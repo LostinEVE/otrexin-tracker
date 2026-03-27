@@ -88,6 +88,18 @@ body.otr-body {
 	border-color: rgba(255, 255, 255, 0.2);
 }
 
+.otr-share-link {
+	background: transparent;
+	cursor: pointer;
+	line-height: 1.2;
+}
+
+.otr-share-link.is-shared {
+	background: rgba(16, 185, 129, 0.2);
+	border-color: rgba(16, 185, 129, 0.55);
+	color: #d1fae5;
+}
+
 .otr-page {
 	max-width: 1200px;
 	margin: 18px auto 28px;

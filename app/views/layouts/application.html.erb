@@ -26,6 +26,7 @@
   <body class="otr-body">
     <nav class="otr-nav">
       <a href="/" class="otr-brand">OTR Tracker</a>
+      <button type="button" class="otr-nav-link otr-share-link" data-share-app>Share This App</button>
       <% if logged_in? %>
         <%= link_to "Invoices", invoices_path, class: "otr-nav-link" %>
         <%= link_to "Expenses", expenses_path, class: "otr-nav-link" %>
