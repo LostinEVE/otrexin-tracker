@@ -1,24 +1,170 @@
-# README
+# OTRExin Tracker (Rails)
 
-This README would normally document whatever steps are necessary to get the
-application up and running.
+OTRExin Tracker is a Ruby on Rails web and mobile-friendly app for owner-operators and small trucking businesses.
 
-Things you may want to cover:
+It helps track:
+- Invoices
+- Expenses
+- Fuel logs and MPG
+- Mileage and cost/revenue per mile
+- Maintenance records
+- Tax payments and estimator
+- Customer analysis
+- Profit and Loss reports
 
-* Ruby version
+The app also supports:
+- Company profile settings used on invoice headers
+- Exporting expense, maintenance, and P&L reports as CSV
+- Emailing invoices directly from the app
+- Print/Save PDF invoice and report workflows
 
-* System dependencies
+## Tech Stack
 
-* Configuration
+- Ruby 4.0+
+- Rails 8.1+
+- SQLite (default)
+- Propshaft + Importmap
 
-* Database creation
+## Local Setup
 
-* Database initialization
+1. Install dependencies:
 
-* How to run the test suite
+```powershell
+bundle install
+```
 
-* Services (job queues, cache servers, search engines, etc.)
+2. Create and migrate the database:
 
-* Deployment instructions
+```powershell
+ruby bin/rails db:create db:migrate
+```
 
-* ...
+3. Start the app:
+
+```powershell
+ruby bin/rails server
+```
+
+4. Open in browser:
+
+http://localhost:3000
+
+Note for Windows:
+- Use ruby bin/rails ... commands if bin/rails alone does not run correctly.
+
+## First-Time App Walkthrough
+
+After booting the app:
+
+1. Open Company page and fill in company details.
+2. Create an invoice.
+3. Open the invoice and test Print/Save PDF.
+4. Use Email Invoice to send from the app.
+5. Add expenses, maintenance, fuel, and mileage records.
+6. Open P&L for period reporting and CSV export.
+
+## Main Sections
+
+- Dashboard: top-level business stats
+- Invoices: create, view, print, email
+- Expenses: categorized expenses with CSV export
+- Fuel Log: fill-up history, per-fill MPG, overall MPG
+- Mileage: miles and revenue per trip, RPM and CPM stats
+- Maintenance: service history with CSV export
+- Customers: customer-level revenue and payment performance
+- Taxes: estimator and payment history tracking
+- P&L: date-range report with CSV export for bank/tax use
+
+## Emailing Invoices
+
+Invoice email is sent through Action Mailer.
+
+To use real email delivery, configure SMTP in environment config.
+
+Example settings to add in development or production environment files:
+
+```ruby
+config.action_mailer.delivery_method = :smtp
+config.action_mailer.smtp_settings = {
+	address: ENV["SMTP_ADDRESS"],
+	port: ENV.fetch("SMTP_PORT", 587).to_i,
+	user_name: ENV["SMTP_USERNAME"],
+	password: ENV["SMTP_PASSWORD"],
+	authentication: :plain,
+	enable_starttls_auto: true
+}
+```
+
+Set environment variables before starting the app.
+
+If SMTP is not configured, invoice email send actions may fail.
+
+## Report Exports
+
+Supported exports:
+- Expense report CSV
+- Maintenance report CSV
+- Profit and Loss CSV
+
+Recommended workflow for banks/taxes:
+1. Filter by date range.
+2. Export CSV for records.
+3. Use Print/Save PDF from browser for a printable statement.
+
+## Git Workflow
+
+If creating a new remote repository:
+
+```powershell
+git branch -M main
+git remote add origin https://github.com/YOUR_USERNAME/otrexin-tracker.git
+git push -u origin main
+```
+
+If origin already exists:
+
+```powershell
+git remote set-url origin https://github.com/YOUR_USERNAME/otrexin-tracker.git
+git push -u origin main
+```
+
+## Useful Commands
+
+```powershell
+ruby bin/rails routes
+ruby bin/rails db:migrate
+ruby bin/rails test
+```
+
+## Troubleshooting
+
+### cannot load such file -- csv
+
+Install dependencies again:
+
+```powershell
+bundle install
+```
+
+Then restart server:
+
+```powershell
+ruby bin/rails server
+```
+
+### Server does not start on Windows
+
+Use:
+
+```powershell
+ruby bin/rails server
+```
+
+### Push to GitHub fails with URL error 400
+
+You are likely using a placeholder URL.
+Set the correct remote URL with your real GitHub username.
+
+## License
+
+Private/Internal use unless otherwise specified by repository owner.
