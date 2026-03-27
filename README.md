@@ -97,7 +97,7 @@ config.action_mailer.smtp_settings = {
 
 Set environment variables before starting the app.
 
-If SMTP is not configured in development, emails are written to `tmp/mails` instead of being sent.
+If SMTP is not configured, emails are written to `tmp/mails` instead of being sent.
 
 ## Buy Me a Coffee (PayPal)
 

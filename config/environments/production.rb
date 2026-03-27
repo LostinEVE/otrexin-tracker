@@ -56,6 +56,7 @@ Rails.application.configure do
   config.action_mailer.default_url_options = { host: ENV.fetch("APP_HOST", "example.com") }
 
   # Configure SMTP via environment variables in Render dashboard.
+  # Fall back to file delivery if SMTP is not configured.
   if ENV["SMTP_ADDRESS"].present?
     config.action_mailer.delivery_method = :smtp
     config.action_mailer.smtp_settings = {
@@ -66,6 +67,9 @@ Rails.application.configure do
       authentication: :plain,
       enable_starttls_auto: true
     }
+  else
+    config.action_mailer.delivery_method = :file
+    config.action_mailer.file_settings = { location: Rails.root.join("tmp", "mails") }
   end
 
   # Enable locale fallbacks for I18n (makes lookups for any locale fall back to
