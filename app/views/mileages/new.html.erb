@@ -1,0 +1,11 @@
+<% content_for :title, "New mileage" %>
+
+<h1>New mileage</h1>
+
+<%= render "form", mileage: @mileage %>
+
+<br>
+
+<div>
+  <%= link_to "Back to mileages", mileages_path %>
+</div>

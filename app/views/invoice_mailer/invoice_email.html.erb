@@ -1,0 +1,59 @@
+<% company_name = @company&.company_name.presence || "Your Company" %>
+<% company_city_state_zip = @company&.city_state_zip.to_s %>
+
+<div style="font-family:Arial,Helvetica,sans-serif;background:#f3f6fa;padding:24px;color:#1b2533;">
+  <div style="max-width:760px;margin:0 auto;background:#fff;border:1px solid #d6dee8;border-radius:12px;overflow:hidden;">
+    <div style="background:#0f2942;color:#fff;padding:16px 20px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+      <div>
+        <div style="font-size:22px;font-weight:700;"><%= company_name %></div>
+        <div style="font-size:13px;opacity:0.9;"><%= @company&.address_line1 %></div>
+        <div style="font-size:13px;opacity:0.9;"><%= @company&.address_line2 %></div>
+        <div style="font-size:13px;opacity:0.9;"><%= company_city_state_zip %></div>
+        <div style="font-size:12px;opacity:0.85;margin-top:4px;"><%= @company&.contact_line %></div>
+      </div>
+      <div style="text-align:right;min-width:180px;">
+        <div style="font-size:26px;font-weight:800;letter-spacing:0.04em;">INVOICE</div>
+        <div>#<%= @invoice.invoice_number %></div>
+        <div><strong>Date:</strong> <%= @invoice.invoice_date %></div>
+      </div>
+    </div>
+
+    <div style="padding:20px;">
+      <% if @message.present? %>
+        <div style="margin-bottom:14px;white-space:pre-line;"><%= @message %></div>
+      <% end %>
+
+      <div style="margin-bottom:14px;">
+        <div style="font-size:12px;color:#5f6c80;text-transform:uppercase;letter-spacing:0.04em;">Bill To</div>
+        <div style="font-size:18px;font-weight:700;"><%= @invoice.customer_name %></div>
+        <div>Load #: <%= @invoice.load_number %></div>
+        <div>Delivery Date: <%= @invoice.delivery_date %></div>
+      </div>
+
+      <table style="width:100%;border-collapse:collapse;border:1px solid #d8dee8;border-radius:10px;overflow:hidden;">
+        <thead>
+          <tr style="background:#f2f6fb;">
+            <th style="text-align:left;padding:10px;border-bottom:1px solid #d8dee8;">Description</th>
+            <th style="text-align:right;padding:10px;border-bottom:1px solid #d8dee8;">Pieces</th>
+            <th style="text-align:right;padding:10px;border-bottom:1px solid #d8dee8;">Rate</th>
+            <th style="text-align:right;padding:10px;border-bottom:1px solid #d8dee8;">Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="padding:10px;border-bottom:1px solid #edf1f6;"><%= @invoice.product_description.presence || "Freight services" %></td>
+            <td style="padding:10px;text-align:right;border-bottom:1px solid #edf1f6;"><%= @invoice.piece_count.presence || "-" %></td>
+            <td style="padding:10px;text-align:right;border-bottom:1px solid #edf1f6;"><%= @invoice.rate_per_piece.present? ? "$#{number_with_precision(@invoice.rate_per_piece, precision: 2)}" : "-" %></td>
+            <td style="padding:10px;text-align:right;font-weight:700;border-bottom:1px solid #edf1f6;">$<%= number_with_precision(@invoice.amount, precision: 2) %></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <% if @invoice.notes.present? %>
+        <div style="margin-top:12px;"><strong>Notes:</strong> <%= @invoice.notes %></div>
+      <% end %>
+
+      <div style="margin-top:16px;font-size:12px;color:#5f6c80;">This invoice was sent from OTR Tracker.</div>
+    </div>
+  </div>
+</div>

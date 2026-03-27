@@ -1,0 +1,21 @@
+<% mpg = fuel_log.mpg_since_last_fill %>
+<% miles = fuel_log.miles_since_last_fill %>
+<div id="<%= dom_id fuel_log %>" style="padding:12px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px;">
+  <div style="display:flex;justify-content:space-between;align-items:center;">
+    <strong><%= fuel_log.fuel_date %> — <%= fuel_log.station.presence || fuel_log.location %></strong>
+    <strong style="color:#155724;">$<%= number_with_precision(fuel_log.total_cost, precision: 2) %></strong>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px;font-size:14px;">
+    <div><strong>Odometer:</strong><br><%= number_with_delimiter(fuel_log.odometer) %></div>
+    <div><strong>Gallons:</strong><br><%= fuel_log.gallons %></div>
+    <div><strong>$/gal:</strong><br>$<%= fuel_log.price_per_gallon %></div>
+    <div><strong>Miles this fill:</strong><br><%= miles&.to_s || "—" %></div>
+    <div style="color:<%= mpg ? (mpg >= 6 ? '#155724' : '#856404') : '#999' %>">
+      <strong>MPG this fill:</strong><br><%= mpg&.to_s || "—" %>
+    </div>
+    <div><strong>Location:</strong><br><%= fuel_log.location %></div>
+  </div>
+  <% if fuel_log.notes.present? %>
+    <div style="margin-top:6px;font-size:13px;color:#666;"><%= fuel_log.notes %></div>
+  <% end %>
+</div>

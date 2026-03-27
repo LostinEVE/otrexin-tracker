@@ -1,0 +1,20 @@
+<% rpm = mileage.revenue_per_mile %>
+<div id="<%= dom_id mileage %>" style="padding:12px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px;">
+  <div style="display:flex;justify-content:space-between;align-items:center;">
+    <strong><%= mileage.trip_date %> — Load <%= mileage.load_number %></strong>
+    <strong style="color:#155724;">$<%= number_with_precision(mileage.revenue, precision: 2) %></strong>
+  </div>
+  <div style="font-size:14px;margin-top:4px;color:#555;">
+    <%= mileage.origin %> &rarr; <%= mileage.destination %>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px;font-size:14px;">
+    <div><strong>Miles:</strong><br><%= number_with_delimiter(mileage.miles) %></div>
+    <div><strong>Revenue:</strong><br>$<%= number_with_precision(mileage.revenue, precision: 2) %></div>
+    <div style="color:<%= rpm ? (rpm >= 2 ? '#155724' : '#856404') : '#999' %>">
+      <strong>Rev/Mile:</strong><br><%= rpm ? "$#{rpm}" : '—' %>
+    </div>
+  </div>
+  <% if mileage.notes.present? %>
+    <div style="margin-top:6px;font-size:13px;color:#666;"><%= mileage.notes %></div>
+  <% end %>
+</div>

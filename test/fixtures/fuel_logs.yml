@@ -1,0 +1,21 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  fuel_date: 2026-03-26
+  odometer: 1
+  gallons: 9.99
+  price_per_gallon: 9.99
+  total_cost: 9.99
+  location: MyString
+  station: MyString
+  notes: MyText
+
+two:
+  fuel_date: 2026-03-26
+  odometer: 1
+  gallons: 9.99
+  price_per_gallon: 9.99
+  total_cost: 9.99
+  location: MyString
+  station: MyString
+  notes: MyText

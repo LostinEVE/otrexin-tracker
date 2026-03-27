@@ -1,0 +1,69 @@
+<% service_types = [
+  ['Oil Change', 'oil_change'],
+  ['Tire Rotation', 'tire_rotation'],
+  ['Brake Inspection / Repair', 'brake_inspection'],
+  ['DOT Inspection', 'dot_inspection'],
+  ['Tire Replacement', 'tire_replacement'],
+  ['Engine Repair', 'engine_repair'],
+  ['Transmission', 'transmission'],
+  ['PM Service', 'pm_service'],
+  ['Other', 'other']
+] %>
+
+<%= form_with(model: maintenance) do |form| %>
+  <% if maintenance.errors.any? %>
+    <div style="color:#b00020;margin-bottom:12px;">
+      <h3><%= pluralize(maintenance.errors.count, "error") %> stopped this record from saving:</h3>
+      <ul>
+        <% maintenance.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <style>
+    .safe-two-col { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
+    .safe-form input, .safe-form select, .safe-form textarea { box-sizing: border-box; max-width: 100%; min-width: 0; }
+  </style>
+
+  <div class="safe-form" style="display:grid;gap:10px;max-width:560px;">
+    <div class="safe-two-col">
+      <div>
+        <%= form.label :maintenance_date, "Service Date", style: "display:block;font-weight:600;" %>
+        <%= form.date_field :maintenance_date, style: "width:100%;padding:10px;" %>
+      </div>
+      <div>
+        <%= form.label :odometer, "Odometer", style: "display:block;font-weight:600;" %>
+        <%= form.number_field :odometer, placeholder: "123456", style: "width:100%;padding:10px;" %>
+      </div>
+    </div>
+
+    <div>
+      <%= form.label :maintenance_type, "Service Type", style: "display:block;font-weight:600;" %>
+      <%= form.select :maintenance_type, service_types,
+          { include_blank: '-- Select Type --' },
+          style: "width:100%;padding:10px;" %>
+    </div>
+
+    <div class="safe-two-col">
+      <div>
+        <%= form.label :cost, "Cost ($)", style: "display:block;font-weight:600;" %>
+        <%= form.number_field :cost, step: "0.01", placeholder: "250.00", style: "width:100%;padding:10px;" %>
+      </div>
+      <div>
+        <%= form.label :vendor, "Shop / Vendor", style: "display:block;font-weight:600;" %>
+        <%= form.text_field :vendor, placeholder: "Speedco, Love's, etc.", style: "width:100%;padding:10px;" %>
+      </div>
+    </div>
+
+    <div>
+      <%= form.label :notes, "Notes", style: "display:block;font-weight:600;" %>
+      <%= form.text_area :notes, rows: 2, style: "width:100%;padding:10px;" %>
+    </div>
+
+    <div>
+      <%= form.submit "Save Record", style: "padding:12px 24px;font-weight:700;font-size:16px;" %>
+    </div>
+  </div>
+<% end %>

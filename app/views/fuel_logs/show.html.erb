@@ -1,0 +1,10 @@
+<p style="color: green"><%= notice %></p>
+
+<%= render @fuel_log %>
+
+<div>
+  <%= link_to "Edit this fuel log", edit_fuel_log_path(@fuel_log) %> |
+  <%= link_to "Back to fuel logs", fuel_logs_path %>
+
+  <%= button_to "Destroy this fuel log", @fuel_log, method: :delete %>
+</div>

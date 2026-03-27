@@ -1,0 +1,79 @@
+<%= form_with(model: fuel_log) do |form| %>
+  <% if fuel_log.errors.any? %>
+    <div style="color:#b00020;margin-bottom:12px;">
+      <h3><%= pluralize(fuel_log.errors.count, "error") %> stopped this entry from saving:</h3>
+      <ul>
+        <% fuel_log.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <style>
+    .safe-two-col { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
+    .safe-form input, .safe-form select, .safe-form textarea { box-sizing: border-box; max-width: 100%; min-width: 0; }
+  </style>
+
+  <div class="safe-form" style="display:grid;gap:10px;max-width:560px;">
+    <div class="safe-two-col">
+      <div>
+        <%= form.label :fuel_date, "Date", style: "display:block;font-weight:600;" %>
+        <%= form.date_field :fuel_date, style: "width:100%;padding:10px;" %>
+      </div>
+      <div>
+        <%= form.label :odometer, "Odometer Reading", style: "display:block;font-weight:600;" %>
+        <%= form.number_field :odometer, placeholder: "123456", style: "width:100%;padding:10px;", id: "fuel_odometer" %>
+      </div>
+    </div>
+
+    <div class="safe-two-col">
+      <div>
+        <%= form.label :gallons, "Gallons", style: "display:block;font-weight:600;" %>
+        <%= form.number_field :gallons, step: "0.01", placeholder: "150.50",
+            style: "width:100%;padding:10px;", id: "fuel_gallons",
+            oninput: "calcTotal()" %>
+      </div>
+      <div>
+        <%= form.label :price_per_gallon, "Price per Gallon ($)", style: "display:block;font-weight:600;" %>
+        <%= form.number_field :price_per_gallon, step: "0.001", placeholder: "3.450",
+            style: "width:100%;padding:10px;", id: "fuel_ppg",
+            oninput: "calcTotal()" %>
+      </div>
+    </div>
+
+    <div>
+      <%= form.label :total_cost, "Total Cost ($) — auto calculated", style: "display:block;font-weight:600;" %>
+      <%= form.number_field :total_cost, step: "0.01", placeholder: "0.00",
+          style: "width:100%;padding:10px;background:#f5f5f5;", id: "fuel_total" %>
+    </div>
+
+    <div>
+      <%= form.label :location, "Location (City, State)", style: "display:block;font-weight:600;" %>
+      <%= form.text_field :location, placeholder: "Memphis, TN", style: "width:100%;padding:10px;" %>
+    </div>
+
+    <div>
+      <%= form.label :station, "Station Name", style: "display:block;font-weight:600;" %>
+      <%= form.text_field :station, placeholder: "Pilot, Love's, TA...", style: "width:100%;padding:10px;" %>
+    </div>
+
+    <div>
+      <%= form.label :notes, "Notes", style: "display:block;font-weight:600;" %>
+      <%= form.text_area :notes, rows: 2, style: "width:100%;padding:10px;" %>
+    </div>
+
+    <div>
+      <%= form.submit "Save Fuel Entry", style: "padding:12px 24px;font-weight:700;font-size:16px;" %>
+    </div>
+  </div>
+<% end %>
+
+<script>
+  function calcTotal() {
+    const g = parseFloat(document.getElementById('fuel_gallons')?.value) || 0;
+    const p = parseFloat(document.getElementById('fuel_ppg')?.value) || 0;
+    const t = document.getElementById('fuel_total');
+    if (t) t.value = (g * p).toFixed(2);
+  }
+</script>

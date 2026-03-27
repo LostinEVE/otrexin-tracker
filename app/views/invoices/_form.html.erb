@@ -1,0 +1,83 @@
+<%= form_with(model: invoice) do |form| %>
+  <% if invoice.errors.any? %>
+    <div style="color: #b00020; margin-bottom: 12px;">
+      <h3><%= pluralize(invoice.errors.count, "error") %> stopped this invoice from saving:</h3>
+      <ul>
+        <% invoice.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <style>
+    .safe-two-col { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
+    .safe-form input, .safe-form select, .safe-form textarea { box-sizing: border-box; max-width: 100%; min-width: 0; }
+  </style>
+
+  <div class="safe-form" style="display:grid; gap:10px; max-width:580px;">
+
+    <h3 style="margin:0;">Load Details</h3>
+
+    <div class="safe-two-col">
+      <div>
+        <%= form.label :invoice_number, "Invoice #", style: "display:block;font-weight:600;" %>
+        <%= form.text_field :invoice_number, placeholder: "001", style: "width:100%;padding:10px;" %>
+      </div>
+      <div>
+        <%= form.label :invoice_date, "Invoice Date", style: "display:block;font-weight:600;" %>
+        <%= form.date_field :invoice_date, style: "width:100%;padding:10px;" %>
+      </div>
+    </div>
+
+    <div>
+      <%= form.label :customer_name, "Customer Name", style: "display:block;font-weight:600;" %>
+      <%= form.text_field :customer_name, placeholder: "ABC Freight Co.", style: "width:100%;padding:10px;" %>
+    </div>
+
+    <div>
+      <%= form.label :load_number, "Load Number", style: "display:block;font-weight:600;" %>
+      <%= form.text_field :load_number, placeholder: "LOAD-5001", style: "width:100%;padding:10px;" %>
+    </div>
+
+    <div>
+      <%= form.label :delivery_date, "Date Delivered", style: "display:block;font-weight:600;" %>
+      <%= form.date_field :delivery_date, style: "width:100%;padding:10px;" %>
+    </div>
+
+    <div>
+      <%= form.label :amount, "Amount to be Paid ($)", style: "display:block;font-weight:600;" %>
+      <%= form.number_field :amount, step: "0.01", placeholder: "2500.00", style: "width:100%;padding:10px;" %>
+    </div>
+
+    <div>
+      <%= form.label :product_description, "Product Description", style: "display:block;font-weight:600;" %>
+      <%= form.text_field :product_description, placeholder: "Dry Goods, Steel Coils...", style: "width:100%;padding:10px;" %>
+    </div>
+
+    <div class="safe-two-col">
+      <div>
+        <%= form.label :piece_count, "Piece Count", style: "display:block;font-weight:600;" %>
+        <%= form.number_field :piece_count, placeholder: "0", style: "width:100%;padding:10px;" %>
+      </div>
+      <div>
+        <%= form.label :rate_per_piece, "Rate Per Piece ($)", style: "display:block;font-weight:600;" %>
+        <%= form.number_field :rate_per_piece, step: "0.01", placeholder: "0.00", style: "width:100%;padding:10px;" %>
+      </div>
+    </div>
+
+    <div>
+      <%= form.label :status, "Payment Status", style: "display:block;font-weight:600;" %>
+      <%= form.select :status, [["Unpaid", "unpaid"], ["Paid", "paid"]], {}, style: "width:100%;padding:10px;" %>
+    </div>
+
+    <div>
+      <%= form.label :notes, "Notes", style: "display:block;font-weight:600;" %>
+      <%= form.text_area :notes, rows: 3, placeholder: "Broker, rate con, special instructions...", style: "width:100%;padding:10px;" %>
+    </div>
+
+    <div>
+      <%= form.submit "Save Invoice", style: "padding:12px 24px;font-weight:700;font-size:16px;" %>
+    </div>
+  </div>
+<% end %>

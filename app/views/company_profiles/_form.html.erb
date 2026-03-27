@@ -1,0 +1,71 @@
+<%= form_with(model: @company_profile, url: company_profile_path, method: :patch) do |form| %>
+  <% if @company_profile.errors.any? %>
+    <div style="color:#b00020;margin-bottom:12px;">
+      <h3><%= pluralize(@company_profile.errors.count, "error") %> stopped this from saving:</h3>
+      <ul>
+        <% @company_profile.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div style="display:grid;gap:10px;max-width:720px;">
+    <div>
+      <%= form.label :company_name, "Company Name", style: "display:block;font-weight:600;" %>
+      <%= form.text_field :company_name, placeholder: "Acme Trucking LLC" %>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px;">
+      <div>
+        <%= form.label :address_line1, "Address Line 1", style: "display:block;font-weight:600;" %>
+        <%= form.text_field :address_line1, placeholder: "123 Main St" %>
+      </div>
+      <div>
+        <%= form.label :address_line2, "Address Line 2", style: "display:block;font-weight:600;" %>
+        <%= form.text_field :address_line2, placeholder: "Suite / Unit" %>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;">
+      <div>
+        <%= form.label :city, "City", style: "display:block;font-weight:600;" %>
+        <%= form.text_field :city %>
+      </div>
+      <div>
+        <%= form.label :state, "State", style: "display:block;font-weight:600;" %>
+        <%= form.text_field :state %>
+      </div>
+      <div>
+        <%= form.label :zip, "ZIP", style: "display:block;font-weight:600;" %>
+        <%= form.text_field :zip %>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;">
+      <div>
+        <%= form.label :phone, "Phone", style: "display:block;font-weight:600;" %>
+        <%= form.text_field :phone, placeholder: "(555) 555-1212" %>
+      </div>
+      <div>
+        <%= form.label :email, "Email", style: "display:block;font-weight:600;" %>
+        <%= form.email_field :email, placeholder: "billing@company.com" %>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;">
+      <div>
+        <%= form.label :dot_number, "DOT Number", style: "display:block;font-weight:600;" %>
+        <%= form.text_field :dot_number %>
+      </div>
+      <div>
+        <%= form.label :mc_number, "MC Number", style: "display:block;font-weight:600;" %>
+        <%= form.text_field :mc_number %>
+      </div>
+    </div>
+
+    <div>
+      <%= form.submit "Save Company Profile", style: "padding:12px 22px;font-weight:700;" %>
+    </div>
+  </div>
+<% end %>

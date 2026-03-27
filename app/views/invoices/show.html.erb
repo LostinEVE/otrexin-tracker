@@ -1,0 +1,63 @@
+<p style="color: green"><%= notice %></p>
+
+<% company = current_company_profile %>
+
+<section style="background:#fff;border:1px solid #d8dee8;border-radius:12px;padding:18px;max-width:900px;">
+  <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;border-bottom:1px solid #e7ecf3;padding-bottom:12px;margin-bottom:12px;">
+    <div>
+      <h2 style="margin:0 0 4px 0;"><%= company.company_name.presence || "Your Company Name" %></h2>
+      <div><%= company.address_line1 %></div>
+      <div><%= company.address_line2 %></div>
+      <div><%= company.city_state_zip %></div>
+      <% if company.contact_line.present? %>
+        <div style="font-size:13px;color:#5f6c80;margin-top:4px;"><%= company.contact_line %></div>
+      <% end %>
+    </div>
+    <div style="text-align:right;min-width:220px;">
+      <div style="font-size:26px;font-weight:800;letter-spacing:0.03em;">INVOICE</div>
+      <div><strong>#</strong> <%= @invoice.invoice_number %></div>
+      <div><strong>Invoice Date:</strong> <%= @invoice.invoice_date %></div>
+      <div><strong>Delivery Date:</strong> <%= @invoice.delivery_date %></div>
+      <div style="margin-top:6px;padding:4px 8px;display:inline-block;border-radius:999px;font-weight:700;
+        background:<%= @invoice.status == 'paid' ? '#d4edda' : '#fff3cd' %>;
+        color:<%= @invoice.status == 'paid' ? '#155724' : '#856404' %>;"><%= @invoice.status&.upcase %></div>
+    </div>
+  </div>
+
+  <div style="margin-bottom:12px;">
+    <div style="font-size:12px;color:#5f6c80;text-transform:uppercase;letter-spacing:0.04em;">Bill To</div>
+    <div style="font-size:18px;font-weight:700;"><%= @invoice.customer_name %></div>
+    <div>Load #: <%= @invoice.load_number %></div>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Description</th>
+        <th style="text-align:right;">Pieces</th>
+        <th style="text-align:right;">Rate</th>
+        <th style="text-align:right;">Amount</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><%= @invoice.product_description.presence || "Freight services" %></td>
+        <td style="text-align:right;"><%= @invoice.piece_count.presence || "-" %></td>
+        <td style="text-align:right;"><%= @invoice.rate_per_piece.present? ? "$#{number_with_precision(@invoice.rate_per_piece, precision: 2)}" : "-" %></td>
+        <td style="text-align:right;font-weight:700;">$<%= number_with_precision(@invoice.amount, precision: 2) %></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <% if @invoice.notes.present? %>
+    <div style="margin-top:12px;"><strong>Notes:</strong> <%= @invoice.notes %></div>
+  <% end %>
+</section>
+
+<div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
+  <%= link_to "Edit Invoice", edit_invoice_path(@invoice) %>
+  <%= link_to "Back to Invoices", invoices_path %>
+  <%= link_to "Email Invoice", email_invoice_path(@invoice) %>
+  <a href="#" onclick="window.print(); return false;">Print / Save PDF</a>
+  <%= button_to "Destroy", @invoice, method: :delete, style: "background:#7f1d1d;color:#fff;border:none;padding:8px 12px;border-radius:8px;" %>
+</div>

@@ -1,0 +1,25 @@
+<% category_labels = {
+  "fuel" => "Fuel",
+  "maintenance" => "Maintenance & Repairs",
+  "tolls" => "Tolls & Parking",
+  "food" => "Food & Meals",
+  "insurance" => "Insurance",
+  "permits" => "Permits & Licenses",
+  "truck_payment" => "Truck Payment / Lease",
+  "supplies" => "Supplies",
+  "drivers_pay" => "Drivers Pay",
+  "truck_wash_hopper_washout" => "Truck Wash / Hopper Washout",
+  "other" => "Other"
+} %>
+<div id="<%= dom_id expense %>" style="display:grid; gap:4px; padding:12px; border:1px solid #ddd; border-radius:6px; margin-bottom:8px;">
+  <div style="display:flex; justify-content:space-between;">
+    <strong><%= category_labels[expense.category] || expense.category %></strong>
+    <strong style="color:#155724;">$<%= number_with_precision(expense.amount, precision: 2) %></strong>
+  </div>
+  <div style="color:#555; font-size:14px;">
+    <%= expense.expense_date %> &mdash; <%= expense.vendor.presence || "No vendor" %>
+  </div>
+  <% if expense.notes.present? %>
+    <div style="font-size:13px; color:#666;"><%= expense.notes %></div>
+  <% end %>
+</div>

@@ -1,0 +1,39 @@
+<%= form_with(model: tax_payment) do |form| %>
+  <% if tax_payment.errors.any? %>
+    <div style="color:#b00020;margin-bottom:12px;">
+      <h3><%= pluralize(tax_payment.errors.count, "error") %> stopped this from saving:</h3>
+      <ul>
+        <% tax_payment.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div style="display:grid;gap:10px;max-width:480px;">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;">
+      <div>
+        <%= form.label :payment_date, "Payment Date", style: "display:block;font-weight:600;" %>
+        <%= form.date_field :payment_date, style: "width:100%;max-width:100%;min-width:0;box-sizing:border-box;padding:10px;" %>
+      </div>
+      <div>
+        <%= form.label :quarter, "Quarter", style: "display:block;font-weight:600;" %>
+        <%= form.select :quarter,
+            [['Q1 (Jan-Mar)', 'Q1'], ['Q2 (Apr-Jun)', 'Q2'], ['Q3 (Jul-Sep)', 'Q3'], ['Q4 (Oct-Dec)', 'Q4']],
+            { include_blank: '-- Select --' },
+            style: "width:100%;max-width:100%;min-width:0;box-sizing:border-box;padding:10px;" %>
+      </div>
+    </div>
+    <div>
+      <%= form.label :amount, "Amount ($)", style: "display:block;font-weight:600;" %>
+      <%= form.number_field :amount, step: "0.01", placeholder: "0.00", style: "width:100%;max-width:100%;min-width:0;box-sizing:border-box;padding:10px;" %>
+    </div>
+    <div>
+      <%= form.label :notes, "Notes", style: "display:block;font-weight:600;" %>
+      <%= form.text_area :notes, rows: 2, style: "width:100%;max-width:100%;min-width:0;box-sizing:border-box;padding:10px;" %>
+    </div>
+    <div>
+      <%= form.submit "Save Payment", style: "padding:12px 24px;font-weight:700;font-size:15px;" %>
+    </div>
+  </div>
+<% end %>

@@ -1,0 +1,53 @@
+<p style="color: green"><%= notice %></p>
+
+<% content_for :title, "Maintenance" %>
+
+<h1>🔧 Maintenance Log</h1>
+
+<%= form_with url: maintenances_path, method: :get, local: true, style: "display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;max-width:700px;margin-bottom:12px;" do |f| %>
+  <div>
+    <%= f.label :start_date, "Start Date", style: "display:block;font-weight:600;" %>
+    <%= f.date_field :start_date, value: @start_date %>
+  </div>
+  <div>
+    <%= f.label :end_date, "End Date", style: "display:block;font-weight:600;" %>
+    <%= f.date_field :end_date, value: @end_date %>
+  </div>
+  <div style="align-self:end;display:flex;gap:8px;">
+    <%= f.submit "Filter", style: "padding:10px 14px;font-weight:700;" %>
+  </div>
+<% end %>
+
+<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
+  <%= link_to "Export Maintenance Report (CSV)", maintenances_path(format: :csv, start_date: @start_date, end_date: @end_date), style: "padding:10px 14px;font-weight:700;display:inline-block;" %>
+  <%= link_to "+ Add Service Record", new_maintenance_path, style: "padding:10px 14px;font-weight:700;display:inline-block;" %>
+</div>
+
+<% total_cost = Maintenance.sum(:cost) %>
+<% total_records = Maintenance.count %>
+<% mtd_cost = Maintenance.where('maintenance_date >= ?', Date.today.beginning_of_month).sum(:cost) %>
+
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px;">
+  <div style="padding:14px;border:1px solid #ddd;border-radius:8px;text-align:center;">
+    <div style="font-size:22px;font-weight:700;"><%= total_records %></div>
+    <div style="font-size:12px;color:#555;">Total Service Records</div>
+  </div>
+  <div style="padding:14px;border:1px solid #ddd;border-radius:8px;text-align:center;">
+    <div style="font-size:22px;font-weight:700;">$<%= number_with_precision(total_cost, precision: 2, delimiter: ',') %></div>
+    <div style="font-size:12px;color:#555;">Total Maintenance Cost</div>
+  </div>
+  <div style="padding:14px;border:1px solid #ddd;border-radius:8px;text-align:center;">
+    <div style="font-size:22px;font-weight:700;">$<%= number_with_precision(mtd_cost, precision: 2, delimiter: ',') %></div>
+    <div style="font-size:12px;color:#555;">This Month</div>
+  </div>
+</div>
+
+<div id="maintenances">
+  <% @maintenances.order(maintenance_date: :desc).each do |maintenance| %>
+    <%= render maintenance %>
+    <div style="margin-bottom:4px;font-size:13px;">
+      <%= link_to "Edit", edit_maintenance_path(maintenance) %> |
+      <%= link_to "Delete", maintenance, data: { turbo_method: :delete, turbo_confirm: "Delete this record?" } %>
+    </div>
+  <% end %>
+</div>

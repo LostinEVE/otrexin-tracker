@@ -1,0 +1,26 @@
+<div id="<%= dom_id invoice %>">
+  <div style="display:grid; gap:6px; padding:12px; border:1px solid #ddd; border-radius:6px; margin-bottom:8px;">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <strong>Invoice #<%= invoice.invoice_number %></strong>
+      <span style="padding:4px 10px; border-radius:12px; font-size:12px; font-weight:700; background:<%= invoice.status == 'paid' ? '#d4edda' : '#fff3cd' %>; color:<%= invoice.status == 'paid' ? '#155724' : '#856404' %>">
+        <%= invoice.status&.upcase %>
+      </span>
+    </div>
+    <div><strong>Customer:</strong> <%= invoice.customer_name %></div>
+    <div><strong>Load #:</strong> <%= invoice.load_number %></div>
+    <div><strong>Invoice Date:</strong> <%= invoice.invoice_date %></div>
+    <div><strong>Date Delivered:</strong> <%= invoice.delivery_date %></div>
+    <div><strong>Amount:</strong> $<%= number_with_precision(invoice.amount, precision: 2) %></div>
+    <% if invoice.product_description.present? %>
+      <div><strong>Product:</strong> <%= invoice.product_description %></div>
+    <% end %>
+    <% if invoice.notes.present? %>
+      <div><strong>Notes:</strong> <%= invoice.notes %></div>
+    <% end %>
+
+    <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;">
+      <%= link_to "View Invoice", invoice_path(invoice), style: "padding:8px 12px;font-weight:700;display:inline-block;" %>
+      <%= link_to "Email Invoice", email_invoice_path(invoice), style: "padding:8px 12px;font-weight:700;display:inline-block;" %>
+    </div>
+  </div>
+</div>

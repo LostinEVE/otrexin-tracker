@@ -1,0 +1,60 @@
+<%= form_with(model: expense) do |form| %>
+  <% if expense.errors.any? %>
+    <div style="color: #b00020; margin-bottom: 12px;">
+      <h3><%= pluralize(expense.errors.count, "error") %> stopped this expense from saving:</h3>
+      <ul>
+        <% expense.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div style="display:grid; gap:10px; max-width:560px;">
+    <div>
+      <%= form.label :expense_date, "Date", style: "display:block;font-weight:600;" %>
+      <%= form.date_field :expense_date, style: "width:100%;padding:10px;" %>
+    </div>
+
+    <div>
+      <%= form.label :category, "Category", style: "display:block;font-weight:600;" %>
+      <%= form.select :category, [
+        ["Fuel", "fuel"],
+        ["Maintenance & Repairs", "maintenance"],
+        ["Tolls & Parking", "tolls"],
+        ["Food & Meals", "food"],
+        ["Insurance", "insurance"],
+        ["Permits & Licenses", "permits"],
+        ["Truck Payment / Lease", "truck_payment"],
+        ["Supplies", "supplies"],
+        ["Drivers Pay", "drivers_pay"],
+        ["Truck Wash / Hopper Washout", "truck_wash_hopper_washout"],
+        ["Other", "other"]
+      ], { prompt: "Select a category" }, style: "width:100%;padding:10px;", id: "expense_category", onchange: "document.getElementById('gallons_group').style.display = this.value === 'fuel' ? 'block' : 'none'" %>
+    </div>
+
+    <div id="gallons_group" style="display:<%= @expense.category == 'fuel' ? 'block' : 'none' %>">
+      <%= form.label :gallons, "Gallons", style: "display:block;font-weight:600;" %>
+      <%= form.number_field :gallons, step: "0.001", placeholder: "150.500", style: "width:100%;padding:10px;" %>
+    </div>
+
+    <div>
+      <%= form.label :vendor, "Vendor / Location", style: "display:block;font-weight:600;" %>
+      <%= form.text_field :vendor, placeholder: "Flying J, Love's, TA...", style: "width:100%;padding:10px;" %>
+    </div>
+
+    <div>
+      <%= form.label :amount, "Amount ($)", style: "display:block;font-weight:600;" %>
+      <%= form.number_field :amount, step: "0.01", placeholder: "0.00", style: "width:100%;padding:10px;" %>
+    </div>
+
+    <div>
+      <%= form.label :notes, "Notes", style: "display:block;font-weight:600;" %>
+      <%= form.text_area :notes, rows: 3, placeholder: "Any extra details...", style: "width:100%;padding:10px;" %>
+    </div>
+
+    <div>
+      <%= form.submit "Save Expense", style: "padding:12px 24px;font-weight:700;font-size:16px;" %>
+    </div>
+  </div>
+<% end %>

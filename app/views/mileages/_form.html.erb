@@ -1,0 +1,78 @@
+<%= form_with(model: mileage) do |form| %>
+  <% if mileage.errors.any? %>
+    <div style="color:#b00020;margin-bottom:12px;">
+      <h3><%= pluralize(mileage.errors.count, "error") %> stopped this trip from saving:</h3>
+      <ul>
+        <% mileage.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <style>
+    .safe-two-col { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
+    .safe-form input, .safe-form select, .safe-form textarea { box-sizing: border-box; max-width: 100%; min-width: 0; }
+  </style>
+
+  <div class="safe-form" style="display:grid;gap:10px;max-width:560px;">
+    <div class="safe-two-col">
+      <div>
+        <%= form.label :trip_date, "Trip Date", style: "display:block;font-weight:600;" %>
+        <%= form.date_field :trip_date, style: "width:100%;padding:10px;" %>
+      </div>
+      <div>
+        <%= form.label :load_number, "Load Number", style: "display:block;font-weight:600;" %>
+        <%= form.text_field :load_number, placeholder: "LD-0012", style: "width:100%;padding:10px;" %>
+      </div>
+    </div>
+
+    <div class="safe-two-col">
+      <div>
+        <%= form.label :origin, "Origin", style: "display:block;font-weight:600;" %>
+        <%= form.text_field :origin, placeholder: "Memphis, TN", style: "width:100%;padding:10px;" %>
+      </div>
+      <div>
+        <%= form.label :destination, "Destination", style: "display:block;font-weight:600;" %>
+        <%= form.text_field :destination, placeholder: "Dallas, TX", style: "width:100%;padding:10px;" %>
+      </div>
+    </div>
+
+    <div class="safe-two-col">
+      <div>
+        <%= form.label :miles, "Miles", style: "display:block;font-weight:600;" %>
+        <%= form.number_field :miles, step: "0.1", placeholder: "450",
+            style: "width:100%;padding:10px;", id: "trip_miles",
+            oninput: "calcRPM()" %>
+      </div>
+      <div>
+        <%= form.label :revenue, "Revenue ($)", style: "display:block;font-weight:600;" %>
+        <%= form.number_field :revenue, step: "0.01", placeholder: "1350.00",
+            style: "width:100%;padding:10px;", id: "trip_revenue",
+            oninput: "calcRPM()" %>
+      </div>
+    </div>
+
+    <div style="padding:10px;background:#f5f5f5;border-radius:6px;font-size:14px;" id="rpm_preview">
+      Revenue per mile: <strong id="rpm_val">—</strong>
+    </div>
+
+    <div>
+      <%= form.label :notes, "Notes", style: "display:block;font-weight:600;" %>
+      <%= form.text_area :notes, rows: 2, style: "width:100%;padding:10px;" %>
+    </div>
+
+    <div>
+      <%= form.submit "Save Trip", style: "padding:12px 24px;font-weight:700;font-size:16px;" %>
+    </div>
+  </div>
+<% end %>
+
+<script>
+  function calcRPM() {
+    const m = parseFloat(document.getElementById('trip_miles')?.value) || 0;
+    const r = parseFloat(document.getElementById('trip_revenue')?.value) || 0;
+    const el = document.getElementById('rpm_val');
+    if (el) el.textContent = (m > 0 && r > 0) ? '$' + (r / m).toFixed(4) + ' / mile' : '—';
+  }
+</script>

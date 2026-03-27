@@ -1,0 +1,41 @@
+<p style="color: green"><%= notice %></p>
+
+<% content_for :title, "Fuel Log" %>
+
+<h1>⛽ Fuel Log</h1>
+
+<% overall = FuelLog.overall_mpg %>
+<% avg10   = FuelLog.avg_mpg_last(10) %>
+<% total_gallons_mtd = FuelLog.where('fuel_date >= ?', Date.today.beginning_of_month).sum(:gallons) %>
+<% total_fuel_cost   = FuelLog.sum(:total_cost) %>
+
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px;">
+  <div style="padding:14px;border:1px solid #ddd;border-radius:8px;text-align:center;">
+    <div style="font-size:22px;font-weight:700;"><%= overall&.to_s || '—' %></div>
+    <div style="font-size:12px;color:#555;">Overall MPG</div>
+  </div>
+  <div style="padding:14px;border:1px solid #ddd;border-radius:8px;text-align:center;">
+    <div style="font-size:22px;font-weight:700;"><%= avg10&.to_s || '—' %></div>
+    <div style="font-size:12px;color:#555;">Avg MPG (last 10)</div>
+  </div>
+  <div style="padding:14px;border:1px solid #ddd;border-radius:8px;text-align:center;">
+    <div style="font-size:22px;font-weight:700;"><%= number_with_precision(total_gallons_mtd, precision: 1) %></div>
+    <div style="font-size:12px;color:#555;">Gallons MTD</div>
+  </div>
+  <div style="padding:14px;border:1px solid #ddd;border-radius:8px;text-align:center;">
+    <div style="font-size:22px;font-weight:700;">$<%= number_with_precision(total_fuel_cost, precision: 2) %></div>
+    <div style="font-size:12px;color:#555;">Total Fuel Cost</div>
+  </div>
+</div>
+
+<div id="fuel_logs">
+  <% @fuel_logs.each do |fuel_log| %>
+    <%= render fuel_log %>
+    <div style="margin-bottom:4px;font-size:13px;">
+      <%= link_to "Edit", edit_fuel_log_path(fuel_log) %> |
+      <%= link_to "Delete", fuel_log, data: { turbo_method: :delete, turbo_confirm: "Delete this entry?" } %>
+    </div>
+  <% end %>
+</div>
+
+<%= link_to "+ Add Fuel Entry", new_fuel_log_path, style: "padding:12px 20px;font-weight:700;display:inline-block;margin-top:10px;" %>

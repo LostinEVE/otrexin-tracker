@@ -1,0 +1,10 @@
+<p style="color: green"><%= notice %></p>
+
+<%= render @mileage %>
+
+<div>
+  <%= link_to "Edit this mileage", edit_mileage_path(@mileage) %> |
+  <%= link_to "Back to mileages", mileages_path %>
+
+  <%= button_to "Destroy this mileage", @mileage, method: :delete %>
+</div>

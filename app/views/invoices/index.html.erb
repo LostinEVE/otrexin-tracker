@@ -1,0 +1,18 @@
+<p style="color: green"><%= notice %></p>
+
+<% content_for :title, "Invoices" %>
+
+<h1>Invoices</h1>
+<p style="margin-top:0;color:#5f6c80;">Use the <strong>Email Invoice</strong> button on each invoice card to send it directly from the app.</p>
+
+<div id="invoices">
+  <% if @invoices.any? %>
+    <% @invoices.each do |invoice| %>
+      <%= render invoice %>
+    <% end %>
+  <% else %>
+    <p style="color:#5f6c80;">No invoices yet. Create one, then you'll see the Email Invoice option.</p>
+  <% end %>
+</div>
+
+<%= link_to "New Invoice", new_invoice_path, style: "padding:10px 14px;font-weight:700;display:inline-block;" %>

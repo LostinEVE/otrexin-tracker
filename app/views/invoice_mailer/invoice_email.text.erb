@@ -1,0 +1,21 @@
+<%= @company&.company_name.presence || "Your Company" %>
+Invoice #<%= @invoice.invoice_number %>
+Invoice Date: <%= @invoice.invoice_date %>
+Delivery Date: <%= @invoice.delivery_date %>
+
+Bill To: <%= @invoice.customer_name %>
+Load #: <%= @invoice.load_number %>
+
+Description: <%= @invoice.product_description.presence || "Freight services" %>
+Pieces: <%= @invoice.piece_count.presence || "-" %>
+Rate: <%= @invoice.rate_per_piece.present? ? "$#{number_with_precision(@invoice.rate_per_piece, precision: 2)}" : "-" %>
+Amount Due: $<%= number_with_precision(@invoice.amount, precision: 2) %>
+
+<% if @invoice.notes.present? %>
+Notes: <%= @invoice.notes %>
+<% end %>
+
+<% if @message.present? %>
+Message:
+<%= @message %>
+<% end %>

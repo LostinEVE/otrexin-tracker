@@ -1,0 +1,12 @@
+<% content_for :title, "Editing mileage" %>
+
+<h1>Editing mileage</h1>
+
+<%= render "form", mileage: @mileage %>
+
+<br>
+
+<div>
+  <%= link_to "Show this mileage", @mileage %> |
+  <%= link_to "Back to mileages", mileages_path %>
+</div>

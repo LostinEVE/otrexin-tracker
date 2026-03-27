@@ -1,0 +1,164 @@
+<p style="color: green"><%= notice %></p>
+<% content_for :title, "Tax Estimator" %>
+
+<h1>🧾 Tax Estimator</h1>
+
+<%# =========================================================
+    CALCULATIONS — all done in the view using model data.
+    SE Tax rate = 15.3%
+    Federal brackets (2024/2025 single filer):
+      10%  on first $11,600
+      12%  on $11,601 – $47,150
+      22%  on $47,151 – $100,525
+      24%  on $100,526 – $191,950
+      32%  on $191,951+
+    Taxable income for income tax = profit * 0.9235  (SE deduction)
+========================================================== %>
+<% year = Date.today.year
+   year_start = Date.new(year, 1, 1)
+
+   ytd_revenue  = Invoice.where(status: 'paid').where('invoice_date >= ?', year_start).sum(:amount).to_f
+   ytd_expenses = Expense.where('expense_date >= ?', year_start).sum(:amount).to_f
+   ytd_profit   = ytd_revenue - ytd_expenses
+
+   se_tax = [ytd_profit * 0.153, 0].max.round(2)
+
+   # Federal income tax on (profit * 0.9235), using 2025 single brackets
+   taxable = [ytd_profit * 0.9235, 0].max
+   brackets = [[11600, 0.10], [47150, 0.12], [100525, 0.22], [191950, 0.24], [Float::INFINITY, 0.32]]
+   income_tax = 0.0
+   prev = 0
+   brackets.each do |limit, rate|
+     next if taxable <= prev
+     taxable_in_bracket = [taxable - prev, limit - prev].min
+     income_tax += taxable_in_bracket * rate
+     prev = limit
+   end
+   income_tax = income_tax.round(2)
+
+   total_owed = (se_tax + income_tax).round(2)
+   quarterly_estimate = (total_owed / 4.0).round(2)
+
+   ytd_paid = @tax_payments.select { |p| p.payment_date&.year == year }.sum { |p| p.amount.to_f }.round(2)
+   remaining = (total_owed - ytd_paid).round(2)
+
+   quarters = {
+     'Q1' => { label: 'Q1 (Jan–Mar)', deadline: 'April 15' },
+     'Q2' => { label: 'Q2 (Apr–Jun)', deadline: 'June 15'  },
+     'Q3' => { label: 'Q3 (Jul–Sep)', deadline: 'September 15' },
+     'Q4' => { label: 'Q4 (Oct–Dec)', deadline: 'January 15'  }
+   }
+   current_quarter = case Date.today.month
+     when 1..3 then 'Q1'
+     when 4..6 then 'Q2'
+     when 7..9 then 'Q3'
+     else           'Q4'
+   end
+%>
+
+<%# --- Summary Cards --- %>
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px;">
+  <div style="padding:16px;border:1px solid #ddd;border-radius:8px;">
+    <div style="font-size:11px;color:#888;text-transform:uppercase;">YTD Profit</div>
+    <div style="font-size:22px;font-weight:700;color:<%= ytd_profit >= 0 ? '#155724' : '#721c24' %>;">
+      $<%= number_with_precision(ytd_profit, precision: 2, delimiter: ',') %>
+    </div>
+    <div style="font-size:12px;color:#888;">Rev: $<%= number_with_precision(ytd_revenue, precision: 2, delimiter: ',') %><br>Exp: $<%= number_with_precision(ytd_expenses, precision: 2, delimiter: ',') %></div>
+  </div>
+  <div style="padding:16px;border:1px solid #ddd;border-radius:8px;">
+    <div style="font-size:11px;color:#888;text-transform:uppercase;">Est. Tax Owed</div>
+    <div style="font-size:22px;font-weight:700;color:#856404;">$<%= number_with_precision(total_owed, precision: 2, delimiter: ',') %></div>
+    <div style="font-size:12px;color:#888;">SE: $<%= se_tax %><br>Income: $<%= income_tax %></div>
+  </div>
+  <div style="padding:16px;border:1px solid #ddd;border-radius:8px;">
+    <div style="font-size:11px;color:#888;text-transform:uppercase;">Paid So Far (YTD)</div>
+    <div style="font-size:22px;font-weight:700;color:#155724;">$<%= number_with_precision(ytd_paid, precision: 2, delimiter: ',') %></div>
+    <div style="font-size:12px;color:#888;"><%= @tax_payments.count { |p| p.payment_date&.year == year } %> payment(s) recorded</div>
+  </div>
+  <div style="padding:16px;border:1px solid #ddd;border-radius:8px;background:<%= remaining > 0 ? '#fff3cd' : '#d4edda' %>;">
+    <div style="font-size:11px;color:#888;text-transform:uppercase;"><%= remaining > 0 ? 'Still Owe' : 'Overpaid' %></div>
+    <div style="font-size:22px;font-weight:700;color:<%= remaining > 0 ? '#856404' : '#155724' %>;">
+      $<%= number_with_precision(remaining.abs, precision: 2, delimiter: ',') %>
+    </div>
+    <div style="font-size:12px;color:#888;"><%= remaining > 0 ? 'Make quarterly payments' : 'Credit toward next year' %></div>
+  </div>
+</div>
+
+<p style="font-size:12px;color:#888;background:#f8f9fa;padding:10px;border-radius:6px;margin-bottom:24px;">
+  ⚠️ This is an <strong>estimate only</strong>. Based on <%= year %> federal tax brackets for a single filer.
+  Does not include state taxes, deductions, or credits. Consult a tax professional for accurate numbers.
+</p>
+
+<%# --- Quarterly Breakdown --- %>
+<h3>Quarterly Estimated Payments (~$<%= quarterly_estimate %>/quarter)</h3>
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:28px;">
+  <% quarters.each do |qkey, qinfo| %>
+    <% q_paid = @tax_payments.select { |p| p.quarter == qkey && p.payment_date&.year == year }.sum { |p| p.amount.to_f }.round(2) %>
+    <% q_remaining = (quarterly_estimate - q_paid).round(2) %>
+    <% is_current = qkey == current_quarter %>
+    <div style="padding:14px;border:2px solid <%= is_current ? '#0d6efd' : '#ddd' %>;border-radius:8px;background:<%= is_current ? '#f0f6ff' : '#fff' %>;">
+      <div style="font-weight:700;font-size:14px;"><%= qinfo[:label] %></div>
+      <div style="font-size:12px;color:#888;margin-bottom:8px;">Due: <%= qinfo[:deadline] %><%= is_current ? ' ← current' : '' %></div>
+      <div style="font-size:13px;">Est: $<%= quarterly_estimate %></div>
+      <div style="font-size:13px;color:#155724;">Paid: $<%= q_paid %></div>
+      <div style="font-size:13px;font-weight:700;color:<%= q_remaining > 0 ? '#856404' : '#155724' %>;">
+        <%= q_remaining > 0 ? "Owe: $#{q_remaining}" : "✓ Covered" %>
+      </div>
+    </div>
+  <% end %>
+</div>
+
+<%# --- Record a Payment --- %>
+<h3>Record a Tax Payment</h3>
+<%= form_with url: tax_payments_path, method: :post, style: "max-width:500px;" do |form| %>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin-bottom:10px;">
+    <div>
+      <%= form.label :payment_date, "Payment Date", style: "display:block;font-weight:600;" %>
+      <%= form.date_field :payment_date, value: Date.today, name: "tax_payment[payment_date]", style: "width:100%;max-width:100%;min-width:0;box-sizing:border-box;padding:10px;" %>
+    </div>
+    <div>
+      <%= form.label :quarter, "Quarter", style: "display:block;font-weight:600;" %>
+      <%= form.select :quarter,
+          [['Q1 (Jan–Mar)', 'Q1'], ['Q2 (Apr–Jun)', 'Q2'], ['Q3 (Jul–Sep)', 'Q3'], ['Q4 (Oct–Dec)', 'Q4']],
+          { selected: current_quarter },
+          name: "tax_payment[quarter]", style: "width:100%;max-width:100%;min-width:0;box-sizing:border-box;padding:10px;" %>
+    </div>
+  </div>
+  <div style="margin-bottom:10px;">
+    <%= form.label :amount, "Amount Paid ($)", style: "display:block;font-weight:600;" %>
+    <%= form.number_field :amount, step: "0.01", placeholder: "#{quarterly_estimate}",
+        name: "tax_payment[amount]", style: "width:100%;max-width:100%;min-width:0;box-sizing:border-box;padding:10px;" %>
+  </div>
+  <div style="margin-bottom:10px;">
+    <%= form.label :notes, "Notes (optional)", style: "display:block;font-weight:600;" %>
+    <%= form.text_area :notes, rows: 2, name: "tax_payment[notes]", style: "width:100%;max-width:100%;min-width:0;box-sizing:border-box;padding:10px;" %>
+  </div>
+  <%= form.submit "Save Payment", style: "padding:12px 24px;font-weight:700;font-size:15px;" %>
+<% end %>
+
+<%# --- Payment History --- %>
+<% if @tax_payments.any? %>
+  <h3 style="margin-top:28px;">Payment History</h3>
+  <table style="width:100%;border-collapse:collapse;font-size:14px;max-width:600px;">
+    <thead>
+      <tr style="background:#f5f5f5;">
+        <th style="text-align:left;padding:8px;border-bottom:2px solid #ddd;">Date</th>
+        <th style="text-align:left;padding:8px;border-bottom:2px solid #ddd;">Quarter</th>
+        <th style="text-align:right;padding:8px;border-bottom:2px solid #ddd;">Amount</th>
+        <th style="padding:8px;border-bottom:2px solid #ddd;"></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @tax_payments.order(payment_date: :desc).each do |tp| %>
+        <tr style="border-bottom:1px solid #eee;">
+          <td style="padding:8px;"><%= tp.payment_date %></td>
+          <td style="padding:8px;"><%= tp.quarter %></td>
+          <td style="padding:8px;text-align:right;font-weight:700;color:#155724;">$<%= number_with_precision(tp.amount, precision: 2) %></td>
+          <td style="padding:8px;">
+            <%= link_to "Delete", tp, data: { turbo_method: :delete, turbo_confirm: "Delete this payment?" }, style: "font-size:12px;color:#721c24;" %>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+<% end %>

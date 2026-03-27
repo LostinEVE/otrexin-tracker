@@ -1,0 +1,19 @@
+<% type_labels = {
+  'oil_change' => 'Oil Change', 'tire_rotation' => 'Tire Rotation',
+  'brake_inspection' => 'Brake Inspection/Repair', 'dot_inspection' => 'DOT Inspection',
+  'tire_replacement' => 'Tire Replacement', 'engine_repair' => 'Engine Repair',
+  'transmission' => 'Transmission', 'pm_service' => 'PM Service', 'other' => 'Other'
+} %>
+<div id="<%= dom_id maintenance %>" style="padding:12px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px;">
+  <div style="display:flex;justify-content:space-between;align-items:center;">
+    <strong><%= maintenance.maintenance_date %> — <%= type_labels[maintenance.maintenance_type] || maintenance.maintenance_type %></strong>
+    <strong style="color:#155724;">$<%= number_with_precision(maintenance.cost, precision: 2) %></strong>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:8px;font-size:14px;">
+    <div><strong>Vendor:</strong><br><%= maintenance.vendor.presence || '—' %></div>
+    <div><strong>Odometer:</strong><br><%= number_with_delimiter(maintenance.odometer) %></div>
+  </div>
+  <% if maintenance.notes.present? %>
+    <div style="margin-top:6px;font-size:13px;color:#666;"><%= maintenance.notes %></div>
+  <% end %>
+</div>

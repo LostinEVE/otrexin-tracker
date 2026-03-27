@@ -1,0 +1,84 @@
+<p style="color: green"><%= notice %></p>
+
+<% content_for :title, "Profit & Loss" %>
+
+<h1>Profit &amp; Loss Statement</h1>
+<p style="margin-top:0;">Bank/tax-ready summary of your operation for a selected date range.</p>
+
+<%= form_with url: reports_profit_loss_path, method: :get, local: true, style: "display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;max-width:760px;margin-bottom:16px;" do |f| %>
+	<div>
+		<%= f.label :start_date, "Start Date", style: "display:block;font-weight:600;" %>
+		<%= f.date_field :start_date, value: @start_date %>
+	</div>
+	<div>
+		<%= f.label :end_date, "End Date", style: "display:block;font-weight:600;" %>
+		<%= f.date_field :end_date, value: @end_date %>
+	</div>
+	<div style="align-self:end;display:flex;gap:8px;flex-wrap:wrap;">
+		<%= f.submit "Run Report", style: "padding:10px 14px;font-weight:700;" %>
+		<%= link_to "Export CSV", reports_profit_loss_path(format: :csv, start_date: @start_date, end_date: @end_date), style: "padding:10px 14px;font-weight:700;display:inline-block;" %>
+		<a href="#" onclick="window.print();return false;" style="padding:10px 14px;font-weight:700;display:inline-block;">Print / Save PDF</a>
+	</div>
+<% end %>
+
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;margin-bottom:16px;">
+	<div style="padding:14px;border:1px solid #d8dee8;border-radius:12px;background:#fff;">
+		<div style="font-size:12px;color:#66748a;">Revenue</div>
+		<div style="font-size:24px;font-weight:800;color:#155724;">$<%= number_with_precision(@revenue_total, precision: 2, delimiter: ',') %></div>
+	</div>
+	<div style="padding:14px;border:1px solid #d8dee8;border-radius:12px;background:#fff;">
+		<div style="font-size:12px;color:#66748a;">Operating Costs</div>
+		<div style="font-size:24px;font-weight:800;color:#721c24;">$<%= number_with_precision(@operating_cost_total, precision: 2, delimiter: ',') %></div>
+	</div>
+	<div style="padding:14px;border:1px solid #d8dee8;border-radius:12px;background:#fff;">
+		<div style="font-size:12px;color:#66748a;">Net Profit</div>
+		<div style="font-size:24px;font-weight:800;color:<%= @net_profit >= 0 ? '#155724' : '#721c24' %>;">$<%= number_with_precision(@net_profit, precision: 2, delimiter: ',') %></div>
+	</div>
+	<div style="padding:14px;border:1px solid #d8dee8;border-radius:12px;background:#fff;">
+		<div style="font-size:12px;color:#66748a;">Revenue / Mile</div>
+		<div style="font-size:24px;font-weight:800;"><%= @revenue_per_mile ? "$#{@revenue_per_mile}" : "-" %></div>
+	</div>
+	<div style="padding:14px;border:1px solid #d8dee8;border-radius:12px;background:#fff;">
+		<div style="font-size:12px;color:#66748a;">Cost / Mile</div>
+		<div style="font-size:24px;font-weight:800;"><%= @cost_per_mile ? "$#{@cost_per_mile}" : "-" %></div>
+	</div>
+</div>
+
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;">
+	<section style="background:#fff;border:1px solid #d8dee8;border-radius:12px;padding:14px;">
+		<h3 style="margin-bottom:8px;">Statement Summary</h3>
+		<table>
+			<tbody>
+				<tr><td>Revenue</td><td style="text-align:right;">$<%= number_with_precision(@revenue_total, precision: 2) %></td></tr>
+				<tr><td>Expense Total</td><td style="text-align:right;">$<%= number_with_precision(@expense_total, precision: 2) %></td></tr>
+				<tr><td>Maintenance Total</td><td style="text-align:right;">$<%= number_with_precision(@maintenance_total, precision: 2) %></td></tr>
+				<tr><td><strong>Operating Cost Total</strong></td><td style="text-align:right;"><strong>$<%= number_with_precision(@operating_cost_total, precision: 2) %></strong></td></tr>
+				<tr><td><strong>Net Profit</strong></td><td style="text-align:right;"><strong>$<%= number_with_precision(@net_profit, precision: 2) %></strong></td></tr>
+			</tbody>
+		</table>
+	</section>
+
+	<section style="background:#fff;border:1px solid #d8dee8;border-radius:12px;padding:14px;">
+		<h3 style="margin-bottom:8px;">Expense Breakdown by Category</h3>
+		<% if @expense_by_category.any? %>
+			<table>
+				<thead>
+					<tr>
+						<th>Category</th>
+						<th style="text-align:right;">Amount</th>
+					</tr>
+				</thead>
+				<tbody>
+					<% @expense_by_category.each do |category, amount| %>
+						<tr>
+							<td><%= category.to_s.humanize %></td>
+							<td style="text-align:right;">$<%= number_with_precision(amount, precision: 2) %></td>
+						</tr>
+					<% end %>
+				</tbody>
+			</table>
+		<% else %>
+			<p>No expense data for this period.</p>
+		<% end %>
+	</section>
+</div>

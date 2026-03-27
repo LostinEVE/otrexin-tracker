@@ -1,0 +1,244 @@
+/*
+ * This is a manifest file that'll be compiled into application.css.
+ *
+ * With Propshaft, assets are served efficiently without preprocessing steps. You can still include
+ * application-wide styles in this file, but keep in mind that CSS precedence will follow the standard
+ * cascading order, meaning styles declared later in the document or manifest will override earlier ones,
+ * depending on specificity.
+ *
+ * Consider organizing styles into separate files for maintainability.
+ */
+
+@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap");
+
+:root {
+	--bg: #f3f5f8;
+	--surface: #ffffff;
+	--surface-soft: #f8fafc;
+	--text: #172033;
+	--muted: #5f6c80;
+	--line: #d8dee8;
+	--brand: #0f2942;
+	--brand-2: #1e4a75;
+	--ok: #155724;
+	--warn: #856404;
+	--bad: #721c24;
+	--radius: 12px;
+	--shadow: 0 12px 28px rgba(20, 38, 62, 0.08);
+}
+
+* {
+	box-sizing: border-box;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+
+body.otr-body {
+	font-family: "Outfit", "Segoe UI", sans-serif;
+	color: var(--text);
+	background:
+		radial-gradient(circle at 10% -10%, #dde9f5 0, transparent 30%),
+		radial-gradient(circle at 95% -20%, #dae6f2 0, transparent 36%),
+		var(--bg);
+}
+
+.otr-nav {
+	position: sticky;
+	top: 0;
+	z-index: 1000;
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 8px;
+	min-height: 64px;
+	padding: 10px 18px;
+	background: linear-gradient(120deg, var(--brand), #132f4e 55%, var(--brand-2));
+	border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+	box-shadow: 0 10px 20px rgba(11, 27, 45, 0.28);
+}
+
+.otr-brand {
+	margin-right: 14px;
+	text-decoration: none;
+	color: #ffffff;
+	font-size: 1.1rem;
+	font-weight: 800;
+	letter-spacing: 0.02em;
+}
+
+.otr-nav-link {
+	text-decoration: none;
+	color: rgba(239, 246, 255, 0.9);
+	font-size: 0.92rem;
+	font-weight: 600;
+	padding: 8px 12px;
+	border-radius: 999px;
+	border: 1px solid transparent;
+	transition: 160ms ease;
+}
+
+.otr-nav-link:hover,
+.otr-nav-link:focus-visible {
+	color: #fff;
+	background: rgba(255, 255, 255, 0.14);
+	border-color: rgba(255, 255, 255, 0.2);
+}
+
+.otr-page {
+	max-width: 1200px;
+	margin: 18px auto 28px;
+	padding: 0 16px 18px;
+}
+
+h1,
+h2,
+h3 {
+	margin-top: 0;
+	letter-spacing: 0.01em;
+}
+
+h1 {
+	font-size: clamp(1.5rem, 2.2vw, 2rem);
+	margin-bottom: 12px;
+}
+
+h2,
+h3 {
+	color: #24334b;
+}
+
+p {
+	color: var(--muted);
+}
+
+table {
+	width: 100%;
+	border-collapse: collapse;
+	border: 1px solid var(--line);
+	border-radius: var(--radius);
+	overflow: hidden;
+	background: var(--surface);
+	box-shadow: var(--shadow);
+}
+
+th {
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	font-size: 0.72rem;
+	color: #4f5f77;
+}
+
+th,
+td {
+	padding: 10px;
+}
+
+tbody tr:nth-child(even) {
+	background: var(--surface-soft);
+}
+
+/* Form controls */
+input,
+select,
+textarea,
+button {
+	font-family: inherit;
+}
+
+input,
+select,
+textarea {
+	width: 100%;
+	max-width: 100%;
+	min-width: 0;
+	border: 1px solid #c7d1de;
+	border-radius: 10px;
+	background: #fff;
+	color: #223045;
+	padding: 10px 11px;
+	outline: none;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+	border-color: #4f83b6;
+	box-shadow: 0 0 0 3px rgba(79, 131, 182, 0.16);
+}
+
+input[type="submit"],
+button,
+a[href*="new_"] {
+	border: none;
+	border-radius: 10px;
+	background: linear-gradient(120deg, #17406a, #2d6aa4);
+	color: #fff;
+	font-weight: 700;
+	text-decoration: none;
+}
+
+/* Utility hardening for inline-styled blocks already in views */
+[style*="display:grid"] {
+	width: 100%;
+}
+
+[style*="grid-template-columns:repeat(4,1fr)"] {
+	grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)) !important;
+}
+
+[style*="grid-template-columns:repeat(3,1fr)"] {
+	grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)) !important;
+}
+
+[style*="grid-template-columns:repeat(2,1fr)"],
+[style*="grid-template-columns:1fr 1fr"] {
+	grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)) !important;
+}
+
+[style*="padding:14px;border:1px solid #ddd;border-radius:8px;text-align:center;"],
+[style*="padding:16px;border:1px solid #ddd;border-radius:8px;"] {
+	background: var(--surface) !important;
+	border: 1px solid var(--line) !important;
+	box-shadow: var(--shadow);
+}
+
+[style*="color: green"] {
+	color: var(--ok) !important;
+	font-weight: 600;
+}
+
+@media (max-width: 860px) {
+	.otr-nav {
+		gap: 6px;
+		padding: 10px 12px;
+	}
+
+	.otr-brand {
+		width: 100%;
+		margin-right: 0;
+	}
+
+	.otr-nav-link {
+		font-size: 0.85rem;
+		padding: 7px 10px;
+	}
+
+	.otr-page {
+		margin-top: 12px;
+		padding: 0 10px 16px;
+	}
+
+	table {
+		display: block;
+		overflow-x: auto;
+		white-space: nowrap;
+	}
+
+	h1 {
+		margin-bottom: 8px;
+	}
+}
