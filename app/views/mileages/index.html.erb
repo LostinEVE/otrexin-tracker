@@ -4,10 +4,10 @@
 
 <h1>🚨 Mileage Tracker</h1>
 
-<% total_miles = Mileage.total_miles %>
-<% total_rev   = Mileage.total_revenue %>
-<% rpm         = Mileage.overall_revenue_per_mile %>
-<% cpm         = Mileage.cost_per_mile %>
+<% total_miles = @total_miles %>
+<% total_rev   = @total_revenue %>
+<% rpm         = @revenue_per_mile %>
+<% cpm         = @cost_per_mile %>
 
 <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px;">
   <div style="padding:14px;border:1px solid #ddd;border-radius:8px;text-align:center;">

@@ -6,7 +6,7 @@ class MaintenancesController < ApplicationController
     @start_date = parse_date(params[:start_date])
     @end_date = parse_date(params[:end_date])
 
-    @maintenances = Maintenance.order(maintenance_date: :desc)
+    @maintenances = current_user.maintenances.order(maintenance_date: :desc)
     @maintenances = @maintenances.where("maintenance_date >= ?", @start_date) if @start_date
     @maintenances = @maintenances.where("maintenance_date <= ?", @end_date) if @end_date
 
@@ -36,7 +36,7 @@ class MaintenancesController < ApplicationController
 
   # POST /maintenances or /maintenances.json
   def create
-    @maintenance = Maintenance.new(maintenance_params)
+    @maintenance = current_user.maintenances.new(maintenance_params)
 
     respond_to do |format|
       if @maintenance.save
@@ -82,7 +82,7 @@ class MaintenancesController < ApplicationController
 
     # Use callbacks to share common setup or constraints between actions.
     def set_maintenance
-      @maintenance = Maintenance.find(params.expect(:id))
+      @maintenance = current_user.maintenances.find(params.expect(:id))
     end
 
     # Only allow a list of trusted parameters through.

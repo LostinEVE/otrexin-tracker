@@ -1,6 +1,6 @@
 class CustomersController < ApplicationController
   def index
-    all_invoices = Invoice.all
+    all_invoices = current_user.invoices
 
     grouped = all_invoices.group_by(&:customer_name)
 

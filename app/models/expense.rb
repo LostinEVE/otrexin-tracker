@@ -1,4 +1,6 @@
 class Expense < ApplicationRecord
+	belongs_to :user
+
 	require "csv"
 
 	def self.to_csv(records)

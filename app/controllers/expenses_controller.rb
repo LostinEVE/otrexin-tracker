@@ -6,7 +6,7 @@ class ExpensesController < ApplicationController
     @start_date = parse_date(params[:start_date])
     @end_date = parse_date(params[:end_date])
 
-    @expenses = Expense.order(expense_date: :desc)
+    @expenses = current_user.expenses.order(expense_date: :desc)
     @expenses = @expenses.where("expense_date >= ?", @start_date) if @start_date
     @expenses = @expenses.where("expense_date <= ?", @end_date) if @end_date
 
@@ -36,7 +36,7 @@ class ExpensesController < ApplicationController
 
   # POST /expenses or /expenses.json
   def create
-    @expense = Expense.new(expense_params)
+    @expense = current_user.expenses.new(expense_params)
 
     respond_to do |format|
       if @expense.save
@@ -82,7 +82,7 @@ class ExpensesController < ApplicationController
 
     # Use callbacks to share common setup or constraints between actions.
     def set_expense
-      @expense = Expense.find(params.expect(:id))
+      @expense = current_user.expenses.find(params.expect(:id))
     end
 
     # Only allow a list of trusted parameters through.

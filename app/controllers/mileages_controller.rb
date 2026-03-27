@@ -3,7 +3,12 @@ class MileagesController < ApplicationController
 
   # GET /mileages or /mileages.json
   def index
-    @mileages = Mileage.all
+    @mileages = current_user.mileages
+
+    @total_miles = @mileages.sum(:miles).to_f
+    @total_revenue = @mileages.sum(:revenue).to_f
+    @revenue_per_mile = @total_miles.positive? ? (@total_revenue / @total_miles).round(4) : nil
+    @cost_per_mile = @total_miles.positive? ? (current_user.expenses.sum(:amount).to_f / @total_miles).round(4) : nil
   end
 
   # GET /mileages/1 or /mileages/1.json
@@ -21,7 +26,7 @@ class MileagesController < ApplicationController
 
   # POST /mileages or /mileages.json
   def create
-    @mileage = Mileage.new(mileage_params)
+    @mileage = current_user.mileages.new(mileage_params)
 
     respond_to do |format|
       if @mileage.save
@@ -60,7 +65,7 @@ class MileagesController < ApplicationController
   private
     # Use callbacks to share common setup or constraints between actions.
     def set_mileage
-      @mileage = Mileage.find(params.expect(:id))
+      @mileage = current_user.mileages.find(params.expect(:id))
     end
 
     # Only allow a list of trusted parameters through.

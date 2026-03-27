@@ -1,4 +1,6 @@
 class Mileage < ApplicationRecord
+  belongs_to :user
+
   # Revenue per mile for a single trip
   def revenue_per_mile
     return nil unless miles.present? && miles > 0 && revenue.present?

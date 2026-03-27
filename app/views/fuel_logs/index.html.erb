@@ -4,10 +4,27 @@
 
 <h1>⛽ Fuel Log</h1>
 
-<% overall = FuelLog.overall_mpg %>
-<% avg10   = FuelLog.avg_mpg_last(10) %>
-<% total_gallons_mtd = FuelLog.where('fuel_date >= ?', Date.today.beginning_of_month).sum(:gallons) %>
-<% total_fuel_cost   = FuelLog.sum(:total_cost) %>
+<%
+  logs_all = @fuel_logs.order(:odometer).where('odometer IS NOT NULL AND gallons IS NOT NULL AND gallons > 0').to_a
+  overall = if logs_all.size > 1
+    miles = logs_all.last.odometer - logs_all.first.odometer
+    gals = logs_all.sum { |l| l.gallons.to_f }
+    (miles > 0 && gals > 0) ? (miles.to_f / gals).round(2) : nil
+  end
+
+  logs_last = @fuel_logs.order(odometer: :desc).where('odometer IS NOT NULL AND gallons IS NOT NULL AND gallons > 0').limit(11).to_a
+  avg10 = if logs_last.size > 1
+    mpgs = logs_last.each_cons(2).map do |newer, older|
+      miles = newer.odometer - older.odometer
+      next nil if miles <= 0
+      (miles.to_f / newer.gallons).round(2)
+    end.compact
+    mpgs.any? ? (mpgs.sum / mpgs.size).round(2) : nil
+  end
+
+  total_gallons_mtd = @fuel_logs.where('fuel_date >= ?', Date.today.beginning_of_month).sum(:gallons)
+  total_fuel_cost = @fuel_logs.sum(:total_cost)
+%>
 
 <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px;">
   <div style="padding:14px;border:1px solid #ddd;border-radius:8px;text-align:center;">

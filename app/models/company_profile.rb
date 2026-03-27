@@ -1,4 +1,6 @@
 class CompanyProfile < ApplicationRecord
+	belongs_to :user
+
 	def city_state_zip
 		[city, state, zip].reject(&:blank?).join(", ")
 	end

@@ -1,0 +1,24 @@
+<h1>Buy Me a Coffee</h1>
+
+<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-top:10px;">
+  <div style="padding:16px;border:1px solid #ddd;border-radius:8px;">
+    <h3 style="margin-top:0;">Support This App</h3>
+    <p style="margin:6px 0 10px;">If this tracker helps your business, you can support continued development.</p>
+    <p style="margin:0;">This is optional and not a product checkout.</p>
+  </div>
+
+  <div style="padding:16px;border:1px solid #ddd;border-radius:8px;">
+    <h3 style="margin-top:0;">PayPal Tip Jar</h3>
+
+    <% if @coffee_url.present? %>
+      <p style="margin:6px 0 12px;">Send a coffee with PayPal.</p>
+      <a href="<%= @coffee_url %>" target="_blank" rel="noopener" style="display:inline-block;padding:11px 14px;border-radius:8px;background:#0070ba;color:#fff;text-decoration:none;font-weight:700;">Buy Me a Coffee</a>
+      <p style="margin:10px 0 0;">
+        <%= link_to "I Sent Support", support_thank_you_path, style: "display:inline-block;padding:10px 12px;border-radius:8px;background:#17406a;color:#fff;text-decoration:none;font-weight:700;" %>
+      </p>
+    <% else %>
+      <p style="margin:6px 0 8px;color:#721c24;font-weight:600;">PAYPAL_BUY_ME_COFFEE_URL is not configured.</p>
+      <p style="margin:0;">Set <code>PAYPAL_BUY_ME_COFFEE_URL</code> in your environment to enable the tip link.</p>
+    <% end %>
+  </div>
+</div>

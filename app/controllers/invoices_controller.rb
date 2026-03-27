@@ -3,7 +3,7 @@ class InvoicesController < ApplicationController
 
   # GET /invoices or /invoices.json
   def index
-    @invoices = Invoice.all
+    @invoices = current_user.invoices
   end
 
   # GET /invoices/1 or /invoices/1.json
@@ -49,7 +49,7 @@ class InvoicesController < ApplicationController
 
   # POST /invoices or /invoices.json
   def create
-    @invoice = Invoice.new(invoice_params)
+    @invoice = current_user.invoices.new(invoice_params)
 
     respond_to do |format|
       if @invoice.save
@@ -88,7 +88,7 @@ class InvoicesController < ApplicationController
   private
     # Use callbacks to share common setup or constraints between actions.
     def set_invoice
-      @invoice = Invoice.find(params.expect(:id))
+      @invoice = current_user.invoices.find(params.expect(:id))
     end
 
     # Only allow a list of trusted parameters through.

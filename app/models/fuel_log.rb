@@ -1,4 +1,6 @@
 class FuelLog < ApplicationRecord
+  belongs_to :user
+
   # Returns miles driven and MPG compared to the PREVIOUS entry by odometer order.
   # Returns nil if there is no previous entry (first fill-up has no reference).
   def mpg_since_last_fill

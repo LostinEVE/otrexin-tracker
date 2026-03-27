@@ -15,10 +15,8 @@
     Taxable income for income tax = profit * 0.9235  (SE deduction)
 ========================================================== %>
 <% year = Date.today.year
-   year_start = Date.new(year, 1, 1)
-
-   ytd_revenue  = Invoice.where(status: 'paid').where('invoice_date >= ?', year_start).sum(:amount).to_f
-   ytd_expenses = Expense.where('expense_date >= ?', year_start).sum(:amount).to_f
+  ytd_revenue  = @ytd_revenue
+  ytd_expenses = @ytd_expenses
    ytd_profit   = ytd_revenue - ytd_expenses
 
    se_tax = [ytd_profit * 0.153, 0].max.round(2)

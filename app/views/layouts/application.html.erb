@@ -26,15 +26,23 @@
   <body class="otr-body">
     <nav class="otr-nav">
       <a href="/" class="otr-brand">OTR Tracker</a>
-      <%= link_to "Invoices", invoices_path, class: "otr-nav-link" %>
-      <%= link_to "Expenses", expenses_path, class: "otr-nav-link" %>
-      <%= link_to "Fuel Log", fuel_logs_path, class: "otr-nav-link" %>
-      <%= link_to "Mileage", mileages_path, class: "otr-nav-link" %>
-      <%= link_to "Maintenance", maintenances_path, class: "otr-nav-link" %>
-      <%= link_to "Customers", customers_path, class: "otr-nav-link" %>
-      <%= link_to "Taxes", tax_payments_path, class: "otr-nav-link" %>
-      <%= link_to "P&L", reports_profit_loss_path, class: "otr-nav-link" %>
-      <%= link_to "Company", company_profile_path, class: "otr-nav-link" %>
+      <% if logged_in? %>
+        <%= link_to "Invoices", invoices_path, class: "otr-nav-link" %>
+        <%= link_to "Expenses", expenses_path, class: "otr-nav-link" %>
+        <%= link_to "Fuel Log", fuel_logs_path, class: "otr-nav-link" %>
+        <%= link_to "Mileage", mileages_path, class: "otr-nav-link" %>
+        <%= link_to "Maintenance", maintenances_path, class: "otr-nav-link" %>
+        <%= link_to "Customers", customers_path, class: "otr-nav-link" %>
+        <%= link_to "Taxes", tax_payments_path, class: "otr-nav-link" %>
+        <%= link_to "P&L", reports_profit_loss_path, class: "otr-nav-link" %>
+        <%= link_to "Buy Me a Coffee", support_path, class: "otr-nav-link" %>
+        <%= link_to "Company", company_profile_path, class: "otr-nav-link" %>
+        <span class="otr-nav-link" style="opacity:0.9;">Signed in as <%= current_user.email %></span>
+        <%= button_to "Logout", logout_path, method: :delete, form: { style: "display:inline;" }, style: "padding:8px 12px;border:none;border-radius:999px;background:#7f1d1d;color:#fff;font-weight:700;" %>
+      <% else %>
+        <%= link_to "Sign In", login_path, class: "otr-nav-link" %>
+        <%= link_to "Create Account", signup_path, class: "otr-nav-link" %>
+      <% end %>
     </nav>
     <main class="otr-page">
       <%= yield %>

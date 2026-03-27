@@ -1,5 +1,13 @@
 Rails.application.routes.draw do
+  get "/signup", to: "registrations#new"
+  post "/signup", to: "registrations#create"
+  get "/login", to: "sessions#new"
+  post "/login", to: "sessions#create"
+  delete "/logout", to: "sessions#destroy"
+
   get "reports/profit_loss", to: "reports#profit_loss", as: :reports_profit_loss
+  get "support", to: "support#show", as: :support
+  get "support/thank_you", to: "support#thank_you", as: :support_thank_you
   resource :company_profile, only: [ :show, :edit, :update ]
   get "customers", to: "customers#index", as: :customers
   resources :tax_payments

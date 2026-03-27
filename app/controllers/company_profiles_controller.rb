@@ -18,7 +18,7 @@ class CompanyProfilesController < ApplicationController
   private
 
   def set_company_profile
-    @company_profile = current_company_profile
+    @company_profile = current_user.company_profile || current_user.build_company_profile
   end
 
   def company_profile_params

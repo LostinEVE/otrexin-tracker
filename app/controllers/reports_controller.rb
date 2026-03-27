@@ -1,14 +1,12 @@
 class ReportsController < ApplicationController
-  require "csv"
-
   def profit_loss
     @start_date = params[:start_date].present? ? Date.parse(params[:start_date]) : Date.current.beginning_of_year
     @end_date   = params[:end_date].present? ? Date.parse(params[:end_date]) : Date.current
 
-    paid_invoices = Invoice.where(status: "paid", invoice_date: @start_date..@end_date)
-    expense_rows = Expense.where(expense_date: @start_date..@end_date)
-    maintenance_rows = Maintenance.where(maintenance_date: @start_date..@end_date)
-    mileage_rows = Mileage.where(trip_date: @start_date..@end_date)
+    paid_invoices = current_user.invoices.where(status: "paid", invoice_date: @start_date..@end_date)
+    expense_rows = current_user.expenses.where(expense_date: @start_date..@end_date)
+    maintenance_rows = current_user.maintenances.where(maintenance_date: @start_date..@end_date)
+    mileage_rows = current_user.mileages.where(trip_date: @start_date..@end_date)
 
     @revenue_total = paid_invoices.sum(:amount).to_f
     @expense_total = expense_rows.sum(:amount).to_f

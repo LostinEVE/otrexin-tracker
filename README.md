@@ -99,6 +99,21 @@ Set environment variables before starting the app.
 
 If SMTP is not configured, invoice email send actions may fail.
 
+## Buy Me a Coffee (PayPal)
+
+You can add an optional PayPal tip link to support development.
+
+1. In PayPal, create a personal payment link (for example your PayPal.Me URL).
+2. Set this environment variable:
+
+```powershell
+$env:PAYPAL_BUY_ME_COFFEE_URL="https://www.paypal.com/your-tip-link"
+```
+
+3. Restart the app and open Buy Me a Coffee from the top navigation.
+
+For Render, add `PAYPAL_BUY_ME_COFFEE_URL` in the service environment variables.
+
 ## Report Exports
 
 Supported exports:

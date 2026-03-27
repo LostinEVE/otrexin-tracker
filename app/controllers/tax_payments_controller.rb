@@ -3,7 +3,10 @@ class TaxPaymentsController < ApplicationController
 
   # GET /tax_payments or /tax_payments.json
   def index
-    @tax_payments = TaxPayment.all
+    @tax_payments = current_user.tax_payments
+
+    @ytd_revenue = current_user.invoices.where(status: 'paid').where('invoice_date >= ?', Date.current.beginning_of_year).sum(:amount).to_f
+    @ytd_expenses = current_user.expenses.where('expense_date >= ?', Date.current.beginning_of_year).sum(:amount).to_f
   end
 
   # GET /tax_payments/1 or /tax_payments/1.json
@@ -21,7 +24,7 @@ class TaxPaymentsController < ApplicationController
 
   # POST /tax_payments or /tax_payments.json
   def create
-    @tax_payment = TaxPayment.new(tax_payment_params)
+    @tax_payment = current_user.tax_payments.new(tax_payment_params)
 
     respond_to do |format|
       if @tax_payment.save
@@ -60,7 +63,7 @@ class TaxPaymentsController < ApplicationController
   private
     # Use callbacks to share common setup or constraints between actions.
     def set_tax_payment
-      @tax_payment = TaxPayment.find(params.expect(:id))
+      @tax_payment = current_user.tax_payments.find(params.expect(:id))
     end
 
     # Only allow a list of trusted parameters through.
