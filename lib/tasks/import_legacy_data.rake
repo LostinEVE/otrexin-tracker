@@ -22,29 +22,46 @@ namespace :data do
 
     settings = root["settings"].is_a?(Hash) ? root["settings"] : {}
     company = (settings["company"] || root["company"] || {}).is_a?(Hash) ? (settings["company"] || root["company"]) : {}
+    import_user = find_or_create_import_user!
 
     if ENV["RESET"] == "true"
-      puts "RESET=true: clearing existing records..."
-      [TaxPayment, Maintenance, Mileage, FuelLog, Expense, Invoice, CompanyProfile].each(&:delete_all)
+      puts "RESET=true: clearing existing records for #{import_user.email}..."
+      import_user.tax_payments.delete_all
+      import_user.maintenances.delete_all
+      import_user.mileages.delete_all
+      import_user.fuel_logs.delete_all
+      import_user.expenses.delete_all
+      import_user.invoices.delete_all
+      import_user.company_profile&.destroy!
     end
 
     ActiveRecord::Base.transaction do
-      import_company(company)
-      import_invoices(invoices)
-      import_expenses(expenses)
-      import_fuel_logs(fuel_logs)
-      import_mileages(mileages)
-      import_maintenances(maintenances)
-      import_tax_payments(tax_payments)
+      import_company(company, import_user)
+      import_invoices(invoices, import_user)
+      import_expenses(expenses, import_user)
+      import_fuel_logs(fuel_logs, import_user)
+      import_mileages(mileages, import_user)
+      import_maintenances(maintenances, import_user)
+      import_tax_payments(tax_payments, import_user)
     end
 
-    puts "Import complete."
-    puts "Invoices: #{Invoice.count}"
-    puts "Expenses: #{Expense.count}"
-    puts "Fuel logs: #{FuelLog.count}"
-    puts "Mileages: #{Mileage.count}"
-    puts "Maintenances: #{Maintenance.count}"
-    puts "Tax payments: #{TaxPayment.count}"
+    puts "Import complete for #{import_user.email}."
+    puts "Invoices: #{import_user.invoices.count}"
+    puts "Expenses: #{import_user.expenses.count}"
+    puts "Fuel logs: #{import_user.fuel_logs.count}"
+    puts "Mileages: #{import_user.mileages.count}"
+    puts "Maintenances: #{import_user.maintenances.count}"
+    puts "Tax payments: #{import_user.tax_payments.count}"
+  end
+
+  def find_or_create_import_user!
+    email = ENV["IMPORT_USER_EMAIL"].presence || "owner@local.app"
+    password = ENV["IMPORT_USER_PASSWORD"].presence || "changeme123"
+
+    User.find_or_create_by!(email: email) do |user|
+      user.password = password
+      user.password_confirmation = password
+    end
   end
 
   def pick(root, *keys)
@@ -71,10 +88,10 @@ namespace :data do
     v.to_i
   end
 
-  def import_company(company)
+  def import_company(company, user)
     return if company.blank?
 
-    profile = CompanyProfile.first_or_initialize
+    profile = CompanyProfile.find_or_initialize_by(user: user)
     profile.assign_attributes(
       company_name: company["companyName"] || company["name"] || company["company_name"],
       address_line1: company["address1"] || company["address_line1"],
@@ -90,9 +107,10 @@ namespace :data do
     profile.save!
   end
 
-  def import_invoices(rows)
+  def import_invoices(rows, user)
     rows.each do |r|
       Invoice.create!(
+        user: user,
         invoice_number: r["invoiceNumber"] || r["invoice_number"],
         invoice_date: parse_date(r["invoiceDate"] || r["invoice_date"] || r["date"]),
         customer_name: r["customerName"] || r["customer_name"],
@@ -108,9 +126,10 @@ namespace :data do
     end
   end
 
-  def import_expenses(rows)
+  def import_expenses(rows, user)
     rows.each do |r|
       Expense.create!(
+        user: user,
         expense_date: parse_date(r["expenseDate"] || r["date"] || r["expense_date"]),
         category: (r["category"] || "other").to_s.downcase,
         vendor: r["vendor"] || r["merchant"],
@@ -121,9 +140,10 @@ namespace :data do
     end
   end
 
-  def import_fuel_logs(rows)
+  def import_fuel_logs(rows, user)
     rows.each do |r|
       FuelLog.create!(
+        user: user,
         fuel_date: parse_date(r["fuelDate"] || r["date"] || r["fuel_date"]),
         odometer: parse_int(r["odometer"]),
         gallons: parse_decimal(r["gallons"]),
@@ -136,9 +156,10 @@ namespace :data do
     end
   end
 
-  def import_mileages(rows)
+  def import_mileages(rows, user)
     rows.each do |r|
       Mileage.create!(
+        user: user,
         trip_date: parse_date(r["tripDate"] || r["date"] || r["trip_date"]),
         load_number: r["loadNumber"] || r["load_number"],
         origin: r["origin"],
@@ -150,9 +171,10 @@ namespace :data do
     end
   end
 
-  def import_maintenances(rows)
+  def import_maintenances(rows, user)
     rows.each do |r|
       Maintenance.create!(
+        user: user,
         maintenance_date: parse_date(r["maintenanceDate"] || r["date"] || r["maintenance_date"]),
         maintenance_type: (r["maintenanceType"] || r["type"] || r["maintenance_type"] || "other").to_s.downcase,
         cost: parse_decimal(r["cost"] || r["amount"]),
@@ -163,9 +185,10 @@ namespace :data do
     end
   end
 
-  def import_tax_payments(rows)
+  def import_tax_payments(rows, user)
     rows.each do |r|
       TaxPayment.create!(
+        user: user,
         payment_date: parse_date(r["paymentDate"] || r["date"] || r["payment_date"]),
         quarter: r["quarter"],
         amount: parse_decimal(r["amount"]),
