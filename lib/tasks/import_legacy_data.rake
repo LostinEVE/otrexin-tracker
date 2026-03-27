@@ -1,3 +1,5 @@
+require "csv"
+
 namespace :data do
   desc "Import legacy JSON data into Rails models. Usage: rake data:import_legacy_json[legacy.json] RESET=true"
   task :import_legacy_json, [ :file_path ] => :environment do |_t, args|
@@ -52,6 +54,64 @@ namespace :data do
     puts "Mileages: #{import_user.mileages.count}"
     puts "Maintenances: #{import_user.maintenances.count}"
     puts "Tax payments: #{import_user.tax_payments.count}"
+  end
+
+  desc "Import expenses from CSV. Usage: rake data:import_expenses_csv[path/to/expenses.csv]"
+  task :import_expenses_csv, [ :file_path ] => :environment do |_t, args|
+    path = args[:file_path] || ENV["FILE"]
+    raise "Provide file path: rake data:import_expenses_csv[path/to/file.csv]" if path.blank?
+
+    unless File.exist?(path)
+      raise "File not found: #{path}"
+    end
+
+    import_user = find_or_create_import_user!
+    imported = 0
+    skipped = 0
+    current_truck = nil
+
+    CSV.foreach(path, headers: true, header_converters: ->(h) { h.to_s.delete_prefix("\uFEFF").strip }) do |row|
+      values = row.to_h.transform_values { |v| v.is_a?(String) ? v.strip : v }
+      next if values.values.compact.all?(&:blank?)
+
+      truck = values["Truck"].presence
+      date_value = values["Date"].presence
+      category = values["Category"].presence
+      vendor = values["Vendor"].presence
+      amount = values["Amount"].presence
+      notes = values["Notes"].presence
+
+      # Old reports often include a section heading row like "Truck Name - EXPENSES".
+      if truck.present? && date_value.blank? && category.blank? && vendor.blank? && amount.blank? && notes.blank?
+        current_truck = truck.sub(/\s*-\s*EXPENSES\s*\z/i, "").strip
+        skipped += 1
+        next
+      end
+
+      expense_date = parse_date(date_value)
+      if expense_date.nil?
+        skipped += 1
+        next
+      end
+
+      truck_name = truck.presence || current_truck
+      combined_notes = [ notes, ("Truck: #{truck_name}" if truck_name.present?) ].compact.join(" | ")
+
+      Expense.create!(
+        user: import_user,
+        expense_date: expense_date,
+        category: (category || "other").downcase,
+        vendor: vendor,
+        amount: parse_decimal(amount),
+        notes: combined_notes.presence
+      )
+      imported += 1
+    end
+
+    puts "Expense CSV import complete for #{import_user.email}."
+    puts "Imported rows: #{imported}"
+    puts "Skipped rows: #{skipped}"
+    puts "Total expenses for user: #{import_user.expenses.count}"
   end
 
   def find_or_create_import_user!

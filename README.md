@@ -259,6 +259,19 @@ Usage on Render shell:
 bundle exec rails "data:import_legacy_json[/tmp/legacy-export.json]"
 ```
 
+### Import expense CSV from old app
+
+If you exported expense report CSV (columns like `Truck,Date,Category,Vendor,Amount,Notes`), use:
+
+```powershell
+$env:IMPORT_USER_EMAIL="your-login-email@example.com"
+ruby bin/rails "data:import_expenses_csv[C:/Users/you/Documents/expenses_by_truck.csv]"
+```
+
+Notes:
+- Section rows like `Truck Name - EXPENSES` are skipped automatically.
+- Truck name is appended into expense notes because the new expense model has no separate truck field.
+
 ### What gets imported
 
 - Invoices
