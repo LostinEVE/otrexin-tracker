@@ -160,6 +160,100 @@ Use:
 ruby bin/rails server
 ```
 
+## Deploy to Render
+
+This app is configured to run on Render with PostgreSQL in production.
+
+### 1. Create a Render PostgreSQL database
+
+In Render dashboard:
+- New > PostgreSQL
+- Name it (for example `otrexin-db`)
+
+### 2. Create the Render Web Service
+
+In Render dashboard:
+- New > Web Service
+- Connect your GitHub repo
+- Runtime: Ruby
+
+Use these commands:
+
+- Build Command:
+
+```bash
+bundle install && bundle exec rails assets:precompile && bundle exec rails db:migrate
+```
+
+- Start Command:
+
+```bash
+bundle exec puma -C config/puma.rb
+```
+
+### 3. Set environment variables
+
+Required:
+- `RAILS_MASTER_KEY` = value from your local `config/master.key`
+- `DATABASE_URL` = Render PostgreSQL internal URL (usually auto-set if linked)
+- `APP_HOST` = your Render domain (example `otrexin-tracker.onrender.com`)
+
+Optional for invoice email:
+- `SMTP_ADDRESS`
+- `SMTP_PORT` (usually `587`)
+- `SMTP_USERNAME`
+- `SMTP_PASSWORD`
+
+### 4. Deploy
+
+Trigger deploy after setting env vars.
+
+## Migrate Data From Old Cloud App
+
+Yes, you can move data from your old app into this Rails app.
+
+### Supported import format
+
+One JSON file, either:
+- direct object with arrays, or
+- wrapped object under `data`
+
+The importer supports common key names from your previous app.
+
+### Import task
+
+Task file:
+- `lib/tasks/import_legacy_data.rake`
+
+Usage locally:
+
+```powershell
+ruby bin/rails "data:import_legacy_json[C:/path/to/legacy-export.json]"
+```
+
+Reset existing data before import:
+
+```powershell
+$env:RESET="true"
+ruby bin/rails "data:import_legacy_json[C:/path/to/legacy-export.json]"
+```
+
+Usage on Render shell:
+
+```bash
+bundle exec rails "data:import_legacy_json[/tmp/legacy-export.json]"
+```
+
+### What gets imported
+
+- Invoices
+- Expenses
+- Fuel logs
+- Mileage trips
+- Maintenance records
+- Tax payments
+- Company profile/settings
+
 ### Push to GitHub fails with URL error 400
 
 You are likely using a placeholder URL.
