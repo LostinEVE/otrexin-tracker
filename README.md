@@ -99,6 +99,24 @@ Set environment variables before starting the app.
 
 If SMTP is not configured, emails are written to `tmp/mails` instead of being sent.
 
+### Local real email quick setup
+
+1. Copy `.env.example` to `.env` and fill your SMTP credentials.
+2. Install gems (adds `dotenv-rails`):
+
+```bash
+bundle install
+```
+
+3. Restart Rails server.
+4. Send a test email:
+
+```bash
+ruby bin/rails "mail:test[your-email@example.com]"
+```
+
+If the test succeeds, invoice emails will go out through SMTP instead of being written to `tmp/mails`.
+
 ## Buy Me a Coffee (PayPal)
 
 You can add an optional PayPal tip link to support development.

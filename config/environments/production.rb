@@ -59,13 +59,15 @@ Rails.application.configure do
   # Fall back to file delivery if SMTP is not configured.
   if ENV["SMTP_ADDRESS"].present?
     config.action_mailer.delivery_method = :smtp
+    smtp_auth = ENV.fetch("SMTP_AUTHENTICATION", "plain")
+    smtp_auth = smtp_auth.to_sym unless smtp_auth == "none"
     config.action_mailer.smtp_settings = {
       address: ENV["SMTP_ADDRESS"],
       port: ENV.fetch("SMTP_PORT", 587).to_i,
       user_name: ENV["SMTP_USERNAME"],
       password: ENV["SMTP_PASSWORD"],
-      authentication: :plain,
-      enable_starttls_auto: true
+      authentication: smtp_auth,
+      enable_starttls_auto: ENV.fetch("SMTP_ENABLE_STARTTLS_AUTO", "true") == "true"
     }
   else
     config.action_mailer.delivery_method = :file

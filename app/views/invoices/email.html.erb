@@ -8,6 +8,12 @@
 <h1>Email Invoice #<%= @invoice.invoice_number %></h1>
 <p style="margin-top:0;">Send a professional invoice email directly from the app.</p>
 
+<% if ActionMailer::Base.delivery_method == :file %>
+  <p style="margin-top:0;color:#856404;background:#fff3cd;border:1px solid #ffeeba;padding:10px 12px;border-radius:8px;">
+    SMTP is not configured. Emails from this form are saved to <strong>tmp/mails</strong> and are not sent to recipients.
+  </p>
+<% end %>
+
 <%= form_with url: send_email_invoice_path(@invoice), method: :post, local: true, style: "max-width:760px;display:grid;gap:10px;" do |f| %>
   <div>
     <label style="display:block;font-weight:600;">To</label>

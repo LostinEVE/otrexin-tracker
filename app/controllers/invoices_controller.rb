@@ -40,9 +40,13 @@ class InvoicesController < ApplicationController
       to: email_params[:to],
       subject: email_params[:subject],
       message: email_params[:message]
-    ).invoice_email.deliver_now
+    ).invoice_email.deliver_now!
 
-    redirect_to @invoice, notice: "Invoice emailed successfully to #{email_params[:to]}."
+    if ActionMailer::Base.delivery_method == :file
+      redirect_to @invoice, alert: "SMTP is not configured, so the email was written to tmp/mails instead of being sent."
+    else
+      redirect_to @invoice, notice: "Invoice emailed successfully to #{email_params[:to]}."
+    end
   rescue StandardError => e
     redirect_to email_invoice_path(@invoice), alert: "Could not send email: #{e.message}"
   end
