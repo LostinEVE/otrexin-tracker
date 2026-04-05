@@ -7,9 +7,10 @@ class InvoiceMailer < ApplicationMailer
     recipient = params[:to]
     subject_line = params[:subject].presence || "Invoice ##{@invoice.invoice_number}"
 
-    # Must send FROM the authenticated SMTP account or Outlook will reject the message.
+    # Must send FROM the authenticated SMTP account.
     # Use the company display name so the recipient sees a friendly sender name.
-    smtp_from = ENV["SMTP_USERNAME"].presence || "no-reply@otrinvextracker.local"
+    smtp_from = ENV["SMTP_FROM"].presence || ENV["SMTP_USERNAME"].presence
+    raise ArgumentError, "SMTP_FROM or SMTP_USERNAME env var must be set" if smtp_from.blank?
     company_name = @company&.company_name.presence || "Invoice"
     from_address = "#{company_name} <#{smtp_from}>"
 
