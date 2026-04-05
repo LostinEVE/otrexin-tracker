@@ -231,11 +231,15 @@ Required:
 - `DATABASE_URL` = Render PostgreSQL internal URL (usually auto-set if linked)
 - `APP_HOST` = your Render domain (example `otrexin-tracker.onrender.com`)
 
-Optional for invoice email:
-- `SMTP_ADDRESS`
-- `SMTP_PORT` (usually `587`)
-- `SMTP_USERNAME`
-- `SMTP_PASSWORD`
+Required for invoice email (Outlook / Microsoft 365):
+- `SMTP_ADDRESS` = `smtp.office365.com`
+- `SMTP_PORT` = `587`
+- `SMTP_USERNAME` = your full Outlook email address
+- `SMTP_PASSWORD` = your Outlook password or app password
+- `SMTP_AUTHENTICATION` = `login`
+- `SMTP_ENABLE_STARTTLS_AUTO` = `true`
+
+> **Note:** The local `.env` file is NOT used on Render. You must enter these values directly in the Render dashboard under your service's Environment tab. After saving, Render will redeploy automatically.
 
 ### 4. Deploy
 
