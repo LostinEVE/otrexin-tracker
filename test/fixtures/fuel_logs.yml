@@ -1,21 +1,37 @@
 # Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
 
 one:
-  fuel_date: 2026-03-26
-  odometer: 1
-  gallons: 9.99
-  price_per_gallon: 9.99
-  total_cost: 9.99
-  location: MyString
-  station: MyString
-  notes: MyText
+  user: one
+  truck: one
+  fuel_date: 2026-03-20
+  odometer: 1000
+  gallons: 50
+  price_per_gallon: 4.00
+  total_cost: 200
+  location: Memphis, TN
+  station: Pilot
+  notes: Start of run
 
 two:
-  fuel_date: 2026-03-26
-  odometer: 1
-  gallons: 9.99
-  price_per_gallon: 9.99
-  total_cost: 9.99
-  location: MyString
-  station: MyString
-  notes: MyText
+  user: one
+  truck: one
+  fuel_date: 2026-03-27
+  odometer: 1500
+  gallons: 50
+  price_per_gallon: 4.10
+  total_cost: 205
+  location: Little Rock, AR
+  station: Love's
+  notes: Mid route
+
+three:
+  user: one
+  truck: two
+  fuel_date: 2026-03-28
+  odometer: 2000
+  gallons: 75
+  price_per_gallon: 4.00
+  total_cost: 300
+  location: Dallas, TX
+  station: TA
+  notes: Different truck

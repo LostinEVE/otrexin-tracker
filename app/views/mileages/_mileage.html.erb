@@ -4,6 +4,7 @@
     <strong><%= mileage.trip_date %> — Load <%= mileage.load_number %></strong>
     <strong style="color:#155724;">$<%= number_with_precision(mileage.revenue, precision: 2) %></strong>
   </div>
+  <div style="font-size:13px;color:#666;margin-top:4px;">Truck: <%= mileage.truck.display_name %></div>
   <div style="font-size:14px;margin-top:4px;color:#555;">
     <%= mileage.origin %> &rarr; <%= mileage.destination %>
   </div>

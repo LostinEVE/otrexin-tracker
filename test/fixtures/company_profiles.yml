@@ -1,25 +1,27 @@
 # Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
 
 one:
-  company_name: MyString
-  address_line1: MyString
-  address_line2: MyString
-  city: MyString
-  state: MyString
-  zip: MyString
-  phone: MyString
-  email: MyString
-  dot_number: MyString
-  mc_number: MyString
+  user: one
+  company_name: One Trucking LLC
+  address_line1: 123 Main St
+  address_line2: Suite 1
+  city: Memphis
+  state: TN
+  zip: 38103
+  phone: 555-111-1111
+  email: office1@example.com
+  dot_number: DOT111
+  mc_number: MC111
 
 two:
-  company_name: MyString
-  address_line1: MyString
-  address_line2: MyString
-  city: MyString
-  state: MyString
-  zip: MyString
-  phone: MyString
-  email: MyString
-  dot_number: MyString
-  mc_number: MyString
+  user: two
+  company_name: Two Trucking LLC
+  address_line1: 500 State St
+  address_line2: 
+  city: Nashville
+  state: TN
+  zip: 37201
+  phone: 555-222-2222
+  email: office2@example.com
+  dot_number: DOT222
+  mc_number: MC222

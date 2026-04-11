@@ -10,6 +10,7 @@ class RegistrationsController < ApplicationController
     @user.email = @user.email.to_s.strip.downcase
 
     if @user.save
+      @user.trucks.create!(name: "Primary Truck", active: true)
       session[:user_id] = @user.id
       redirect_to root_path, notice: "Account created. Your cloud workspace is ready."
     else

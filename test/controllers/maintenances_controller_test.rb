@@ -2,6 +2,7 @@ require "test_helper"
 
 class MaintenancesControllerTest < ActionDispatch::IntegrationTest
   setup do
+    sign_in_as(users(:one))
     @maintenance = maintenances(:one)
   end
 
@@ -17,7 +18,7 @@ class MaintenancesControllerTest < ActionDispatch::IntegrationTest
 
   test "should create maintenance" do
     assert_difference("Maintenance.count") do
-      post maintenances_url, params: { maintenance: { cost: @maintenance.cost, maintenance_date: @maintenance.maintenance_date, maintenance_type: @maintenance.maintenance_type, notes: @maintenance.notes, odometer: @maintenance.odometer, vendor: @maintenance.vendor } }
+      post maintenances_url, params: { maintenance: { cost: @maintenance.cost, maintenance_date: @maintenance.maintenance_date, maintenance_type: @maintenance.maintenance_type, notes: @maintenance.notes, odometer: @maintenance.odometer, vendor: @maintenance.vendor, truck_id: @maintenance.truck_id } }
     end
 
     assert_redirected_to maintenance_url(Maintenance.last)
@@ -34,7 +35,7 @@ class MaintenancesControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "should update maintenance" do
-    patch maintenance_url(@maintenance), params: { maintenance: { cost: @maintenance.cost, maintenance_date: @maintenance.maintenance_date, maintenance_type: @maintenance.maintenance_type, notes: @maintenance.notes, odometer: @maintenance.odometer, vendor: @maintenance.vendor } }
+    patch maintenance_url(@maintenance), params: { maintenance: { cost: @maintenance.cost, maintenance_date: @maintenance.maintenance_date, maintenance_type: @maintenance.maintenance_type, notes: @maintenance.notes, odometer: @maintenance.odometer, vendor: @maintenance.vendor, truck_id: @maintenance.truck_id } }
     assert_redirected_to maintenance_url(@maintenance)
   end
 

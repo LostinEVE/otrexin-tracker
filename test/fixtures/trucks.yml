@@ -1,0 +1,29 @@
+one:
+  user: one
+  name: Primary Truck
+  unit_number: T-1
+  vin: VINPRIMARY1
+  year: 2024
+  make: Freightliner
+  model: Cascadia
+  active: true
+
+two:
+  user: one
+  name: Secondary Truck
+  unit_number: T-2
+  vin: VINSECOND2
+  year: 2022
+  make: Peterbilt
+  model: 579
+  active: true
+
+three:
+  user: two
+  name: Fleet Truck
+  unit_number: T-9
+  vin: VINFLEET9
+  year: 2021
+  make: Kenworth
+  model: T680
+  active: true

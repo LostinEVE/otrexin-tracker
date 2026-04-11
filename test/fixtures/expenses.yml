@@ -1,15 +1,31 @@
 # Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
 
 one:
+  user: one
+  truck: one
   expense_date: 2026-03-26
-  category: MyString
-  vendor: MyString
-  amount: 9.99
-  notes: MyText
+  category: fuel
+  vendor: Pilot
+  amount: 800
+  gallons: 200
+  notes: Fuel advances
 
 two:
-  expense_date: 2026-03-26
-  category: MyString
-  vendor: MyString
-  amount: 9.99
-  notes: MyText
+  user: one
+  truck: one
+  expense_date: 2026-03-29
+  category: tolls
+  vendor: Toll Road
+  amount: 300
+  gallons: 
+  notes: Toll charges
+
+three:
+  user: one
+  truck: two
+  expense_date: 2026-03-30
+  category: maintenance
+  vendor: Shop
+  amount: 550
+  gallons: 
+  notes: Separate truck expense

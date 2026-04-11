@@ -7,6 +7,13 @@
 
 <%= form_with url: reports_profit_loss_path, method: :get, local: true, style: "display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;max-width:760px;margin-bottom:16px;" do |f| %>
 	<div>
+		<%= f.label :truck_id, "Truck", style: "display:block;font-weight:600;" %>
+		<%= f.select :truck_id,
+			options_from_collection_for_select(current_trucks, :id, :display_name, selected_truck&.id),
+			{ include_blank: "All trucks" },
+			style: "padding:10px;width:100%;" %>
+	</div>
+	<div>
 		<%= f.label :start_date, "Start Date", style: "display:block;font-weight:600;" %>
 		<%= f.date_field :start_date, value: @start_date %>
 	</div>
@@ -16,7 +23,7 @@
 	</div>
 	<div style="align-self:end;display:flex;gap:8px;flex-wrap:wrap;">
 		<%= f.submit "Run Report", style: "padding:10px 14px;font-weight:700;" %>
-		<%= link_to "Export CSV", reports_profit_loss_path(format: :csv, start_date: @start_date, end_date: @end_date), style: "padding:10px 14px;font-weight:700;display:inline-block;" %>
+		<%= link_to "Export CSV", reports_profit_loss_path(format: :csv, truck_id: selected_truck&.id, start_date: @start_date, end_date: @end_date), style: "padding:10px 14px;font-weight:700;display:inline-block;" %>
 		<a href="#" onclick="window.print();return false;" style="padding:10px 14px;font-weight:700;display:inline-block;">Print / Save PDF</a>
 	</div>
 <% end %>
@@ -42,6 +49,14 @@
 		<div style="font-size:12px;color:#66748a;">Cost / Mile</div>
 		<div style="font-size:24px;font-weight:800;"><%= @cost_per_mile ? "$#{@cost_per_mile}" : "-" %></div>
 	</div>
+	<div style="padding:14px;border:1px solid #d8dee8;border-radius:12px;background:#fff;">
+		<div style="font-size:12px;color:#66748a;">Tax Adjustments</div>
+		<div style="font-size:24px;font-weight:800;color:#0d6efd;">$<%= number_with_precision(@tax_adjustment_total, precision: 2, delimiter: ',') %></div>
+	</div>
+	<div style="padding:14px;border:1px solid #d8dee8;border-radius:12px;background:#fff;">
+		<div style="font-size:12px;color:#66748a;">Taxable Profit Est.</div>
+		<div style="font-size:24px;font-weight:800;color:<%= @taxable_profit_estimate >= 0 ? '#155724' : '#721c24' %> ;">$<%= number_with_precision(@taxable_profit_estimate, precision: 2, delimiter: ',') %></div>
+	</div>
 </div>
 
 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;">
@@ -54,6 +69,9 @@
 				<tr><td>Maintenance Total</td><td style="text-align:right;">$<%= number_with_precision(@maintenance_total, precision: 2) %></td></tr>
 				<tr><td><strong>Operating Cost Total</strong></td><td style="text-align:right;"><strong>$<%= number_with_precision(@operating_cost_total, precision: 2) %></strong></td></tr>
 				<tr><td><strong>Net Profit</strong></td><td style="text-align:right;"><strong>$<%= number_with_precision(@net_profit, precision: 2) %></strong></td></tr>
+				<tr><td>Per Diem Deductions</td><td style="text-align:right;">$<%= number_with_precision(@per_diem_total, precision: 2) %></td></tr>
+				<tr><td>Depreciation Deductions</td><td style="text-align:right;">$<%= number_with_precision(@depreciation_total, precision: 2) %></td></tr>
+				<tr><td><strong>Taxable Profit Estimate</strong></td><td style="text-align:right;"><strong>$<%= number_with_precision(@taxable_profit_estimate, precision: 2) %></strong></td></tr>
 			</tbody>
 		</table>
 	</section>

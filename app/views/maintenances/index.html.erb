@@ -6,6 +6,13 @@
 
 <%= form_with url: maintenances_path, method: :get, local: true, style: "display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;max-width:700px;margin-bottom:12px;" do |f| %>
   <div>
+    <%= f.label :truck_id, "Truck", style: "display:block;font-weight:600;" %>
+    <%= f.select :truck_id,
+      options_from_collection_for_select(@trucks, :id, :display_name, selected_truck&.id),
+        { include_blank: "All trucks" },
+        style: "padding:10px;width:100%;" %>
+  </div>
+  <div>
     <%= f.label :start_date, "Start Date", style: "display:block;font-weight:600;" %>
     <%= f.date_field :start_date, value: @start_date %>
   </div>
@@ -19,13 +26,13 @@
 <% end %>
 
 <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
-  <%= link_to "Export Maintenance Report (CSV)", maintenances_path(format: :csv, start_date: @start_date, end_date: @end_date), style: "padding:10px 14px;font-weight:700;display:inline-block;" %>
-  <%= link_to "+ Add Service Record", new_maintenance_path, style: "padding:10px 14px;font-weight:700;display:inline-block;" %>
+  <%= link_to "Export Maintenance Report (CSV)", maintenances_path(format: :csv, truck_id: selected_truck&.id, start_date: @start_date, end_date: @end_date), style: "padding:10px 14px;font-weight:700;display:inline-block;" %>
+  <%= link_to "+ Add Service Record", new_maintenance_path(truck_id: selected_truck&.id), style: "padding:10px 14px;font-weight:700;display:inline-block;" %>
 </div>
 
-<% total_cost = Maintenance.sum(:cost) %>
-<% total_records = Maintenance.count %>
-<% mtd_cost = Maintenance.where('maintenance_date >= ?', Date.today.beginning_of_month).sum(:cost) %>
+<% total_cost = @maintenances.sum(:cost) %>
+<% total_records = @maintenances.count %>
+<% mtd_cost = @maintenances.where('maintenance_date >= ?', Date.today.beginning_of_month).sum(:cost) %>
 
 <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px;">
   <div style="padding:14px;border:1px solid #ddd;border-radius:8px;text-align:center;">

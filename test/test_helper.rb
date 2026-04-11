@@ -12,4 +12,15 @@ module ActiveSupport
 
     # Add more helper methods to be used by all tests here...
   end
+
+  module AuthenticationHelpers
+    def sign_in_as(user, password: "password123")
+      post login_url, params: { email: user.email, password: password }
+      assert_response :redirect
+    end
+  end
+end
+
+class ActionDispatch::IntegrationTest
+  include ActiveSupport::AuthenticationHelpers
 end

@@ -4,43 +4,34 @@
 
 <h1>⛽ Fuel Log</h1>
 
-<%
-  logs_all = @fuel_logs.order(:odometer).where('odometer IS NOT NULL AND gallons IS NOT NULL AND gallons > 0').to_a
-  overall = if logs_all.size > 1
-    miles = logs_all.last.odometer - logs_all.first.odometer
-    gals = logs_all.sum { |l| l.gallons.to_f }
-    (miles > 0 && gals > 0) ? (miles.to_f / gals).round(2) : nil
-  end
-
-  logs_last = @fuel_logs.order(odometer: :desc).where('odometer IS NOT NULL AND gallons IS NOT NULL AND gallons > 0').limit(11).to_a
-  avg10 = if logs_last.size > 1
-    mpgs = logs_last.each_cons(2).map do |newer, older|
-      miles = newer.odometer - older.odometer
-      next nil if miles <= 0
-      (miles.to_f / newer.gallons).round(2)
-    end.compact
-    mpgs.any? ? (mpgs.sum / mpgs.size).round(2) : nil
-  end
-
-  total_gallons_mtd = @fuel_logs.where('fuel_date >= ?', Date.today.beginning_of_month).sum(:gallons)
-  total_fuel_cost = @fuel_logs.sum(:total_cost)
-%>
+<%= form_with url: fuel_logs_path, method: :get, local: true, style: "display:flex;gap:10px;align-items:end;flex-wrap:wrap;margin-bottom:16px;" do |f| %>
+  <div>
+    <%= f.label :truck_id, "Truck", style: "display:block;font-weight:600;" %>
+    <%= f.select :truck_id,
+      options_from_collection_for_select(@trucks, :id, :display_name, selected_truck&.id),
+        { include_blank: "All trucks" },
+        style: "padding:10px;min-width:220px;" %>
+  </div>
+  <div>
+    <%= f.submit "Filter", style: "padding:10px 14px;font-weight:700;" %>
+  </div>
+<% end %>
 
 <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px;">
   <div style="padding:14px;border:1px solid #ddd;border-radius:8px;text-align:center;">
-    <div style="font-size:22px;font-weight:700;"><%= overall&.to_s || '—' %></div>
+    <div style="font-size:22px;font-weight:700;"><%= @overall_mpg&.to_s || '—' %></div>
     <div style="font-size:12px;color:#555;">Overall MPG</div>
   </div>
   <div style="padding:14px;border:1px solid #ddd;border-radius:8px;text-align:center;">
-    <div style="font-size:22px;font-weight:700;"><%= avg10&.to_s || '—' %></div>
+    <div style="font-size:22px;font-weight:700;"><%= @avg10&.to_s || '—' %></div>
     <div style="font-size:12px;color:#555;">Avg MPG (last 10)</div>
   </div>
   <div style="padding:14px;border:1px solid #ddd;border-radius:8px;text-align:center;">
-    <div style="font-size:22px;font-weight:700;"><%= number_with_precision(total_gallons_mtd, precision: 1) %></div>
+    <div style="font-size:22px;font-weight:700;"><%= number_with_precision(@total_gallons_mtd, precision: 1) %></div>
     <div style="font-size:12px;color:#555;">Gallons MTD</div>
   </div>
   <div style="padding:14px;border:1px solid #ddd;border-radius:8px;text-align:center;">
-    <div style="font-size:22px;font-weight:700;">$<%= number_with_precision(total_fuel_cost, precision: 2) %></div>
+    <div style="font-size:22px;font-weight:700;">$<%= number_with_precision(@total_fuel_cost, precision: 2) %></div>
     <div style="font-size:12px;color:#555;">Total Fuel Cost</div>
   </div>
 </div>
@@ -55,4 +46,4 @@
   <% end %>
 </div>
 
-<%= link_to "+ Add Fuel Entry", new_fuel_log_path, style: "padding:12px 20px;font-weight:700;display:inline-block;margin-top:10px;" %>
+<%= link_to "+ Add Fuel Entry", new_fuel_log_path(truck_id: selected_truck&.id), style: "padding:12px 20px;font-weight:700;display:inline-block;margin-top:10px;" %>

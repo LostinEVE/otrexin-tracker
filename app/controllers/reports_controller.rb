@@ -7,12 +7,29 @@ class ReportsController < ApplicationController
     expense_rows = current_user.expenses.where(expense_date: @start_date..@end_date)
     maintenance_rows = current_user.maintenances.where(maintenance_date: @start_date..@end_date)
     mileage_rows = current_user.mileages.where(trip_date: @start_date..@end_date)
+    per_diem_rows = current_user.per_diem_entries
+    depreciation_assets = current_user.depreciation_assets.where('placed_in_service_date <= ?', @end_date)
+
+    if selected_truck
+      paid_invoices = paid_invoices.where(truck: selected_truck)
+      expense_rows = expense_rows.where(truck: selected_truck)
+      maintenance_rows = maintenance_rows.where(truck: selected_truck)
+      mileage_rows = mileage_rows.where(truck: selected_truck)
+      per_diem_rows = per_diem_rows.where(truck: selected_truck)
+      depreciation_assets = depreciation_assets.where(truck: selected_truck)
+    end
+
+    per_diem_rows = per_diem_rows.select { |entry| entry.overlaps_period?(@start_date, @end_date) }
 
     @revenue_total = paid_invoices.sum(:amount).to_f
     @expense_total = expense_rows.sum(:amount).to_f
     @maintenance_total = maintenance_rows.sum(:cost).to_f
     @operating_cost_total = @expense_total + @maintenance_total
     @net_profit = @revenue_total - @operating_cost_total
+    @per_diem_total = per_diem_rows.sum(&:deduction_amount).to_f
+    @depreciation_total = depreciation_assets.sum { |asset| asset.deduction_for_period(@start_date, @end_date) }.to_f
+    @tax_adjustment_total = @per_diem_total + @depreciation_total
+    @taxable_profit_estimate = @net_profit - @tax_adjustment_total
 
     @expense_by_category = expense_rows.group(:category).sum(:amount).sort_by { |_k, v| -v.to_f }
 
@@ -47,6 +64,10 @@ class ReportsController < ApplicationController
       csv << ["Maintenance", @maintenance_total.round(2)]
       csv << ["Operating Cost Total", @operating_cost_total.round(2)]
       csv << ["Net Profit", @net_profit.round(2)]
+      csv << ["Per Diem Deductions", @per_diem_total.round(2)]
+      csv << ["Depreciation Deductions", @depreciation_total.round(2)]
+      csv << ["Tax Adjustment Total", @tax_adjustment_total.round(2)]
+      csv << ["Taxable Profit Estimate", @taxable_profit_estimate.round(2)]
       csv << ["Revenue per Mile", @revenue_per_mile]
       csv << ["Cost per Mile", @cost_per_mile]
       csv << []

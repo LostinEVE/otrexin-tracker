@@ -2,6 +2,7 @@ require "test_helper"
 
 class TaxPaymentsControllerTest < ActionDispatch::IntegrationTest
   setup do
+    sign_in_as(users(:one))
     @tax_payment = tax_payments(:one)
   end
 
@@ -20,7 +21,7 @@ class TaxPaymentsControllerTest < ActionDispatch::IntegrationTest
       post tax_payments_url, params: { tax_payment: { amount: @tax_payment.amount, notes: @tax_payment.notes, payment_date: @tax_payment.payment_date, quarter: @tax_payment.quarter } }
     end
 
-    assert_redirected_to tax_payment_url(TaxPayment.last)
+    assert_redirected_to tax_payments_url
   end
 
   test "should show tax_payment" do

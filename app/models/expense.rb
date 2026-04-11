@@ -1,13 +1,15 @@
 class Expense < ApplicationRecord
 	belongs_to :user
+	belongs_to :truck
 
 	require "csv"
 
 	def self.to_csv(records)
 		CSV.generate(headers: true) do |csv|
-			csv << ["Date", "Category", "Vendor", "Amount", "Gallons", "Notes"]
+			csv << ["Truck", "Date", "Category", "Vendor", "Amount", "Gallons", "Notes"]
 			records.each do |expense|
 				csv << [
+					expense.truck&.display_name,
 					expense.expense_date,
 					expense.category,
 					expense.vendor,

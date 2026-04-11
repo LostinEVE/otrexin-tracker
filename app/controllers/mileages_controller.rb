@@ -1,14 +1,19 @@
 class MileagesController < ApplicationController
   before_action :set_mileage, only: %i[ show edit update destroy ]
+  before_action :ensure_trucks!
+  before_action :set_trucks, only: %i[ index new edit create update ]
 
   # GET /mileages or /mileages.json
   def index
-    @mileages = current_user.mileages
+    @mileages = current_user.mileages.includes(:truck)
+    @mileages = @mileages.where(truck: selected_truck) if selected_truck
 
     @total_miles = @mileages.sum(:miles).to_f
     @total_revenue = @mileages.sum(:revenue).to_f
     @revenue_per_mile = @total_miles.positive? ? (@total_revenue / @total_miles).round(4) : nil
-    @cost_per_mile = @total_miles.positive? ? (current_user.expenses.sum(:amount).to_f / @total_miles).round(4) : nil
+    expense_scope = current_user.expenses
+    expense_scope = expense_scope.where(truck: selected_truck) if selected_truck
+    @cost_per_mile = @total_miles.positive? ? (expense_scope.sum(:amount).to_f / @total_miles).round(4) : nil
   end
 
   # GET /mileages/1 or /mileages/1.json
@@ -17,7 +22,7 @@ class MileagesController < ApplicationController
 
   # GET /mileages/new
   def new
-    @mileage = Mileage.new
+    @mileage = current_user.mileages.new(truck: selected_truck || current_user.default_truck)
   end
 
   # GET /mileages/1/edit
@@ -26,7 +31,10 @@ class MileagesController < ApplicationController
 
   # POST /mileages or /mileages.json
   def create
-    @mileage = current_user.mileages.new(mileage_params)
+    permitted = mileage_params
+    truck_id = permitted.delete(:truck_id)
+    @mileage = current_user.mileages.new(permitted)
+    assign_owned_truck(@mileage, truck_id)
 
     respond_to do |format|
       if @mileage.save
@@ -41,8 +49,12 @@ class MileagesController < ApplicationController
 
   # PATCH/PUT /mileages/1 or /mileages/1.json
   def update
+    permitted = mileage_params
+    truck_id = permitted.delete(:truck_id)
+    assign_owned_truck(@mileage, truck_id)
+
     respond_to do |format|
-      if @mileage.update(mileage_params)
+      if @mileage.update(permitted)
         format.html { redirect_to @mileage, notice: "Mileage was successfully updated.", status: :see_other }
         format.json { render :show, status: :ok, location: @mileage }
       else
@@ -70,6 +82,10 @@ class MileagesController < ApplicationController
 
     # Only allow a list of trusted parameters through.
     def mileage_params
-      params.expect(mileage: [ :trip_date, :load_number, :origin, :destination, :miles, :revenue, :notes ])
+      params.expect(mileage: [ :trip_date, :load_number, :origin, :destination, :miles, :revenue, :notes, :truck_id ])
+    end
+
+    def set_trucks
+      @trucks = current_trucks
     end
 end

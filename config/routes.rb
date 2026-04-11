@@ -10,6 +10,9 @@ Rails.application.routes.draw do
   get "support/thank_you", to: "support#thank_you", as: :support_thank_you
   resource :company_profile, only: [ :show, :edit, :update ]
   get "customers", to: "customers#index", as: :customers
+  resources :trucks, except: [ :show ]
+  resources :per_diem_entries, except: [ :show ]
+  resources :depreciation_assets, except: [ :show ]
   resources :tax_payments
   resources :maintenances
   resources :mileages

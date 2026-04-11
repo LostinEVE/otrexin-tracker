@@ -1,9 +1,12 @@
 class InvoicesController < ApplicationController
   before_action :set_invoice, only: %i[ show edit update destroy email send_email ]
+  before_action :ensure_trucks!
+  before_action :set_trucks, only: %i[ index new edit create update ]
 
   # GET /invoices or /invoices.json
   def index
-    @invoices = current_user.invoices
+    @invoices = current_user.invoices.includes(:truck)
+    @invoices = @invoices.where(truck: selected_truck) if selected_truck
   end
 
   # GET /invoices/1 or /invoices/1.json
@@ -12,7 +15,7 @@ class InvoicesController < ApplicationController
 
   # GET /invoices/new
   def new
-    @invoice = Invoice.new
+    @invoice = current_user.invoices.new(truck: selected_truck || current_user.default_truck)
   end
 
   # GET /invoices/1/edit
@@ -53,7 +56,10 @@ class InvoicesController < ApplicationController
 
   # POST /invoices or /invoices.json
   def create
-    @invoice = current_user.invoices.new(invoice_params)
+    permitted = invoice_params
+    truck_id = permitted.delete(:truck_id)
+    @invoice = current_user.invoices.new(permitted)
+    assign_owned_truck(@invoice, truck_id)
 
     respond_to do |format|
       if @invoice.save
@@ -68,8 +74,12 @@ class InvoicesController < ApplicationController
 
   # PATCH/PUT /invoices/1 or /invoices/1.json
   def update
+    permitted = invoice_params
+    truck_id = permitted.delete(:truck_id)
+    assign_owned_truck(@invoice, truck_id)
+
     respond_to do |format|
-      if @invoice.update(invoice_params)
+      if @invoice.update(permitted)
         format.html { redirect_to @invoice, notice: "Invoice was successfully updated.", status: :see_other }
         format.json { render :show, status: :ok, location: @invoice }
       else
@@ -97,6 +107,10 @@ class InvoicesController < ApplicationController
 
     # Only allow a list of trusted parameters through.
     def invoice_params
-      params.expect(invoice: [ :invoice_number, :invoice_date, :customer_name, :load_number, :delivery_date, :amount, :product_description, :piece_count, :rate_per_piece, :status, :notes ])
+      params.expect(invoice: [ :invoice_number, :invoice_date, :customer_name, :load_number, :delivery_date, :amount, :product_description, :piece_count, :rate_per_piece, :status, :notes, :truck_id ])
+    end
+
+    def set_trucks
+      @trucks = current_trucks
     end
 end

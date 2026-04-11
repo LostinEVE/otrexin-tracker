@@ -16,6 +16,7 @@
     <strong><%= category_labels[expense.category] || expense.category %></strong>
     <strong style="color:#155724;">$<%= number_with_precision(expense.amount, precision: 2) %></strong>
   </div>
+  <div style="color:#555; font-size:14px;">Truck: <%= expense.truck.display_name %></div>
   <div style="color:#555; font-size:14px;">
     <%= expense.expense_date %> &mdash; <%= expense.vendor.presence || "No vendor" %>
   </div>

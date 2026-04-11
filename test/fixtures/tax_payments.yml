@@ -1,13 +1,15 @@
 # Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
 
 one:
+  user: one
   payment_date: 2026-03-26
-  quarter: MyString
-  amount: 9.99
-  notes: MyText
+  quarter: Q1
+  amount: 500
+  notes: First estimate
 
 two:
+  user: two
   payment_date: 2026-03-26
-  quarter: MyString
-  amount: 9.99
-  notes: MyText
+  quarter: Q1
+  amount: 250
+  notes: Other user

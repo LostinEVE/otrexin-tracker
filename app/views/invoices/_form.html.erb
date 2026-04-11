@@ -19,6 +19,13 @@
 
     <h3 style="margin:0;">Load Details</h3>
 
+    <div>
+      <%= form.label :truck_id, "Truck", style: "display:block;font-weight:600;" %>
+      <%= form.collection_select :truck_id, @trucks, :id, :display_name,
+          { prompt: "Select a truck" },
+          style: "width:100%;padding:10px;" %>
+    </div>
+
     <div class="safe-two-col">
       <div>
         <%= form.label :invoice_number, "Invoice #", style: "display:block;font-weight:600;" %>

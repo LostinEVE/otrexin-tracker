@@ -5,6 +5,19 @@
 <h1>Invoices</h1>
 <p style="margin-top:0;color:#5f6c80;">Use the <strong>Email Invoice</strong> button on each invoice card to send it directly from the app.</p>
 
+<%= form_with url: invoices_path, method: :get, local: true, style: "display:flex;gap:10px;align-items:end;flex-wrap:wrap;margin-bottom:16px;" do |f| %>
+  <div>
+    <%= f.label :truck_id, "Truck", style: "display:block;font-weight:600;" %>
+    <%= f.select :truck_id,
+      options_from_collection_for_select(@trucks, :id, :display_name, selected_truck&.id),
+        { include_blank: "All trucks" },
+        style: "padding:10px;min-width:220px;" %>
+  </div>
+  <div>
+    <%= f.submit "Filter", style: "padding:10px 14px;font-weight:700;" %>
+  </div>
+<% end %>
+
 <div id="invoices">
   <% if @invoices.any? %>
     <% @invoices.each do |invoice| %>
@@ -15,4 +28,4 @@
   <% end %>
 </div>
 
-<%= link_to "New Invoice", new_invoice_path, style: "padding:10px 14px;font-weight:700;display:inline-block;" %>
+<%= link_to "New Invoice", new_invoice_path(truck_id: selected_truck&.id), style: "padding:10px 14px;font-weight:700;display:inline-block;" %>

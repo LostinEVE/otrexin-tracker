@@ -1,12 +1,15 @@
 class MaintenancesController < ApplicationController
   before_action :set_maintenance, only: %i[ show edit update destroy ]
+  before_action :ensure_trucks!
+  before_action :set_trucks, only: %i[ index new edit create update ]
 
   # GET /maintenances or /maintenances.json
   def index
     @start_date = parse_date(params[:start_date])
     @end_date = parse_date(params[:end_date])
 
-    @maintenances = current_user.maintenances.order(maintenance_date: :desc)
+    @maintenances = current_user.maintenances.includes(:truck).order(maintenance_date: :desc)
+    @maintenances = @maintenances.where(truck: selected_truck) if selected_truck
     @maintenances = @maintenances.where("maintenance_date >= ?", @start_date) if @start_date
     @maintenances = @maintenances.where("maintenance_date <= ?", @end_date) if @end_date
 
@@ -27,7 +30,7 @@ class MaintenancesController < ApplicationController
 
   # GET /maintenances/new
   def new
-    @maintenance = Maintenance.new
+    @maintenance = current_user.maintenances.new(truck: selected_truck || current_user.default_truck)
   end
 
   # GET /maintenances/1/edit
@@ -36,7 +39,10 @@ class MaintenancesController < ApplicationController
 
   # POST /maintenances or /maintenances.json
   def create
-    @maintenance = current_user.maintenances.new(maintenance_params)
+    permitted = maintenance_params
+    truck_id = permitted.delete(:truck_id)
+    @maintenance = current_user.maintenances.new(permitted)
+    assign_owned_truck(@maintenance, truck_id)
 
     respond_to do |format|
       if @maintenance.save
@@ -51,8 +57,12 @@ class MaintenancesController < ApplicationController
 
   # PATCH/PUT /maintenances/1 or /maintenances/1.json
   def update
+    permitted = maintenance_params
+    truck_id = permitted.delete(:truck_id)
+    assign_owned_truck(@maintenance, truck_id)
+
     respond_to do |format|
-      if @maintenance.update(maintenance_params)
+      if @maintenance.update(permitted)
         format.html { redirect_to @maintenance, notice: "Maintenance was successfully updated.", status: :see_other }
         format.json { render :show, status: :ok, location: @maintenance }
       else
@@ -87,6 +97,10 @@ class MaintenancesController < ApplicationController
 
     # Only allow a list of trusted parameters through.
     def maintenance_params
-      params.expect(maintenance: [ :maintenance_date, :maintenance_type, :cost, :odometer, :vendor, :notes ])
+      params.expect(maintenance: [ :maintenance_date, :maintenance_type, :cost, :odometer, :vendor, :notes, :truck_id ])
+    end
+
+    def set_trucks
+      @trucks = current_trucks
     end
 end

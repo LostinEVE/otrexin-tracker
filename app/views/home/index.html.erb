@@ -1,6 +1,19 @@
 <h1>🚨 Dashboard</h1>
 <h2 style="font-size:15px;color:#555;font-weight:400;margin-top:0;">Welcome back — here's where you stand today.</h2>
 
+<%= form_with url: root_path, method: :get, local: true, style: "display:flex;gap:10px;align-items:end;flex-wrap:wrap;margin-bottom:16px;" do |f| %>
+  <div>
+    <%= f.label :truck_id, "Truck", style: "display:block;font-weight:600;" %>
+    <%= f.select :truck_id,
+        options_from_collection_for_select(current_trucks, :id, :display_name, selected_truck&.id),
+        { include_blank: "All trucks" },
+        style: "padding:10px;min-width:220px;" %>
+  </div>
+  <div>
+    <%= f.submit "Filter", style: "padding:10px 14px;font-weight:700;" %>
+  </div>
+<% end %>
+
 <h3 style="margin-bottom:6px;">Revenue</h3>
 <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px;">
   <div style="padding:16px;border:1px solid #ddd;border-radius:8px;">

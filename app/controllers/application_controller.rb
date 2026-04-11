@@ -5,7 +5,7 @@ class ApplicationController < ActionController::Base
   # Changes to the importmap will invalidate the etag for HTML responses
   stale_when_importmap_changes
 
-  helper_method :current_user, :logged_in?, :current_company_profile
+  helper_method :current_user, :logged_in?, :current_company_profile, :current_trucks, :selected_truck
 
   before_action :require_login
 
@@ -30,5 +30,33 @@ class ApplicationController < ActionController::Base
     return CompanyProfile.new unless logged_in?
 
     @current_company_profile ||= current_user.company_profile || current_user.build_company_profile.tap(&:save!)
+  end
+
+  def current_trucks
+    return Truck.none unless logged_in?
+
+    @current_trucks ||= current_user.trucks.order(active: :desc, name: :asc, created_at: :asc)
+  end
+
+  def selected_truck
+    return @selected_truck if defined?(@selected_truck)
+
+    @selected_truck = if params[:truck_id].present?
+      current_user.trucks.find_by(id: params[:truck_id])
+    end
+  end
+
+  def ensure_trucks!
+    return if current_user.trucks.exists?
+
+    redirect_to trucks_path, alert: "Add a truck before logging trips, fuel, invoices, or expenses."
+  end
+
+  def assign_owned_truck(record, truck_id)
+    if truck_id.present?
+      record.truck = current_user.trucks.find(truck_id)
+    else
+      record.errors.add(:truck, "must be selected")
+    end
   end
 end

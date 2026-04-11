@@ -1,0 +1,17 @@
+one:
+  user: one
+  truck: one
+  start_date: 2026-03-01
+  end_date: 2026-03-07
+  qualifying_days: 7
+  daily_rate: 150.00
+  notes: Week on the road
+
+two:
+  user: two
+  truck: three
+  start_date: 2026-03-10
+  end_date: 2026-03-12
+  qualifying_days: 3
+  daily_rate: 120.00
+  notes: Other user

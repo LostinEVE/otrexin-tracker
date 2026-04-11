@@ -4,9 +4,9 @@ class TaxPaymentsController < ApplicationController
   # GET /tax_payments or /tax_payments.json
   def index
     @tax_payments = current_user.tax_payments
-
-    @ytd_revenue = current_user.invoices.where(status: 'paid').where('invoice_date >= ?', Date.current.beginning_of_year).sum(:amount).to_f
-    @ytd_expenses = current_user.expenses.where('expense_date >= ?', Date.current.beginning_of_year).sum(:amount).to_f
+    @per_diem_entries = current_user.per_diem_entries.order(start_date: :desc)
+    @depreciation_assets = current_user.depreciation_assets.order(placed_in_service_date: :desc)
+    @tax_summary = TaxEstimator.new(user: current_user, year: Date.current.year)
   end
 
   # GET /tax_payments/1 or /tax_payments/1.json

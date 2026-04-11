@@ -4,6 +4,19 @@
 
 <h1>🚨 Mileage Tracker</h1>
 
+<%= form_with url: mileages_path, method: :get, local: true, style: "display:flex;gap:10px;align-items:end;flex-wrap:wrap;margin-bottom:16px;" do |f| %>
+  <div>
+    <%= f.label :truck_id, "Truck", style: "display:block;font-weight:600;" %>
+    <%= f.select :truck_id,
+      options_from_collection_for_select(@trucks, :id, :display_name, selected_truck&.id),
+        { include_blank: "All trucks" },
+        style: "padding:10px;min-width:220px;" %>
+  </div>
+  <div>
+    <%= f.submit "Filter", style: "padding:10px 14px;font-weight:700;" %>
+  </div>
+<% end %>
+
 <% total_miles = @total_miles %>
 <% total_rev   = @total_revenue %>
 <% rpm         = @revenue_per_mile %>
@@ -38,4 +51,4 @@
   <% end %>
 </div>
 
-<%= link_to "+ Log a Trip", new_mileage_path, style: "padding:12px 20px;font-weight:700;display:inline-block;margin-top:10px;" %>
+<%= link_to "+ Log a Trip", new_mileage_path(truck_id: selected_truck&.id), style: "padding:12px 20px;font-weight:700;display:inline-block;margin-top:10px;" %>

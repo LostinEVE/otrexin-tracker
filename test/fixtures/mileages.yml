@@ -1,19 +1,34 @@
 # Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
 
 one:
+  user: one
+  truck: one
   trip_date: 2026-03-26
-  load_number: MyString
-  origin: MyString
-  destination: MyString
-  miles: 9.99
-  revenue: 9.99
-  notes: MyText
+  load_number: LOAD-100
+  origin: Memphis, TN
+  destination: Dallas, TX
+  miles: 1000
+  revenue: 2000
+  notes: Main lane
 
 two:
-  trip_date: 2026-03-26
-  load_number: MyString
-  origin: MyString
-  destination: MyString
-  miles: 9.99
-  revenue: 9.99
-  notes: MyText
+  user: one
+  truck: one
+  trip_date: 2026-04-02
+  load_number: LOAD-101
+  origin: Dallas, TX
+  destination: Houston, TX
+  miles: 1500
+  revenue: 3000
+  notes: Reload
+
+three:
+  user: two
+  truck: three
+  trip_date: 2026-04-05
+  load_number: LOAD-200
+  origin: Atlanta, GA
+  destination: Orlando, FL
+  miles: 800
+  revenue: 1600
+  notes: Separate user

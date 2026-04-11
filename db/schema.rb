@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_27_005134) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_11_000200) do
   create_table "company_profiles", force: :cascade do |t|
     t.string "address_line1"
     t.string "address_line2"
@@ -28,6 +28,24 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_27_005134) do
     t.index ["user_id"], name: "index_company_profiles_on_user_id"
   end
 
+  create_table "depreciation_assets", force: :cascade do |t|
+    t.string "asset_type", null: false
+    t.decimal "cost_basis", precision: 12, scale: 2, null: false
+    t.datetime "created_at", null: false
+    t.string "depreciation_method", default: "straight_line", null: false
+    t.string "name", null: false
+    t.text "notes"
+    t.date "placed_in_service_date", null: false
+    t.integer "recovery_period_years", null: false
+    t.decimal "salvage_value", precision: 12, scale: 2, default: "0.0", null: false
+    t.integer "truck_id"
+    t.datetime "updated_at", null: false
+    t.integer "user_id", null: false
+    t.index ["truck_id"], name: "index_depreciation_assets_on_truck_id"
+    t.index ["user_id", "placed_in_service_date"], name: "idx_on_user_id_placed_in_service_date_0fe1fd55a2"
+    t.index ["user_id"], name: "index_depreciation_assets_on_user_id"
+  end
+
   create_table "expenses", force: :cascade do |t|
     t.decimal "amount"
     t.string "category"
@@ -35,10 +53,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_27_005134) do
     t.date "expense_date"
     t.decimal "gallons"
     t.text "notes"
+    t.integer "truck_id", null: false
     t.datetime "updated_at", null: false
     t.integer "user_id", null: false
     t.string "vendor"
     t.index ["expense_date"], name: "index_expenses_on_expense_date"
+    t.index ["truck_id"], name: "index_expenses_on_truck_id"
+    t.index ["user_id", "truck_id"], name: "index_expenses_on_user_id_and_truck_id"
     t.index ["user_id"], name: "index_expenses_on_user_id"
   end
 
@@ -52,8 +73,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_27_005134) do
     t.decimal "price_per_gallon"
     t.string "station"
     t.decimal "total_cost"
+    t.integer "truck_id", null: false
     t.datetime "updated_at", null: false
     t.integer "user_id", null: false
+    t.index ["truck_id"], name: "index_fuel_logs_on_truck_id"
+    t.index ["user_id", "truck_id"], name: "index_fuel_logs_on_user_id_and_truck_id"
     t.index ["user_id"], name: "index_fuel_logs_on_user_id"
   end
 
@@ -72,10 +96,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_27_005134) do
     t.string "product_description"
     t.decimal "rate_per_piece"
     t.string "status"
+    t.integer "truck_id", null: false
     t.datetime "updated_at", null: false
     t.integer "user_id", null: false
     t.index ["invoice_date"], name: "index_invoices_on_invoice_date"
     t.index ["status"], name: "index_invoices_on_status"
+    t.index ["truck_id"], name: "index_invoices_on_truck_id"
+    t.index ["user_id", "truck_id"], name: "index_invoices_on_user_id_and_truck_id"
     t.index ["user_id"], name: "index_invoices_on_user_id"
   end
 
@@ -86,10 +113,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_27_005134) do
     t.string "maintenance_type"
     t.text "notes"
     t.integer "odometer"
+    t.integer "truck_id", null: false
     t.datetime "updated_at", null: false
     t.integer "user_id", null: false
     t.string "vendor"
     t.index ["maintenance_date"], name: "index_maintenances_on_maintenance_date"
+    t.index ["truck_id"], name: "index_maintenances_on_truck_id"
+    t.index ["user_id", "truck_id"], name: "index_maintenances_on_user_id_and_truck_id"
     t.index ["user_id"], name: "index_maintenances_on_user_id"
   end
 
@@ -102,10 +132,28 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_27_005134) do
     t.string "origin"
     t.decimal "revenue"
     t.date "trip_date"
+    t.integer "truck_id", null: false
     t.datetime "updated_at", null: false
     t.integer "user_id", null: false
     t.index ["trip_date"], name: "index_mileages_on_trip_date"
+    t.index ["truck_id"], name: "index_mileages_on_truck_id"
+    t.index ["user_id", "truck_id"], name: "index_mileages_on_user_id_and_truck_id"
     t.index ["user_id"], name: "index_mileages_on_user_id"
+  end
+
+  create_table "per_diem_entries", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.decimal "daily_rate", precision: 10, scale: 2, null: false
+    t.date "end_date", null: false
+    t.text "notes"
+    t.integer "qualifying_days", null: false
+    t.date "start_date", null: false
+    t.integer "truck_id"
+    t.datetime "updated_at", null: false
+    t.integer "user_id", null: false
+    t.index ["truck_id"], name: "index_per_diem_entries_on_truck_id"
+    t.index ["user_id", "start_date"], name: "index_per_diem_entries_on_user_id_and_start_date"
+    t.index ["user_id"], name: "index_per_diem_entries_on_user_id"
   end
 
   create_table "tax_payments", force: :cascade do |t|
@@ -119,6 +167,21 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_27_005134) do
     t.index ["user_id"], name: "index_tax_payments_on_user_id"
   end
 
+  create_table "trucks", force: :cascade do |t|
+    t.boolean "active", default: true, null: false
+    t.datetime "created_at", null: false
+    t.string "make"
+    t.string "model"
+    t.string "name", null: false
+    t.string "unit_number"
+    t.datetime "updated_at", null: false
+    t.integer "user_id", null: false
+    t.string "vin"
+    t.integer "year"
+    t.index ["user_id", "name"], name: "index_trucks_on_user_id_and_name", unique: true
+    t.index ["user_id"], name: "index_trucks_on_user_id"
+  end
+
   create_table "users", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "email", null: false
@@ -128,10 +191,20 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_27_005134) do
   end
 
   add_foreign_key "company_profiles", "users"
+  add_foreign_key "depreciation_assets", "trucks"
+  add_foreign_key "depreciation_assets", "users"
+  add_foreign_key "expenses", "trucks"
   add_foreign_key "expenses", "users"
+  add_foreign_key "fuel_logs", "trucks"
   add_foreign_key "fuel_logs", "users"
+  add_foreign_key "invoices", "trucks"
   add_foreign_key "invoices", "users"
+  add_foreign_key "maintenances", "trucks"
   add_foreign_key "maintenances", "users"
+  add_foreign_key "mileages", "trucks"
   add_foreign_key "mileages", "users"
+  add_foreign_key "per_diem_entries", "trucks"
+  add_foreign_key "per_diem_entries", "users"
   add_foreign_key "tax_payments", "users"
+  add_foreign_key "trucks", "users"
 end

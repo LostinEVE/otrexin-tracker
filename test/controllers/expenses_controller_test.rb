@@ -2,6 +2,7 @@ require "test_helper"
 
 class ExpensesControllerTest < ActionDispatch::IntegrationTest
   setup do
+    sign_in_as(users(:one))
     @expense = expenses(:one)
   end
 
@@ -17,7 +18,7 @@ class ExpensesControllerTest < ActionDispatch::IntegrationTest
 
   test "should create expense" do
     assert_difference("Expense.count") do
-      post expenses_url, params: { expense: { amount: @expense.amount, category: @expense.category, expense_date: @expense.expense_date, notes: @expense.notes, vendor: @expense.vendor } }
+      post expenses_url, params: { expense: { amount: @expense.amount, category: @expense.category, expense_date: @expense.expense_date, notes: @expense.notes, vendor: @expense.vendor, gallons: @expense.gallons, truck_id: @expense.truck_id } }
     end
 
     assert_redirected_to expense_url(Expense.last)
@@ -34,7 +35,7 @@ class ExpensesControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "should update expense" do
-    patch expense_url(@expense), params: { expense: { amount: @expense.amount, category: @expense.category, expense_date: @expense.expense_date, notes: @expense.notes, vendor: @expense.vendor } }
+    patch expense_url(@expense), params: { expense: { amount: @expense.amount, category: @expense.category, expense_date: @expense.expense_date, notes: @expense.notes, vendor: @expense.vendor, gallons: @expense.gallons, truck_id: @expense.truck_id } }
     assert_redirected_to expense_url(@expense)
   end
 

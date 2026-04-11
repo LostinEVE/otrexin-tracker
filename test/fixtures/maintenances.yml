@@ -1,17 +1,21 @@
 # Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
 
 one:
-  maintenance_date: 2026-03-26
-  maintenance_type: MyString
-  cost: 9.99
-  odometer: 1
-  vendor: MyString
-  notes: MyText
+  user: one
+  truck: one
+  maintenance_date: 2026-03-25
+  maintenance_type: oil_change
+  cost: 400
+  odometer: 1450
+  vendor: Speedco
+  notes: PM service
 
 two:
-  maintenance_date: 2026-03-26
-  maintenance_type: MyString
-  cost: 9.99
-  odometer: 1
-  vendor: MyString
-  notes: MyText
+  user: two
+  truck: three
+  maintenance_date: 2026-04-01
+  maintenance_type: tire_replacement
+  cost: 850
+  odometer: 50000
+  vendor: Loves
+  notes: Steer tires

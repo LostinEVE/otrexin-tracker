@@ -2,6 +2,7 @@ require "test_helper"
 
 class FuelLogsControllerTest < ActionDispatch::IntegrationTest
   setup do
+    sign_in_as(users(:one))
     @fuel_log = fuel_logs(:one)
   end
 
@@ -17,7 +18,7 @@ class FuelLogsControllerTest < ActionDispatch::IntegrationTest
 
   test "should create fuel_log" do
     assert_difference("FuelLog.count") do
-      post fuel_logs_url, params: { fuel_log: { fuel_date: @fuel_log.fuel_date, gallons: @fuel_log.gallons, location: @fuel_log.location, notes: @fuel_log.notes, odometer: @fuel_log.odometer, price_per_gallon: @fuel_log.price_per_gallon, station: @fuel_log.station, total_cost: @fuel_log.total_cost } }
+      post fuel_logs_url, params: { fuel_log: { fuel_date: @fuel_log.fuel_date, gallons: @fuel_log.gallons, location: @fuel_log.location, notes: @fuel_log.notes, odometer: @fuel_log.odometer, price_per_gallon: @fuel_log.price_per_gallon, station: @fuel_log.station, total_cost: @fuel_log.total_cost, truck_id: @fuel_log.truck_id } }
     end
 
     assert_redirected_to fuel_log_url(FuelLog.last)
@@ -34,7 +35,7 @@ class FuelLogsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "should update fuel_log" do
-    patch fuel_log_url(@fuel_log), params: { fuel_log: { fuel_date: @fuel_log.fuel_date, gallons: @fuel_log.gallons, location: @fuel_log.location, notes: @fuel_log.notes, odometer: @fuel_log.odometer, price_per_gallon: @fuel_log.price_per_gallon, station: @fuel_log.station, total_cost: @fuel_log.total_cost } }
+    patch fuel_log_url(@fuel_log), params: { fuel_log: { fuel_date: @fuel_log.fuel_date, gallons: @fuel_log.gallons, location: @fuel_log.location, notes: @fuel_log.notes, odometer: @fuel_log.odometer, price_per_gallon: @fuel_log.price_per_gallon, station: @fuel_log.station, total_cost: @fuel_log.total_cost, truck_id: @fuel_log.truck_id } }
     assert_redirected_to fuel_log_url(@fuel_log)
   end
 

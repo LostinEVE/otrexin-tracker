@@ -9,6 +9,7 @@
     <strong><%= maintenance.maintenance_date %> — <%= type_labels[maintenance.maintenance_type] || maintenance.maintenance_type %></strong>
     <strong style="color:#155724;">$<%= number_with_precision(maintenance.cost, precision: 2) %></strong>
   </div>
+  <div style="font-size:13px;color:#666;margin-top:4px;">Truck: <%= maintenance.truck.display_name %></div>
   <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:8px;font-size:14px;">
     <div><strong>Vendor:</strong><br><%= maintenance.vendor.presence || '—' %></div>
     <div><strong>Odometer:</strong><br><%= number_with_delimiter(maintenance.odometer) %></div>

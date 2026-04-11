@@ -2,6 +2,7 @@ require "test_helper"
 
 class MileagesControllerTest < ActionDispatch::IntegrationTest
   setup do
+    sign_in_as(users(:one))
     @mileage = mileages(:one)
   end
 
@@ -17,7 +18,7 @@ class MileagesControllerTest < ActionDispatch::IntegrationTest
 
   test "should create mileage" do
     assert_difference("Mileage.count") do
-      post mileages_url, params: { mileage: { destination: @mileage.destination, load_number: @mileage.load_number, miles: @mileage.miles, notes: @mileage.notes, origin: @mileage.origin, revenue: @mileage.revenue, trip_date: @mileage.trip_date } }
+      post mileages_url, params: { mileage: { destination: @mileage.destination, load_number: @mileage.load_number, miles: @mileage.miles, notes: @mileage.notes, origin: @mileage.origin, revenue: @mileage.revenue, trip_date: @mileage.trip_date, truck_id: @mileage.truck_id } }
     end
 
     assert_redirected_to mileage_url(Mileage.last)
@@ -34,7 +35,7 @@ class MileagesControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "should update mileage" do
-    patch mileage_url(@mileage), params: { mileage: { destination: @mileage.destination, load_number: @mileage.load_number, miles: @mileage.miles, notes: @mileage.notes, origin: @mileage.origin, revenue: @mileage.revenue, trip_date: @mileage.trip_date } }
+    patch mileage_url(@mileage), params: { mileage: { destination: @mileage.destination, load_number: @mileage.load_number, miles: @mileage.miles, notes: @mileage.notes, origin: @mileage.origin, revenue: @mileage.revenue, trip_date: @mileage.trip_date, truck_id: @mileage.truck_id } }
     assert_redirected_to mileage_url(@mileage)
   end
 

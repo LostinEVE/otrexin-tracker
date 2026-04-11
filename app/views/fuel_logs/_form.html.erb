@@ -18,13 +18,20 @@
   <div class="safe-form" style="display:grid;gap:10px;max-width:560px;">
     <div class="safe-two-col">
       <div>
+        <%= form.label :truck_id, "Truck", style: "display:block;font-weight:600;" %>
+        <%= form.collection_select :truck_id, @trucks, :id, :display_name,
+            { prompt: "Select a truck" },
+            style: "width:100%;padding:10px;" %>
+      </div>
+      <div>
         <%= form.label :fuel_date, "Date", style: "display:block;font-weight:600;" %>
         <%= form.date_field :fuel_date, style: "width:100%;padding:10px;" %>
       </div>
-      <div>
-        <%= form.label :odometer, "Odometer Reading", style: "display:block;font-weight:600;" %>
-        <%= form.number_field :odometer, placeholder: "123456", style: "width:100%;padding:10px;", id: "fuel_odometer" %>
-      </div>
+    </div>
+
+    <div>
+      <%= form.label :odometer, "Odometer Reading", style: "display:block;font-weight:600;" %>
+      <%= form.number_field :odometer, placeholder: "123456", style: "width:100%;padding:10px;", id: "fuel_odometer" %>
     </div>
 
     <div class="safe-two-col">

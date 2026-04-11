@@ -1,5 +1,6 @@
 class Mileage < ApplicationRecord
   belongs_to :user
+  belongs_to :truck
 
   # Revenue per mile for a single trip
   def revenue_per_mile
@@ -10,27 +11,27 @@ class Mileage < ApplicationRecord
   # --- Class-level stats ---
 
   # Total miles across all trips
-  def self.total_miles
-    sum(:miles).to_f
+  def self.total_miles(scope = all)
+    scope.sum(:miles).to_f
   end
 
   # Total revenue across all trips
-  def self.total_revenue
-    sum(:revenue).to_f
+  def self.total_revenue(scope = all)
+    scope.sum(:revenue).to_f
   end
 
   # Revenue per mile across ALL trips
-  def self.overall_revenue_per_mile
-    tm = total_miles
+  def self.overall_revenue_per_mile(scope = all)
+    tm = total_miles(scope)
     return nil if tm == 0
-    (total_revenue / tm).round(4)
+    (total_revenue(scope) / tm).round(4)
   end
 
   # Cost per mile — pulls total expenses from Expense table against total miles
-  def self.cost_per_mile
-    tm = total_miles
+  def self.cost_per_mile(mileage_scope = all, expense_scope: Expense.all)
+    tm = total_miles(mileage_scope)
     return nil if tm == 0
-    total_expenses = Expense.sum(:amount).to_f
+    total_expenses = expense_scope.sum(:amount).to_f
     (total_expenses / tm).round(4)
   end
 end

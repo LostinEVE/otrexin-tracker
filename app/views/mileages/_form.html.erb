@@ -18,13 +18,20 @@
   <div class="safe-form" style="display:grid;gap:10px;max-width:560px;">
     <div class="safe-two-col">
       <div>
+        <%= form.label :truck_id, "Truck", style: "display:block;font-weight:600;" %>
+        <%= form.collection_select :truck_id, @trucks, :id, :display_name,
+            { prompt: "Select a truck" },
+            style: "width:100%;padding:10px;" %>
+      </div>
+      <div>
         <%= form.label :trip_date, "Trip Date", style: "display:block;font-weight:600;" %>
         <%= form.date_field :trip_date, style: "width:100%;padding:10px;" %>
       </div>
-      <div>
-        <%= form.label :load_number, "Load Number", style: "display:block;font-weight:600;" %>
-        <%= form.text_field :load_number, placeholder: "LD-0012", style: "width:100%;padding:10px;" %>
-      </div>
+    </div>
+
+    <div>
+      <%= form.label :load_number, "Load Number", style: "display:block;font-weight:600;" %>
+      <%= form.text_field :load_number, placeholder: "LD-0012", style: "width:100%;padding:10px;" %>
     </div>
 
     <div class="safe-two-col">

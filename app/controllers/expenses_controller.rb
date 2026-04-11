@@ -1,12 +1,15 @@
 class ExpensesController < ApplicationController
   before_action :set_expense, only: %i[ show edit update destroy ]
+  before_action :ensure_trucks!
+  before_action :set_trucks, only: %i[ index new edit create update ]
 
   # GET /expenses or /expenses.json
   def index
     @start_date = parse_date(params[:start_date])
     @end_date = parse_date(params[:end_date])
 
-    @expenses = current_user.expenses.order(expense_date: :desc)
+    @expenses = current_user.expenses.includes(:truck).order(expense_date: :desc)
+    @expenses = @expenses.where(truck: selected_truck) if selected_truck
     @expenses = @expenses.where("expense_date >= ?", @start_date) if @start_date
     @expenses = @expenses.where("expense_date <= ?", @end_date) if @end_date
 
@@ -27,7 +30,7 @@ class ExpensesController < ApplicationController
 
   # GET /expenses/new
   def new
-    @expense = Expense.new
+    @expense = current_user.expenses.new(truck: selected_truck || current_user.default_truck)
   end
 
   # GET /expenses/1/edit
@@ -36,7 +39,10 @@ class ExpensesController < ApplicationController
 
   # POST /expenses or /expenses.json
   def create
-    @expense = current_user.expenses.new(expense_params)
+    permitted = expense_params
+    truck_id = permitted.delete(:truck_id)
+    @expense = current_user.expenses.new(permitted)
+    assign_owned_truck(@expense, truck_id)
 
     respond_to do |format|
       if @expense.save
@@ -51,8 +57,12 @@ class ExpensesController < ApplicationController
 
   # PATCH/PUT /expenses/1 or /expenses/1.json
   def update
+    permitted = expense_params
+    truck_id = permitted.delete(:truck_id)
+    assign_owned_truck(@expense, truck_id)
+
     respond_to do |format|
-      if @expense.update(expense_params)
+      if @expense.update(permitted)
         format.html { redirect_to @expense, notice: "Expense was successfully updated.", status: :see_other }
         format.json { render :show, status: :ok, location: @expense }
       else
@@ -87,6 +97,10 @@ class ExpensesController < ApplicationController
 
     # Only allow a list of trusted parameters through.
     def expense_params
-      params.expect(expense: [ :expense_date, :category, :vendor, :amount, :gallons, :notes ])
+      params.expect(expense: [ :expense_date, :category, :vendor, :amount, :gallons, :notes, :truck_id ])
+    end
+
+    def set_trucks
+      @trucks = current_trucks
     end
 end

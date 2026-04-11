@@ -1,0 +1,77 @@
+<%= form_with(model: depreciation_asset) do |form| %>
+  <% if depreciation_asset.errors.any? %>
+    <div style="color:#b00020;margin-bottom:12px;">
+      <h3><%= pluralize(depreciation_asset.errors.count, "error") %> stopped this asset from saving:</h3>
+      <ul>
+        <% depreciation_asset.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div style="display:grid;gap:10px;max-width:680px;">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;">
+      <div>
+        <%= form.label :name, "Asset Name", style: "display:block;font-weight:600;" %>
+        <%= form.text_field :name, placeholder: "2023 Peterbilt 579", style: "width:100%;padding:10px;" %>
+      </div>
+      <div>
+        <%= form.label :asset_type, "Asset Type", style: "display:block;font-weight:600;" %>
+        <%= form.select :asset_type,
+            [["Truck", "truck"], ["Trailer", "trailer"], ["Equipment", "equipment"], ["Other", "other"]],
+            {},
+            style: "width:100%;padding:10px;" %>
+      </div>
+    </div>
+
+    <div>
+      <%= form.label :truck_id, "Linked Truck (optional)", style: "display:block;font-weight:600;" %>
+      <%= form.collection_select :truck_id, @trucks, :id, :display_name,
+          { include_blank: "Not tied to a specific truck" },
+          style: "width:100%;padding:10px;" %>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;">
+      <div>
+        <%= form.label :placed_in_service_date, "Placed In Service", style: "display:block;font-weight:600;" %>
+        <%= form.date_field :placed_in_service_date, style: "width:100%;padding:10px;" %>
+      </div>
+      <div>
+        <%= form.label :cost_basis, "Cost Basis ($)", style: "display:block;font-weight:600;" %>
+        <%= form.number_field :cost_basis, step: "0.01", style: "width:100%;padding:10px;" %>
+      </div>
+      <div>
+        <%= form.label :salvage_value, "Salvage Value ($)", style: "display:block;font-weight:600;" %>
+        <%= form.number_field :salvage_value, step: "0.01", style: "width:100%;padding:10px;" %>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;">
+      <div>
+        <%= form.label :recovery_period_years, "Recovery Period (Years)", style: "display:block;font-weight:600;" %>
+        <%= form.number_field :recovery_period_years, min: 1, style: "width:100%;padding:10px;" %>
+      </div>
+      <div>
+        <%= form.label :depreciation_method, "Method", style: "display:block;font-weight:600;" %>
+        <%= form.select :depreciation_method,
+            [["Straight Line", "straight_line"], ["Double Declining Balance", "double_declining_balance"], ["Section 179", "section_179"]],
+            {},
+            style: "width:100%;padding:10px;" %>
+      </div>
+    </div>
+
+    <div style="padding:10px;background:#f8f9fa;border-radius:8px;font-size:14px;">
+      Estimated annual deduction: <strong>$<%= number_with_precision(depreciation_asset.annual_deduction, precision: 2) rescue '0.00' %></strong>
+    </div>
+
+    <div>
+      <%= form.label :notes, "Notes", style: "display:block;font-weight:600;" %>
+      <%= form.text_area :notes, rows: 3, style: "width:100%;padding:10px;" %>
+    </div>
+
+    <div>
+      <%= form.submit depreciation_asset.persisted? ? "Update Asset" : "Save Asset", style: "padding:12px 24px;font-weight:700;font-size:16px;" %>
+    </div>
+  </div>
+<% end %>

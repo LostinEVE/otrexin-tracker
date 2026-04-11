@@ -1,0 +1,56 @@
+<%= form_with(model: truck) do |form| %>
+  <% if truck.errors.any? %>
+    <div style="color:#b00020;margin-bottom:12px;">
+      <h3><%= pluralize(truck.errors.count, "error") %> stopped this truck from saving:</h3>
+      <ul>
+        <% truck.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div style="display:grid;gap:10px;max-width:580px;">
+    <div>
+      <%= form.label :name, "Truck Name", style: "display:block;font-weight:600;" %>
+      <%= form.text_field :name, placeholder: "Primary Truck", style: "width:100%;padding:10px;" %>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;">
+      <div>
+        <%= form.label :unit_number, "Unit Number", style: "display:block;font-weight:600;" %>
+        <%= form.text_field :unit_number, placeholder: "Truck 12", style: "width:100%;padding:10px;" %>
+      </div>
+      <div>
+        <%= form.label :vin, "VIN", style: "display:block;font-weight:600;" %>
+        <%= form.text_field :vin, placeholder: "Optional", style: "width:100%;padding:10px;" %>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;">
+      <div>
+        <%= form.label :year, "Year", style: "display:block;font-weight:600;" %>
+        <%= form.number_field :year, placeholder: "2024", style: "width:100%;padding:10px;" %>
+      </div>
+      <div>
+        <%= form.label :make, "Make", style: "display:block;font-weight:600;" %>
+        <%= form.text_field :make, placeholder: "Freightliner", style: "width:100%;padding:10px;" %>
+      </div>
+      <div>
+        <%= form.label :model, "Model", style: "display:block;font-weight:600;" %>
+        <%= form.text_field :model, placeholder: "Cascadia", style: "width:100%;padding:10px;" %>
+      </div>
+    </div>
+
+    <div>
+      <label style="display:flex;gap:8px;align-items:center;font-weight:600;">
+        <%= form.check_box :active %>
+        Active truck
+      </label>
+    </div>
+
+    <div>
+      <%= form.submit truck.persisted? ? "Update Truck" : "Save Truck", style: "padding:12px 24px;font-weight:700;font-size:16px;" %>
+    </div>
+  </div>
+<% end %>
