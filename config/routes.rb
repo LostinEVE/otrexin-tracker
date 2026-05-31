@@ -15,7 +15,6 @@ Rails.application.routes.draw do
   resources :depreciation_assets, except: [ :show ]
   resources :tax_payments
   resources :maintenances
-  resources :mileages
   resources :fuel_logs
   resources :expenses
   resources :invoices do

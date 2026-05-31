@@ -11,9 +11,6 @@ class HomeController < ApplicationController
     expense_scope = current_user.expenses
     expense_scope = expense_scope.where(truck: truck_filter) if truck_filter
 
-    mileage_scope = current_user.mileages
-    mileage_scope = mileage_scope.where(truck: truck_filter) if truck_filter
-
     fuel_scope = current_user.fuel_logs
     fuel_scope = fuel_scope.where(truck: truck_filter) if truck_filter
 
@@ -30,15 +27,15 @@ class HomeController < ApplicationController
       .group(:category).sum(:amount)
       .sort_by { |_k, v| -v.to_f }
 
-    # CPM from fuel log odometer range
-    fuel_logs_for_cpm = fuel_scope.where('odometer IS NOT NULL').order(:odometer)
-    fuel_min_odo = fuel_logs_for_cpm.first&.odometer.to_f
-    fuel_max_odo = fuel_logs_for_cpm.last&.odometer.to_f
+    # Miles from fuel log odometer range
+    fuel_logs_ordered = fuel_scope.where('odometer IS NOT NULL').order(:odometer)
+    fuel_min_odo = fuel_logs_ordered.first&.odometer.to_f
+    fuel_max_odo = fuel_logs_ordered.last&.odometer.to_f
     fuel_log_miles = fuel_max_odo - fuel_min_odo
 
-    # Mileage / RPM
-    @total_miles = Mileage.total_miles(mileage_scope)
-    @rpm = Mileage.overall_revenue_per_mile(mileage_scope)
+    @total_miles = fuel_log_miles.round
+    total_paid_revenue = invoice_scope.where(status: 'paid').sum(:amount).to_f
+    @rpm = fuel_log_miles > 0 ? (total_paid_revenue / fuel_log_miles).round(4) : nil
     @cpm = fuel_log_miles > 0 ? (expense_scope.sum(:amount).to_f / fuel_log_miles).round(4) : nil
 
     # Fuel
