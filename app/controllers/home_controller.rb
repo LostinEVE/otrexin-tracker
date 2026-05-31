@@ -27,11 +27,8 @@ class HomeController < ApplicationController
       .group(:category).sum(:amount)
       .sort_by { |_k, v| -v.to_f }
 
-    # Miles from fuel log odometer range
-    fuel_logs_ordered = fuel_scope.where('odometer IS NOT NULL').order(:odometer)
-    fuel_min_odo = fuel_logs_ordered.first&.odometer.to_f
-    fuel_max_odo = fuel_logs_ordered.last&.odometer.to_f
-    fuel_log_miles = fuel_max_odo - fuel_min_odo
+    # Miles from fuel log odometer range (caps unreasonable jumps to exclude bad odometer readings)
+    fuel_log_miles = FuelLog.total_miles_safe(fuel_scope) || 0
 
     @total_miles = fuel_log_miles.round
     total_paid_revenue = invoice_scope.where(status: 'paid').sum(:amount).to_f

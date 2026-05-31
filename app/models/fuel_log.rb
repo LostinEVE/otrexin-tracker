@@ -34,6 +34,18 @@ class FuelLog < ApplicationRecord
     miles > 0 ? miles : nil
   end
 
+  def self.total_miles_safe(scope = all)
+    logs = scope.where('odometer IS NOT NULL').order(:odometer).to_a
+    return nil if logs.size < 2
+
+    total = 0
+    logs.each_cons(2) do |prev, current|
+      miles = current.odometer - prev.odometer
+      total += miles if miles > 0 && miles <= 2000
+    end
+    total > 0 ? total : nil
+  end
+
   # Class-level stats used by the index page
   def self.overall_mpg(scope = all)
     logs = scope.with_mpg_inputs.reorder(:odometer).to_a
