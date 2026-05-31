@@ -27,13 +27,20 @@ class HomeController < ApplicationController
       .group(:category).sum(:amount)
       .sort_by { |_k, v| -v.to_f }
 
-    # Miles from fuel log odometer range (caps unreasonable jumps to exclude bad odometer readings)
-    fuel_log_miles = FuelLog.total_miles_safe(fuel_scope) || 0
+    # Historical miles and metrics
+    historical_miles = 20468
+    @historical_cpm = historical_miles > 0 ? (expense_scope.sum(:amount).to_f / historical_miles).round(4) : nil
 
-    @total_miles = fuel_log_miles.round
+    # Miles from baseline odometer forward
+    baseline_odo = truck_filter&.baseline_odometer || 0
+    fuel_logs_after_baseline = fuel_scope.where('odometer IS NOT NULL').where('odometer >= ?', baseline_odo).order(:odometer)
+    fuel_max_odo = fuel_logs_after_baseline.maximum(:odometer).to_f
+    fuel_new_miles = baseline_odo > 0 && fuel_max_odo > baseline_odo ? (fuel_max_odo - baseline_odo) : 0
+
+    @total_miles = fuel_new_miles.round
     total_paid_revenue = invoice_scope.where(status: 'paid').sum(:amount).to_f
-    @rpm = fuel_log_miles > 0 ? (total_paid_revenue / fuel_log_miles).round(4) : nil
-    @cpm = fuel_log_miles > 0 ? (expense_scope.sum(:amount).to_f / fuel_log_miles).round(4) : nil
+    @rpm = fuel_new_miles > 0 ? (total_paid_revenue / fuel_new_miles).round(4) : nil
+    @cpm = fuel_new_miles > 0 ? (expense_scope.sum(:amount).to_f / fuel_new_miles).round(4) : nil
 
     # Fuel
     @overall_mpg = FuelLog.overall_mpg(fuel_scope)

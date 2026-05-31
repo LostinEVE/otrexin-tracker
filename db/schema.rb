@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_11_000200) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_31_223439) do
   create_table "company_profiles", force: :cascade do |t|
     t.string "address_line1"
     t.string "address_line2"
@@ -169,6 +169,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_11_000200) do
 
   create_table "trucks", force: :cascade do |t|
     t.boolean "active", default: true, null: false
+    t.integer "baseline_odometer"
     t.datetime "created_at", null: false
     t.string "make"
     t.string "model"

@@ -82,9 +82,10 @@
     <div style="font-size:26px;font-weight:700;"><%= @rpm ? "$#{@rpm}" : '—' %></div>
   </div>
   <div style="padding:16px;border:1px solid #ddd;border-radius:8px;">
-    <div style="font-size:11px;color:#888;text-transform:uppercase;">Cost / Mile</div>
+    <div style="font-size:11px;color:#888;text-transform:uppercase;">Cost / Mile (Current)</div>
     <div style="font-size:26px;font-weight:700;"><%= @cpm ? "$#{@cpm}" : '—' %></div>
-    <div style="font-size:10px;color:#aaa;margin-top:2px;">from fuel log miles</div>
+    <div style="font-size:10px;color:#aaa;margin-top:2px;">from odometer 1,371,354</div>
+    <div style="font-size:10px;color:#aaa;">Historical: <%= @historical_cpm ? "$#{@historical_cpm}" : '—' %></div>
   </div>
   <div style="padding:16px;border:1px solid #ddd;border-radius:8px;">
     <div style="font-size:11px;color:#888;text-transform:uppercase;">Overall MPG</div>
