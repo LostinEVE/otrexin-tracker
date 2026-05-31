@@ -8,13 +8,14 @@ class ExpensesController < ApplicationController
     @start_date = parse_date(params[:start_date])
     @end_date = parse_date(params[:end_date])
 
-    @expenses = current_user.expenses.includes(:truck).order(expense_date: :desc)
+    @expenses = current_user.expenses.includes(:truck)
     @expenses = @expenses.where(truck: selected_truck) if selected_truck
     @expenses = @expenses.where("expense_date >= ?", @start_date) if @start_date
     @expenses = @expenses.where("expense_date <= ?", @end_date) if @end_date
 
     @expense_by_category = @expenses.group(:category).sum(:amount).sort_by { |_k, v| -v.to_f }
     @expense_total = @expenses.sum(:amount).to_f
+    @expenses = @expenses.order(expense_date: :desc)
 
     respond_to do |format|
       format.html
