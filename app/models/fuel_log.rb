@@ -2,6 +2,8 @@ class FuelLog < ApplicationRecord
   belongs_to :user
   belongs_to :truck
 
+  validates :odometer, presence: true, numericality: { only_integer: true, greater_than: 0 }
+
   scope :with_mpg_inputs, -> { where('odometer IS NOT NULL AND gallons IS NOT NULL AND gallons > 0') }
 
   # Returns miles driven and MPG compared to the PREVIOUS entry by odometer order.
