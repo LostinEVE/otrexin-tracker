@@ -30,8 +30,22 @@
   </div>
 </div>
 
+<% category_labels = {
+  "fuel" => "Fuel",
+  "maintenance" => "Maintenance & Repairs",
+  "tolls" => "Tolls & Parking",
+  "food" => "Food & Meals",
+  "insurance" => "Insurance",
+  "permits" => "Permits & Licenses",
+  "truck_payment" => "Truck Payment / Lease",
+  "supplies" => "Supplies",
+  "drivers_pay" => "Drivers Pay",
+  "truck_wash_hopper_washout" => "Truck Wash / Hopper Washout",
+  "other" => "Other"
+} %>
+
 <h3 style="margin-bottom:6px;">Expenses</h3>
-<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:20px;">
+<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:10px;">
   <div style="padding:16px;border:1px solid #ddd;border-radius:8px;">
     <div style="font-size:11px;color:#888;text-transform:uppercase;">Expenses This Month</div>
     <div style="font-size:26px;font-weight:700;color:#721c24;">$<%= number_with_precision(@expenses_mtd, precision: 2, delimiter: ',') %></div>
@@ -41,6 +55,21 @@
     <div style="font-size:26px;font-weight:700;color:#721c24;">$<%= number_with_precision(@ytd_expenses, precision: 2, delimiter: ',') %></div>
   </div>
 </div>
+<% if @expenses_by_category_mtd.any? %>
+  <div style="border:1px solid #ddd;border-radius:8px;padding:12px;margin-bottom:20px;background:#fafafa;">
+    <div style="font-size:11px;color:#888;text-transform:uppercase;margin-bottom:8px;font-weight:600;">This Month by Category</div>
+    <table style="width:100%;border-collapse:collapse;font-size:14px;">
+      <% @expenses_by_category_mtd.each do |cat, amt| %>
+        <tr style="border-bottom:1px solid #eee;">
+          <td style="padding:5px 4px;"><%= category_labels[cat] || cat.to_s.humanize %></td>
+          <td style="padding:5px 4px;text-align:right;font-weight:600;color:#721c24;">$<%= number_with_precision(amt, precision: 2, delimiter: ',') %></td>
+        </tr>
+      <% end %>
+    </table>
+  </div>
+<% else %>
+  <div style="margin-bottom:20px;"></div>
+<% end %>
 
 <h3 style="margin-bottom:6px;">Performance</h3>
 <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px;">
@@ -55,6 +84,7 @@
   <div style="padding:16px;border:1px solid #ddd;border-radius:8px;">
     <div style="font-size:11px;color:#888;text-transform:uppercase;">Cost / Mile</div>
     <div style="font-size:26px;font-weight:700;"><%= @cpm ? "$#{@cpm}" : '—' %></div>
+    <div style="font-size:10px;color:#aaa;margin-top:2px;">from fuel log miles</div>
   </div>
   <div style="padding:16px;border:1px solid #ddd;border-radius:8px;">
     <div style="font-size:11px;color:#888;text-transform:uppercase;">Overall MPG</div>

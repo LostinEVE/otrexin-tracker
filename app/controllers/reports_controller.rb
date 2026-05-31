@@ -33,9 +33,19 @@ class ReportsController < ApplicationController
 
     @expense_by_category = expense_rows.group(:category).sum(:amount).sort_by { |_k, v| -v.to_f }
 
+    # Revenue per mile uses mileage trip entries
     miles = mileage_rows.sum(:miles).to_f
     @revenue_per_mile = miles.positive? ? (@revenue_total / miles).round(4) : nil
-    @cost_per_mile = miles.positive? ? (@operating_cost_total / miles).round(4) : nil
+
+    # Cost per mile uses fuel log odometer range within the date range
+    fuel_in_range = current_user.fuel_logs
+      .where(fuel_date: @start_date..@end_date)
+      .where('odometer IS NOT NULL')
+      .order(:odometer)
+    fuel_min_odo = fuel_in_range.first&.odometer.to_f
+    fuel_max_odo = fuel_in_range.last&.odometer.to_f
+    fuel_miles = fuel_max_odo - fuel_min_odo
+    @cost_per_mile = fuel_miles > 0 ? (@operating_cost_total / fuel_miles).round(4) : nil
 
     respond_to do |format|
       format.html

@@ -25,11 +25,21 @@ class HomeController < ApplicationController
     # Expenses
     @expenses_mtd  = expense_scope.where('expense_date >= ?', month_start).sum(:amount)
     @ytd_expenses  = expense_scope.where('expense_date >= ?', year_start).sum(:amount)
+    @expenses_by_category_mtd = expense_scope
+      .where('expense_date >= ?', month_start)
+      .group(:category).sum(:amount)
+      .sort_by { |_k, v| -v.to_f }
 
-    # Mileage / CPM
+    # CPM from fuel log odometer range
+    fuel_logs_for_cpm = fuel_scope.where('odometer IS NOT NULL').order(:odometer)
+    fuel_min_odo = fuel_logs_for_cpm.first&.odometer.to_f
+    fuel_max_odo = fuel_logs_for_cpm.last&.odometer.to_f
+    fuel_log_miles = fuel_max_odo - fuel_min_odo
+
+    # Mileage / RPM
     @total_miles = Mileage.total_miles(mileage_scope)
     @rpm = Mileage.overall_revenue_per_mile(mileage_scope)
-    @cpm = Mileage.cost_per_mile(mileage_scope, expense_scope: expense_scope)
+    @cpm = fuel_log_miles > 0 ? (expense_scope.sum(:amount).to_f / fuel_log_miles).round(4) : nil
 
     # Fuel
     @overall_mpg = FuelLog.overall_mpg(fuel_scope)

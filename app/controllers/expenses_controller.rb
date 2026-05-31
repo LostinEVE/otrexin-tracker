@@ -13,6 +13,9 @@ class ExpensesController < ApplicationController
     @expenses = @expenses.where("expense_date >= ?", @start_date) if @start_date
     @expenses = @expenses.where("expense_date <= ?", @end_date) if @end_date
 
+    @expense_by_category = @expenses.group(:category).sum(:amount).sort_by { |_k, v| -v.to_f }
+    @expense_total = @expenses.sum(:amount).to_f
+
     respond_to do |format|
       format.html
       format.json

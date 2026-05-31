@@ -1,3 +1,17 @@
+<% category_labels = {
+  "fuel" => "Fuel",
+  "maintenance" => "Maintenance & Repairs",
+  "tolls" => "Tolls & Parking",
+  "food" => "Food & Meals",
+  "insurance" => "Insurance",
+  "permits" => "Permits & Licenses",
+  "truck_payment" => "Truck Payment / Lease",
+  "supplies" => "Supplies",
+  "drivers_pay" => "Drivers Pay",
+  "truck_wash_hopper_washout" => "Truck Wash / Hopper Washout",
+  "other" => "Other"
+} %>
+
 <p style="color: green"><%= notice %></p>
 
 <% content_for :title, "Expenses" %>
@@ -29,6 +43,32 @@
   <%= link_to "Export Expense Report (CSV)", expenses_path(format: :csv, truck_id: selected_truck&.id, start_date: @start_date, end_date: @end_date), style: "padding:10px 14px;font-weight:700;display:inline-block;" %>
   <%= link_to "New Expense", new_expense_path(truck_id: selected_truck&.id), style: "padding:10px 14px;font-weight:700;display:inline-block;" %>
 </div>
+
+<% if @expense_by_category.any? %>
+  <div style="border:1px solid #d8dee8;border-radius:10px;padding:14px;margin-bottom:20px;background:#fafafa;">
+    <h3 style="margin:0 0 10px;">Expense Summary</h3>
+    <table style="width:100%;max-width:500px;border-collapse:collapse;font-size:14px;">
+      <thead>
+        <tr style="background:#f0f0f0;">
+          <th style="text-align:left;padding:7px 8px;">Category</th>
+          <th style="text-align:right;padding:7px 8px;">Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @expense_by_category.each do |cat, amt| %>
+          <tr style="border-bottom:1px solid #eee;">
+            <td style="padding:6px 8px;"><%= category_labels[cat] || cat.to_s.humanize %></td>
+            <td style="padding:6px 8px;text-align:right;font-weight:600;color:#721c24;">$<%= number_with_precision(amt, precision: 2, delimiter: ',') %></td>
+          </tr>
+        <% end %>
+        <tr style="background:#f5f5f5;font-weight:700;border-top:2px solid #ccc;">
+          <td style="padding:7px 8px;">Total</td>
+          <td style="padding:7px 8px;text-align:right;color:#721c24;">$<%= number_with_precision(@expense_total, precision: 2, delimiter: ',') %></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+<% end %>
 
 <div id="expenses">
   <% @expenses.each do |expense| %>
