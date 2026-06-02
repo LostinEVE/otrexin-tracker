@@ -2,16 +2,19 @@ class FuelLog < ApplicationRecord
   belongs_to :user
   belongs_to :truck
 
+  validates :fuel_date, presence: true
   validates :odometer, presence: true, numericality: { only_integer: true, greater_than: 0 }
+  validates :gallons, numericality: { greater_than: 0 }, allow_nil: true
+  validates :price_per_gallon, :total_cost, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
 
-  scope :with_mpg_inputs, -> { where('odometer IS NOT NULL AND gallons IS NOT NULL AND gallons > 0') }
+  scope :with_mpg_inputs, -> { where("odometer IS NOT NULL AND gallons IS NOT NULL AND gallons > 0") }
 
   # Returns miles driven and MPG compared to the PREVIOUS entry by odometer order.
   # Returns nil if there is no previous entry (first fill-up has no reference).
   def mpg_since_last_fill
     return nil unless truck.present? && odometer.present? && gallons.present? && gallons > 0
 
-    prev = truck.fuel_logs.where('odometer < ?', odometer)
+    prev = truck.fuel_logs.where("odometer < ?", odometer)
                          .order(odometer: :desc)
                          .first
     return nil unless prev&.odometer.present?
@@ -25,7 +28,7 @@ class FuelLog < ApplicationRecord
   def miles_since_last_fill
     return nil unless truck.present? && odometer.present?
 
-    prev = truck.fuel_logs.where('odometer < ?', odometer)
+    prev = truck.fuel_logs.where("odometer < ?", odometer)
                          .order(odometer: :desc)
                          .first
     return nil unless prev&.odometer.present?
@@ -35,7 +38,7 @@ class FuelLog < ApplicationRecord
   end
 
   def self.total_miles_safe(scope = all)
-    logs = scope.where('odometer IS NOT NULL').order(:odometer).to_a
+    logs = scope.where("odometer IS NOT NULL").order(:odometer).to_a
     return nil if logs.size < 2
 
     total = 0

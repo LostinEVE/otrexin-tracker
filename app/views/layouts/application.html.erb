@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title><%= content_for(:title) || "Otrinvextracker Rails" %></title>
+    <title><%= content_for(:title) || "OTR Tracker" %></title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="application-name" content="Otrinvextracker Rails">
+    <meta name="application-name" content="OTR Tracker">
     <meta name="mobile-web-app-capable" content="yes">
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
@@ -24,29 +24,55 @@
   </head>
 
   <body class="otr-body">
-    <nav class="otr-nav">
-      <a href="/" class="otr-brand">OTR Tracker</a>
-      <button type="button" class="otr-nav-link otr-share-link" data-share-app>Share This App</button>
-      <% if logged_in? %>
-        <%= link_to "Invoices", invoices_path, class: "otr-nav-link" %>
-        <%= link_to "Expenses", expenses_path, class: "otr-nav-link" %>
-        <%= link_to "Fuel Log", fuel_logs_path, class: "otr-nav-link" %>
-        <%= link_to "Maintenance", maintenances_path, class: "otr-nav-link" %>
-        <%= link_to "Trucks", trucks_path, class: "otr-nav-link" %>
-        <%= link_to "Customers", customers_path, class: "otr-nav-link" %>
-        <%= link_to "Taxes", tax_payments_path, class: "otr-nav-link" %>
-        <%= link_to "P&L", reports_profit_loss_path, class: "otr-nav-link" %>
-        <%= link_to "Buy Me a Coffee", support_path, class: "otr-nav-link" %>
-        <%= link_to "Company", company_profile_path, class: "otr-nav-link" %>
-        <span class="otr-nav-link" style="opacity:0.9;">Signed in as <%= current_user.email %></span>
-        <%= button_to "Logout", logout_path, method: :delete, form: { style: "display:inline;" }, style: "padding:8px 12px;border:none;border-radius:999px;background:#7f1d1d;color:#fff;font-weight:700;" %>
-      <% else %>
-        <%= link_to "Sign In", login_path, class: "otr-nav-link" %>
-        <%= link_to "Create Account", signup_path, class: "otr-nav-link" %>
-      <% end %>
-    </nav>
-    <main class="otr-page">
-      <%= yield %>
-    </main>
+    <div class="app-shell">
+      <header class="app-header">
+        <div class="app-header-inner">
+          <div class="brand-lockup">
+            <div class="brand-mark">OTR</div>
+            <div class="brand-text">
+              <%= link_to "OTR Tracker", root_path, class: "otr-brand" %>
+              <span class="brand-subtitle">Operations, money, and tax records</span>
+            </div>
+          </div>
+
+          <div class="header-actions">
+            <button type="button" class="otr-nav-link otr-share-link" data-share-app>Share</button>
+            <% if logged_in? %>
+              <span class="user-email"><%= current_user.email %></span>
+              <%= button_to "Logout", logout_path, method: :delete, form: { class: "button_to" }, class: "btn btn-secondary" %>
+            <% else %>
+              <%= link_to "Sign In", login_path, class: "btn btn-secondary" %>
+              <%= link_to "Create Account", signup_path, class: "btn" %>
+            <% end %>
+          </div>
+        </div>
+
+        <% if logged_in? %>
+          <nav class="app-nav" aria-label="Primary">
+            <%= link_to "Dashboard", root_path, class: "otr-nav-link #{current_page?(root_path) ? 'is-active' : ''}" %>
+            <%= link_to "Invoices", invoices_path, class: "otr-nav-link #{current_page?(invoices_path) ? 'is-active' : ''}" %>
+            <%= link_to "Expenses", expenses_path, class: "otr-nav-link #{current_page?(expenses_path) ? 'is-active' : ''}" %>
+            <%= link_to "Fuel", fuel_logs_path, class: "otr-nav-link #{current_page?(fuel_logs_path) ? 'is-active' : ''}" %>
+            <%= link_to "Mileage", mileages_path, class: "otr-nav-link #{current_page?(mileages_path) ? 'is-active' : ''}" %>
+            <%= link_to "Maintenance", maintenances_path, class: "otr-nav-link #{current_page?(maintenances_path) ? 'is-active' : ''}" %>
+            <%= link_to "Trucks", trucks_path, class: "otr-nav-link #{current_page?(trucks_path) ? 'is-active' : ''}" %>
+            <%= link_to "Customers", customers_path, class: "otr-nav-link #{current_page?(customers_path) ? 'is-active' : ''}" %>
+            <%= link_to "Taxes", tax_payments_path, class: "otr-nav-link #{current_page?(tax_payments_path) ? 'is-active' : ''}" %>
+            <%= link_to "P&L", reports_profit_loss_path, class: "otr-nav-link #{current_page?(reports_profit_loss_path) ? 'is-active' : ''}" %>
+            <%= link_to "Company", company_profile_path, class: "otr-nav-link #{current_page?(company_profile_path) ? 'is-active' : ''}" %>
+            <%= link_to "Support", support_path, class: "otr-nav-link #{current_page?(support_path) ? 'is-active' : ''}" %>
+          </nav>
+        <% end %>
+      </header>
+
+      <main class="otr-page">
+        <% flash.each do |type, message| %>
+          <% next if message.blank? %>
+          <div class="alert <%= type.to_s == 'alert' ? 'alert-danger' : 'alert-success' %>"><%= message %></div>
+        <% end %>
+
+        <%= yield %>
+      </main>
+    </div>
   </body>
 </html>

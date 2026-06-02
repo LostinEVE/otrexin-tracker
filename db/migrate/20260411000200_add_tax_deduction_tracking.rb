@@ -12,7 +12,7 @@ class AddTaxDeductionTracking < ActiveRecord::Migration[8.1]
       t.timestamps
     end
 
-    add_index :per_diem_entries, [:user_id, :start_date]
+    add_index :per_diem_entries, [ :user_id, :start_date ]
 
     create_table :depreciation_assets do |t|
       t.references :user, null: false, foreign_key: true
@@ -29,6 +29,6 @@ class AddTaxDeductionTracking < ActiveRecord::Migration[8.1]
       t.timestamps
     end
 
-    add_index :depreciation_assets, [:user_id, :placed_in_service_date]
+    add_index :depreciation_assets, [ :user_id, :placed_in_service_date ]
   end
 end

@@ -1,0 +1,15 @@
+<% content_for :title, "Edit Mileage Entry" %>
+
+<div class="page-header">
+  <div class="page-title-group">
+    <h1>Edit Mileage Entry</h1>
+    <p class="page-kicker">Update trip details without changing the rest of your records.</p>
+  </div>
+</div>
+
+<%= render "form", mileage: @mileage %>
+
+<div class="page-footer-actions">
+  <%= link_to "View Entry", @mileage, class: "btn btn-secondary" %>
+  <%= link_to "Back to Mileage", mileages_path, class: "btn btn-secondary" %>
+</div>

@@ -1,24 +1,26 @@
 <% content_for :title, "Sign In" %>
 
-<h1>Sign In</h1>
-<p style="margin-top:0;">Access your cloud data securely.</p>
+<div class="page-header">
+  <div class="page-title-group">
+    <h1>Sign In</h1>
+    <p class="page-kicker">Access your trucking records and reports.</p>
+  </div>
+</div>
 
-<% if flash[:alert].present? %>
-  <p style="color:#721c24;"><%= flash[:alert] %></p>
+<%= form_with url: login_path, method: :post, local: true, class: "form-card" do |f| %>
+  <div class="form-grid">
+    <div class="field">
+      <%= f.label :email, "Email" %>
+      <%= f.email_field :email, required: true %>
+    </div>
+    <div class="field">
+      <%= f.label :password, "Password" %>
+      <%= f.password_field :password, required: true %>
+    </div>
+    <div class="action-bar">
+      <%= f.submit "Sign In" %>
+    </div>
+  </div>
 <% end %>
 
-<%= form_with url: login_path, method: :post, local: true, style: "max-width:420px;display:grid;gap:10px;" do |f| %>
-  <div>
-    <%= f.label :email, "Email", style: "display:block;font-weight:600;" %>
-    <%= f.email_field :email, required: true %>
-  </div>
-  <div>
-    <%= f.label :password, "Password", style: "display:block;font-weight:600;" %>
-    <%= f.password_field :password, required: true %>
-  </div>
-  <div>
-    <%= f.submit "Sign In", style: "padding:12px 14px;font-weight:700;" %>
-  </div>
-<% end %>
-
-<p style="margin-top:10px;">No account? <%= link_to "Create one", signup_path %></p>
+<p>Need an account? <%= link_to "Create one", signup_path %></p>

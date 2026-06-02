@@ -9,7 +9,7 @@ class FuelLogsController < ApplicationController
     @fuel_logs = @fuel_logs.where(truck: selected_truck) if selected_truck
     @overall_mpg = FuelLog.overall_mpg(@fuel_logs)
     @avg10 = FuelLog.avg_mpg_last(@fuel_logs)
-    @total_gallons_mtd = @fuel_logs.where('fuel_date >= ?', Date.today.beginning_of_month).sum(:gallons)
+    @total_gallons_mtd = @fuel_logs.where("fuel_date >= ?", Date.today.beginning_of_month).sum(:gallons)
     @total_fuel_cost = FuelLog.total_cost(@fuel_logs)
   end
 

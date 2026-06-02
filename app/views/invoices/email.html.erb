@@ -1,37 +1,38 @@
-<p style="color: green"><%= notice %></p>
-<% if flash[:alert].present? %>
-  <p style="color:#721c24;"><%= flash[:alert] %></p>
-<% end %>
-
 <% content_for :title, "Email Invoice" %>
 
-<h1>Email Invoice #<%= @invoice.invoice_number %></h1>
-<p style="margin-top:0;">Send a professional invoice email directly from the app.</p>
+<div class="page-header">
+  <div class="page-title-group">
+    <h1>Email Invoice #<%= @invoice.invoice_number %></h1>
+    <p class="page-kicker">Send the invoice to your customer directly from OTR Tracker.</p>
+  </div>
+</div>
 
 <% if ActionMailer::Base.delivery_method == :file %>
-  <p style="margin-top:0;color:#856404;background:#fff3cd;border:1px solid #ffeeba;padding:10px 12px;border-radius:8px;">
+  <div class="alert alert-danger">
     SMTP is not configured. Emails from this form are saved to <strong>tmp/mails</strong> and are not sent to recipients.
-  </p>
+  </div>
 <% end %>
 
-<%= form_with url: send_email_invoice_path(@invoice), method: :post, local: true, style: "max-width:760px;display:grid;gap:10px;" do |f| %>
-  <div>
-    <label style="display:block;font-weight:600;">To</label>
-    <%= email_field_tag "invoice_email[to]", @default_recipient, placeholder: "customer@company.com", required: true %>
-  </div>
+<%= form_with url: send_email_invoice_path(@invoice), method: :post, local: true, class: "form-card" do |f| %>
+  <div class="form-grid">
+    <div class="field">
+      <label>To</label>
+      <%= email_field_tag "invoice_email[to]", @default_recipient, placeholder: "customer@company.com", required: true %>
+    </div>
 
-  <div>
-    <label style="display:block;font-weight:600;">Subject</label>
-    <%= text_field_tag "invoice_email[subject]", @default_subject, required: true %>
-  </div>
+    <div class="field">
+      <label>Subject</label>
+      <%= text_field_tag "invoice_email[subject]", @default_subject, required: true %>
+    </div>
 
-  <div>
-    <label style="display:block;font-weight:600;">Message (optional)</label>
-    <%= text_area_tag "invoice_email[message]", "Hello,\n\nPlease find your invoice attached below in this email.\n\nThank you.", rows: 6 %>
-  </div>
+    <div class="field">
+      <label>Message</label>
+      <%= text_area_tag "invoice_email[message]", "Hello,\n\nPlease find your invoice attached below in this email.\n\nThank you.", rows: 6 %>
+    </div>
 
-  <div style="display:flex;gap:8px;flex-wrap:wrap;">
-    <%= f.submit "Send Invoice Email", style: "padding:12px 16px;font-weight:700;" %>
-    <%= link_to "Back to Invoice", invoice_path(@invoice), style: "padding:12px 16px;font-weight:700;display:inline-block;" %>
+    <div class="action-bar">
+      <%= f.submit "Send Invoice Email" %>
+      <%= link_to "Back to Invoice", invoice_path(@invoice), class: "btn btn-secondary" %>
+    </div>
   </div>
 <% end %>

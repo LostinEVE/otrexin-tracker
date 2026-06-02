@@ -1,0 +1,61 @@
+<%= form_with(model: mileage, class: "form-card") do |form| %>
+  <% if mileage.errors.any? %>
+    <div class="form-errors">
+      <h3><%= pluralize(mileage.errors.count, "error") %> stopped this mileage entry from saving:</h3>
+      <ul>
+        <% mileage.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="form-grid">
+    <div class="field">
+      <%= form.label :truck_id, "Truck" %>
+      <%= form.collection_select :truck_id, @trucks, :id, :display_name, { prompt: "Select a truck" } %>
+    </div>
+
+    <div class="two-col">
+      <div class="field">
+        <%= form.label :trip_date, "Trip Date" %>
+        <%= form.date_field :trip_date %>
+      </div>
+      <div class="field">
+        <%= form.label :load_number, "Load Number" %>
+        <%= form.text_field :load_number, placeholder: "LOAD-100" %>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div class="field">
+        <%= form.label :origin, "Origin" %>
+        <%= form.text_field :origin, placeholder: "Memphis, TN" %>
+      </div>
+      <div class="field">
+        <%= form.label :destination, "Destination" %>
+        <%= form.text_field :destination, placeholder: "Dallas, TX" %>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div class="field">
+        <%= form.label :miles, "Miles" %>
+        <%= form.number_field :miles, step: "0.1", min: 0, placeholder: "0.0" %>
+      </div>
+      <div class="field">
+        <%= form.label :revenue, "Revenue ($)" %>
+        <%= form.number_field :revenue, step: "0.01", min: 0, placeholder: "0.00" %>
+      </div>
+    </div>
+
+    <div class="field">
+      <%= form.label :notes, "Notes" %>
+      <%= form.text_area :notes, rows: 3, placeholder: "Lane notes, detention, broker details..." %>
+    </div>
+
+    <div class="action-bar">
+      <%= form.submit "Save Mileage" %>
+    </div>
+  </div>
+<% end %>

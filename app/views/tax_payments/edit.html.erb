@@ -1,12 +1,15 @@
-<% content_for :title, "Editing tax payment" %>
+<% content_for :title, "Edit Tax Payment" %>
 
-<h1>Editing tax payment</h1>
+<div class="page-header">
+  <div class="page-title-group">
+    <h1>Edit Tax Payment</h1>
+    <p class="page-kicker">Update payment date, quarter, amount, or notes.</p>
+  </div>
+</div>
 
 <%= render "form", tax_payment: @tax_payment %>
 
-<br>
-
-<div>
-  <%= link_to "Show this tax payment", @tax_payment %> |
-  <%= link_to "Back to tax payments", tax_payments_path %>
+<div class="page-footer-actions">
+  <%= link_to "View Payment", @tax_payment, class: "btn btn-secondary" %>
+  <%= link_to "Back to Taxes", tax_payments_path, class: "btn btn-secondary" %>
 </div>

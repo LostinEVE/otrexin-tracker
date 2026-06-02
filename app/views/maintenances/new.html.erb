@@ -1,11 +1,14 @@
-<% content_for :title, "New maintenance" %>
+<% content_for :title, "New Maintenance Record" %>
 
-<h1>New maintenance</h1>
+<div class="page-header">
+  <div class="page-title-group">
+    <h1>New Maintenance Record</h1>
+    <p class="page-kicker">Log service work, repair cost, odometer, and vendor information.</p>
+  </div>
+</div>
 
 <%= render "form", maintenance: @maintenance %>
 
-<br>
-
-<div>
-  <%= link_to "Back to maintenances", maintenances_path %>
+<div class="page-footer-actions">
+  <%= link_to "Back to Maintenance", maintenances_path, class: "btn btn-secondary" %>
 </div>

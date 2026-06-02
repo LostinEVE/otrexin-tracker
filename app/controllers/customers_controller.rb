@@ -6,7 +6,7 @@ class CustomersController < ApplicationController
 
     @customers = grouped.map do |name, invoices|
       total_revenue = invoices.sum { |i| i.amount.to_f }
-      paid_count    = invoices.count { |i| i.status == 'paid' }
+      paid_count    = invoices.count { |i| i.status == "paid" }
       invoice_count = invoices.size
       avg_invoice   = invoice_count > 0 ? (total_revenue / invoice_count).round(2) : 0
 

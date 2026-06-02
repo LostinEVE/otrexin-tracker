@@ -11,16 +11,39 @@
   "truck_wash_hopper_washout" => "Truck Wash / Hopper Washout",
   "other" => "Other"
 } %>
-<div id="<%= dom_id expense %>" style="display:grid; gap:4px; padding:12px; border:1px solid #ddd; border-radius:6px; margin-bottom:8px;">
-  <div style="display:flex; justify-content:space-between;">
-    <strong><%= category_labels[expense.category] || expense.category %></strong>
-    <strong style="color:#155724;">$<%= number_with_precision(expense.amount, precision: 2) %></strong>
+
+<div id="<%= dom_id expense %>" class="record-card">
+  <div class="record-main">
+    <div>
+      <h3 class="record-title"><%= category_labels[expense.category] || expense.category.to_s.humanize %></h3>
+      <div class="record-subtitle"><%= expense.expense_date %> - <%= expense.vendor.presence || "No vendor" %></div>
+    </div>
+    <div class="record-amount text-danger">$<%= number_with_precision(expense.amount, precision: 2) %></div>
   </div>
-  <div style="color:#555; font-size:14px;">Truck: <%= expense.truck&.display_name || "No truck" %></div>
-  <div style="color:#555; font-size:14px;">
-    <%= expense.expense_date %> &mdash; <%= expense.vendor.presence || "No vendor" %>
+
+  <div class="record-meta-grid">
+    <div class="meta-item">
+      <div class="meta-label">Truck</div>
+      <div class="meta-value"><%= expense.truck&.display_name || "No truck" %></div>
+    </div>
+    <div class="meta-item">
+      <div class="meta-label">Category</div>
+      <div class="meta-value"><%= category_labels[expense.category] || expense.category.to_s.humanize %></div>
+    </div>
+    <% if expense.gallons.present? %>
+      <div class="meta-item">
+        <div class="meta-label">Gallons</div>
+        <div class="meta-value"><%= expense.gallons %></div>
+      </div>
+    <% end %>
   </div>
+
   <% if expense.notes.present? %>
-    <div style="font-size:13px; color:#666;"><%= expense.notes %></div>
+    <p class="record-note"><%= expense.notes %></p>
   <% end %>
+
+  <div class="record-actions">
+    <%= link_to "View", expense, class: "btn btn-secondary" %>
+    <%= link_to "Edit", edit_expense_path(expense), class: "btn btn-secondary" %>
+  </div>
 </div>

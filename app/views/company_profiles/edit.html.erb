@@ -1,10 +1,14 @@
 <% content_for :title, "Edit Company Profile" %>
 
-<h1>Edit Company Profile</h1>
-<p style="margin-top:0;">Keep this up to date for professional invoices and reports.</p>
+<div class="page-header">
+  <div class="page-title-group">
+    <h1>Edit Company Profile</h1>
+    <p class="page-kicker">Keep invoice and report identity details up to date.</p>
+  </div>
+</div>
 
 <%= render "form" %>
 
-<div style="margin-top:14px;">
-  <%= link_to "Back", company_profile_path %>
+<div class="page-footer-actions">
+  <%= link_to "Back to Company Profile", company_profile_path, class: "btn btn-secondary" %>
 </div>

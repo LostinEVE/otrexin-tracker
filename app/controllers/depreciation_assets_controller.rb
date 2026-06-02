@@ -47,6 +47,6 @@ class DepreciationAssetsController < ApplicationController
   end
 
   def depreciation_asset_params
-    params.expect(depreciation_asset: [:truck_id, :name, :asset_type, :placed_in_service_date, :cost_basis, :salvage_value, :recovery_period_years, :depreciation_method, :notes])
+    params.expect(depreciation_asset: [ :truck_id, :name, :asset_type, :placed_in_service_date, :cost_basis, :salvage_value, :recovery_period_years, :depreciation_method, :notes ])
   end
 end

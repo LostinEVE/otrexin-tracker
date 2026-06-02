@@ -1,34 +1,44 @@
-<p style="color: green"><%= notice %></p>
-
 <% content_for :title, "Trucks" %>
 
-<h1>Truck Manager</h1>
-<p style="color:#5f6c80;max-width:720px;">Each trip, invoice, fuel entry, expense, and maintenance record now belongs to a truck. Add trucks here, then filter records across the app by truck.</p>
-
-<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">
-  <%= link_to "Add Truck", new_truck_path, style: "padding:10px 14px;font-weight:700;display:inline-block;" %>
+<div class="page-header">
+  <div class="page-title-group">
+    <h1>Truck Manager</h1>
+    <p class="page-kicker">Manage the trucks used across invoices, trips, fuel entries, expenses, and maintenance records.</p>
+  </div>
+  <div class="action-bar">
+    <%= link_to "Add Truck", new_truck_path, class: "btn" %>
+  </div>
 </div>
 
-<div style="display:grid;gap:10px;max-width:820px;">
-  <% @trucks.each do |truck| %>
-    <div style="padding:14px;border:1px solid #ddd;border-radius:8px;display:grid;gap:6px;">
-      <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;">
-        <strong><%= truck.display_name %></strong>
-        <span style="padding:4px 10px;border-radius:999px;background:<%= truck.active? ? '#d4edda' : '#f1f3f5' %>;color:<%= truck.active? ? '#155724' : '#495057' %>;font-size:12px;font-weight:700;">
-          <%= truck.active? ? 'ACTIVE' : 'INACTIVE' %>
-        </span>
+<div class="record-list">
+  <% if @trucks.any? %>
+    <% @trucks.each do |truck| %>
+      <div class="record-card">
+        <div class="record-main">
+          <div>
+            <h3 class="record-title"><%= truck.display_name %></h3>
+            <div class="record-subtitle"><%= [truck.year, truck.make, truck.model].compact_blank.join(" ").presence || "No truck details added yet." %></div>
+          </div>
+          <span class="badge <%= truck.active? ? 'badge-success' : 'badge-neutral' %>"><%= truck.active? ? "Active" : "Inactive" %></span>
+        </div>
+
+        <% if truck.vin.present? %>
+          <div class="record-meta-grid">
+            <div class="meta-item">
+              <div class="meta-label">VIN</div>
+              <div class="meta-value"><%= truck.vin %></div>
+            </div>
+          </div>
+        <% end %>
+
+        <div class="record-actions">
+          <%= link_to "Edit", edit_truck_path(truck), class: "btn btn-secondary" %>
+          <%= link_to "View Trips", mileages_path(truck_id: truck.id), class: "btn btn-secondary" %>
+          <%= link_to "Delete", truck_path(truck), data: { turbo_method: :delete, turbo_confirm: "Delete this truck?" }, class: "btn btn-danger" %>
+        </div>
       </div>
-      <div style="color:#555;font-size:14px;">
-        <%= [truck.year, truck.make, truck.model].compact_blank.join(' ').presence || 'No truck details added yet.' %>
-      </div>
-      <% if truck.vin.present? %>
-        <div style="color:#666;font-size:13px;">VIN: <%= truck.vin %></div>
-      <% end %>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;">
-        <%= link_to "Edit", edit_truck_path(truck), style: "padding:8px 12px;font-weight:700;display:inline-block;" %>
-        <%= link_to "View Trips", mileages_path(truck_id: truck.id), style: "padding:8px 12px;font-weight:700;display:inline-block;" %>
-        <%= link_to "Delete", truck_path(truck), data: { turbo_method: :delete, turbo_confirm: "Delete this truck?" }, style: "padding:8px 12px;font-weight:700;display:inline-block;color:#7f1d1d;" %>
-      </div>
-    </div>
+    <% end %>
+  <% else %>
+    <div class="empty-state">No trucks have been added yet.</div>
   <% end %>
 </div>

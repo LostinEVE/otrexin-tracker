@@ -1,49 +1,52 @@
-<p style="color: green"><%= notice %></p>
-
 <% content_for :title, "Fuel Log" %>
 
-<h1>⛽ Fuel Log</h1>
+<div class="page-header">
+  <div class="page-title-group">
+    <h1>Fuel Log</h1>
+    <p class="page-kicker">Track fill-ups, gallons, fuel spend, and MPG trends.</p>
+  </div>
+  <div class="action-bar">
+    <%= link_to "Add Fuel Entry", new_fuel_log_path(truck_id: selected_truck&.id), class: "btn" %>
+  </div>
+</div>
 
-<%= form_with url: fuel_logs_path, method: :get, local: true, style: "display:flex;gap:10px;align-items:end;flex-wrap:wrap;margin-bottom:16px;" do |f| %>
-  <div>
-    <%= f.label :truck_id, "Truck", style: "display:block;font-weight:600;" %>
+<%= form_with url: fuel_logs_path, method: :get, local: true, class: "filter-bar" do |f| %>
+  <div class="field">
+    <%= f.label :truck_id, "Truck" %>
     <%= f.select :truck_id,
       options_from_collection_for_select(@trucks, :id, :display_name, selected_truck&.id),
-        { include_blank: "All trucks" },
-        style: "padding:10px;min-width:220px;" %>
+      { include_blank: "All trucks" } %>
   </div>
-  <div>
-    <%= f.submit "Filter", style: "padding:10px 14px;font-weight:700;" %>
+  <div class="field">
+    <%= f.submit "Filter" %>
   </div>
 <% end %>
 
-<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px;">
-  <div style="padding:14px;border:1px solid #ddd;border-radius:8px;text-align:center;">
-    <div style="font-size:22px;font-weight:700;"><%= @overall_mpg&.to_s || '—' %></div>
-    <div style="font-size:12px;color:#555;">Overall MPG</div>
+<div class="metric-grid is-compact">
+  <div class="metric-card">
+    <div class="metric-label">Overall MPG</div>
+    <div class="metric-value"><%= @overall_mpg&.to_s || "-" %></div>
   </div>
-  <div style="padding:14px;border:1px solid #ddd;border-radius:8px;text-align:center;">
-    <div style="font-size:22px;font-weight:700;"><%= @avg10&.to_s || '—' %></div>
-    <div style="font-size:12px;color:#555;">Avg MPG (last 10)</div>
+  <div class="metric-card">
+    <div class="metric-label">Avg MPG (Last 10)</div>
+    <div class="metric-value"><%= @avg10&.to_s || "-" %></div>
   </div>
-  <div style="padding:14px;border:1px solid #ddd;border-radius:8px;text-align:center;">
-    <div style="font-size:22px;font-weight:700;"><%= number_with_precision(@total_gallons_mtd, precision: 1) %></div>
-    <div style="font-size:12px;color:#555;">Gallons MTD</div>
+  <div class="metric-card">
+    <div class="metric-label">Gallons MTD</div>
+    <div class="metric-value"><%= number_with_precision(@total_gallons_mtd, precision: 1) %></div>
   </div>
-  <div style="padding:14px;border:1px solid #ddd;border-radius:8px;text-align:center;">
-    <div style="font-size:22px;font-weight:700;">$<%= number_with_precision(@total_fuel_cost, precision: 2) %></div>
-    <div style="font-size:12px;color:#555;">Total Fuel Cost</div>
+  <div class="metric-card">
+    <div class="metric-label">Total Fuel Cost</div>
+    <div class="metric-value text-danger">$<%= number_with_precision(@total_fuel_cost, precision: 2) %></div>
   </div>
 </div>
 
-<div id="fuel_logs">
-  <% @fuel_logs.each do |fuel_log| %>
-    <%= render fuel_log %>
-    <div style="margin-bottom:4px;font-size:13px;">
-      <%= link_to "Edit", edit_fuel_log_path(fuel_log) %> |
-      <%= link_to "Delete", fuel_log, data: { turbo_method: :delete, turbo_confirm: "Delete this entry?" } %>
-    </div>
+<div id="fuel_logs" class="record-list">
+  <% if @fuel_logs.any? %>
+    <% @fuel_logs.each do |fuel_log| %>
+      <%= render fuel_log %>
+    <% end %>
+  <% else %>
+    <div class="empty-state">No fuel entries yet.</div>
   <% end %>
 </div>
-
-<%= link_to "+ Add Fuel Entry", new_fuel_log_path(truck_id: selected_truck&.id), style: "padding:12px 20px;font-weight:700;display:inline-block;margin-top:10px;" %>

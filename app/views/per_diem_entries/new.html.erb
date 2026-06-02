@@ -1,5 +1,14 @@
 <% content_for :title, "Add Per Diem Entry" %>
 
-<h1>Add Per Diem Entry</h1>
+<div class="page-header">
+  <div class="page-title-group">
+    <h1>Add Per Diem Entry</h1>
+    <p class="page-kicker">Record qualifying travel days for tax estimate support.</p>
+  </div>
+</div>
 
 <%= render "form", per_diem_entry: @per_diem_entry %>
+
+<div class="page-footer-actions">
+  <%= link_to "Back to Per Diem", per_diem_entries_path, class: "btn btn-secondary" %>
+</div>

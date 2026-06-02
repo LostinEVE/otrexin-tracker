@@ -1,0 +1,40 @@
+<div id="<%= dom_id mileage %>" class="record-card">
+  <div class="record-main">
+    <div>
+      <h3 class="record-title"><%= mileage.origin %> to <%= mileage.destination %></h3>
+      <div class="record-subtitle">
+        <%= mileage.trip_date %> - <%= mileage.truck.display_name %>
+        <% if mileage.load_number.present? %>
+          - Load <%= mileage.load_number %>
+        <% end %>
+      </div>
+    </div>
+    <% if mileage.revenue.present? %>
+      <div class="record-amount">$<%= number_with_precision(mileage.revenue, precision: 2) %></div>
+    <% end %>
+  </div>
+
+  <div class="record-meta-grid">
+    <div class="meta-item">
+      <div class="meta-label">Miles</div>
+      <div class="meta-value"><%= number_with_precision(mileage.miles, precision: 1, delimiter: ",") %></div>
+    </div>
+    <div class="meta-item">
+      <div class="meta-label">Revenue / Mile</div>
+      <div class="meta-value"><%= mileage.revenue_per_mile ? "$#{mileage.revenue_per_mile}" : "-" %></div>
+    </div>
+    <div class="meta-item">
+      <div class="meta-label">Truck</div>
+      <div class="meta-value"><%= mileage.truck.display_name %></div>
+    </div>
+  </div>
+
+  <% if mileage.notes.present? %>
+    <p class="record-note"><%= mileage.notes %></p>
+  <% end %>
+
+  <div class="record-actions">
+    <%= link_to "View", mileage, class: "btn btn-secondary" %>
+    <%= link_to "Edit", edit_mileage_path(mileage), class: "btn btn-secondary" %>
+  </div>
+</div>

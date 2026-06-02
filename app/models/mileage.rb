@@ -2,6 +2,10 @@ class Mileage < ApplicationRecord
   belongs_to :user
   belongs_to :truck
 
+  validates :trip_date, :origin, :destination, presence: true
+  validates :miles, numericality: { greater_than: 0 }
+  validates :revenue, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
+
   # Revenue per mile for a single trip
   def revenue_per_mile
     return nil unless miles.present? && miles > 0 && revenue.present?

@@ -1,12 +1,15 @@
-<% content_for :title, "Editing expense" %>
+<% content_for :title, "Edit Expense" %>
 
-<h1>Editing expense</h1>
+<div class="page-header">
+  <div class="page-title-group">
+    <h1>Edit Expense</h1>
+    <p class="page-kicker">Update the expense details and category.</p>
+  </div>
+</div>
 
 <%= render "form", expense: @expense %>
 
-<br>
-
-<div>
-  <%= link_to "Show this expense", @expense %> |
-  <%= link_to "Back to expenses", expenses_path %>
+<div class="page-footer-actions">
+  <%= link_to "View Expense", @expense, class: "btn btn-secondary" %>
+  <%= link_to "Back to Expenses", expenses_path, class: "btn btn-secondary" %>
 </div>

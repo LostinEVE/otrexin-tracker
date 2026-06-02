@@ -41,7 +41,7 @@ class AddTrucksAndAssignRecords < ActiveRecord::Migration[8.1]
       t.timestamps
     end
 
-    add_index :trucks, [:user_id, :name], unique: true
+    add_index :trucks, [ :user_id, :name ], unique: true
 
     add_reference :mileages, :truck, foreign_key: true
     add_reference :fuel_logs, :truck, foreign_key: true
@@ -49,11 +49,11 @@ class AddTrucksAndAssignRecords < ActiveRecord::Migration[8.1]
     add_reference :expenses, :truck, foreign_key: true
     add_reference :invoices, :truck, foreign_key: true
 
-    add_index :mileages, [:user_id, :truck_id]
-    add_index :fuel_logs, [:user_id, :truck_id]
-    add_index :maintenances, [:user_id, :truck_id]
-    add_index :expenses, [:user_id, :truck_id]
-    add_index :invoices, [:user_id, :truck_id]
+    add_index :mileages, [ :user_id, :truck_id ]
+    add_index :fuel_logs, [ :user_id, :truck_id ]
+    add_index :maintenances, [ :user_id, :truck_id ]
+    add_index :expenses, [ :user_id, :truck_id ]
+    add_index :invoices, [ :user_id, :truck_id ]
 
     backfill_default_trucks
 
@@ -65,11 +65,11 @@ class AddTrucksAndAssignRecords < ActiveRecord::Migration[8.1]
   end
 
   def down
-    remove_index :invoices, [:user_id, :truck_id]
-    remove_index :expenses, [:user_id, :truck_id]
-    remove_index :maintenances, [:user_id, :truck_id]
-    remove_index :fuel_logs, [:user_id, :truck_id]
-    remove_index :mileages, [:user_id, :truck_id]
+    remove_index :invoices, [ :user_id, :truck_id ]
+    remove_index :expenses, [ :user_id, :truck_id ]
+    remove_index :maintenances, [ :user_id, :truck_id ]
+    remove_index :fuel_logs, [ :user_id, :truck_id ]
+    remove_index :mileages, [ :user_id, :truck_id ]
 
     remove_reference :invoices, :truck, foreign_key: true
     remove_reference :expenses, :truck, foreign_key: true

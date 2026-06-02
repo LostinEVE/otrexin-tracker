@@ -1,20 +1,46 @@
 <% type_labels = {
-  'oil_change' => 'Oil Change', 'tire_rotation' => 'Tire Rotation',
-  'brake_inspection' => 'Brake Inspection/Repair', 'dot_inspection' => 'DOT Inspection',
-  'tire_replacement' => 'Tire Replacement', 'engine_repair' => 'Engine Repair',
-  'transmission' => 'Transmission', 'pm_service' => 'PM Service', 'other' => 'Other'
+  "oil_change" => "Oil Change",
+  "tire_rotation" => "Tire Rotation",
+  "brake_inspection" => "Brake Inspection / Repair",
+  "dot_inspection" => "DOT Inspection",
+  "tire_replacement" => "Tire Replacement",
+  "engine_repair" => "Engine Repair",
+  "transmission" => "Transmission",
+  "pm_service" => "PM Service",
+  "other" => "Other"
 } %>
-<div id="<%= dom_id maintenance %>" style="padding:12px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px;">
-  <div style="display:flex;justify-content:space-between;align-items:center;">
-    <strong><%= maintenance.maintenance_date %> — <%= type_labels[maintenance.maintenance_type] || maintenance.maintenance_type %></strong>
-    <strong style="color:#155724;">$<%= number_with_precision(maintenance.cost, precision: 2) %></strong>
+
+<div id="<%= dom_id maintenance %>" class="record-card">
+  <div class="record-main">
+    <div>
+      <h3 class="record-title"><%= type_labels[maintenance.maintenance_type] || maintenance.maintenance_type.to_s.humanize %></h3>
+      <div class="record-subtitle"><%= maintenance.maintenance_date %> - <%= maintenance.truck.display_name %></div>
+    </div>
+    <div class="record-amount text-danger">$<%= number_with_precision(maintenance.cost, precision: 2) %></div>
   </div>
-  <div style="font-size:13px;color:#666;margin-top:4px;">Truck: <%= maintenance.truck.display_name %></div>
-  <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:8px;font-size:14px;">
-    <div><strong>Vendor:</strong><br><%= maintenance.vendor.presence || '—' %></div>
-    <div><strong>Odometer:</strong><br><%= number_with_delimiter(maintenance.odometer) %></div>
+
+  <div class="record-meta-grid">
+    <div class="meta-item">
+      <div class="meta-label">Vendor</div>
+      <div class="meta-value"><%= maintenance.vendor.presence || "-" %></div>
+    </div>
+    <div class="meta-item">
+      <div class="meta-label">Odometer</div>
+      <div class="meta-value"><%= maintenance.odometer.present? ? number_with_delimiter(maintenance.odometer) : "-" %></div>
+    </div>
+    <div class="meta-item">
+      <div class="meta-label">Truck</div>
+      <div class="meta-value"><%= maintenance.truck.display_name %></div>
+    </div>
   </div>
+
   <% if maintenance.notes.present? %>
-    <div style="margin-top:6px;font-size:13px;color:#666;"><%= maintenance.notes %></div>
+    <p class="record-note"><%= maintenance.notes %></p>
   <% end %>
+
+  <div class="record-actions">
+    <%= link_to "View", maintenance, class: "btn btn-secondary" %>
+    <%= link_to "Edit", edit_maintenance_path(maintenance), class: "btn btn-secondary" %>
+    <%= link_to "Delete", maintenance, data: { turbo_method: :delete, turbo_confirm: "Delete this record?" }, class: "btn btn-danger" %>
+  </div>
 </div>

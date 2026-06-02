@@ -1,31 +1,33 @@
-<p style="color: green"><%= notice %></p>
-
 <% content_for :title, "Invoices" %>
 
-<h1>Invoices</h1>
-<p style="margin-top:0;color:#5f6c80;">Use the <strong>Email Invoice</strong> button on each invoice card to send it directly from the app.</p>
+<div class="page-header">
+  <div class="page-title-group">
+    <h1>Invoices</h1>
+    <p class="page-kicker">Create, track, print, and email customer invoices.</p>
+  </div>
+  <div class="action-bar">
+    <%= link_to "New Invoice", new_invoice_path(truck_id: selected_truck&.id), class: "btn" %>
+  </div>
+</div>
 
-<%= form_with url: invoices_path, method: :get, local: true, style: "display:flex;gap:10px;align-items:end;flex-wrap:wrap;margin-bottom:16px;" do |f| %>
-  <div>
-    <%= f.label :truck_id, "Truck", style: "display:block;font-weight:600;" %>
+<%= form_with url: invoices_path, method: :get, local: true, class: "filter-bar" do |f| %>
+  <div class="field">
+    <%= f.label :truck_id, "Truck" %>
     <%= f.select :truck_id,
       options_from_collection_for_select(@trucks, :id, :display_name, selected_truck&.id),
-        { include_blank: "All trucks" },
-        style: "padding:10px;min-width:220px;" %>
+      { include_blank: "All trucks" } %>
   </div>
-  <div>
-    <%= f.submit "Filter", style: "padding:10px 14px;font-weight:700;" %>
+  <div class="field">
+    <%= f.submit "Filter" %>
   </div>
 <% end %>
 
-<div id="invoices">
+<div id="invoices" class="record-list">
   <% if @invoices.any? %>
     <% @invoices.each do |invoice| %>
       <%= render invoice %>
     <% end %>
   <% else %>
-    <p style="color:#5f6c80;">No invoices yet. Create one, then you'll see the Email Invoice option.</p>
+    <div class="empty-state">No invoices yet.</div>
   <% end %>
 </div>
-
-<%= link_to "New Invoice", new_invoice_path(truck_id: selected_truck&.id), style: "padding:10px 14px;font-weight:700;display:inline-block;" %>

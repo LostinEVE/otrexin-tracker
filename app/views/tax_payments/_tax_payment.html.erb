@@ -1,22 +1,13 @@
-<div id="<%= dom_id tax_payment %>">
-  <div>
-    <strong>Payment date:</strong>
-    <%= tax_payment.payment_date %>
+<div id="<%= dom_id tax_payment %>" class="record-card">
+  <div class="record-main">
+    <div>
+      <h3 class="record-title"><%= tax_payment.quarter %> Payment</h3>
+      <div class="record-subtitle"><%= tax_payment.payment_date %></div>
+    </div>
+    <div class="record-amount">$<%= number_with_precision(tax_payment.amount, precision: 2) %></div>
   </div>
 
-  <div>
-    <strong>Quarter:</strong>
-    <%= tax_payment.quarter %>
-  </div>
-
-  <div>
-    <strong>Amount:</strong>
-    <%= tax_payment.amount %>
-  </div>
-
-  <div>
-    <strong>Notes:</strong>
-    <%= tax_payment.notes %>
-  </div>
-
+  <% if tax_payment.notes.present? %>
+    <p class="record-note"><%= tax_payment.notes %></p>
+  <% end %>
 </div>

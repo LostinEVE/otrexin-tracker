@@ -1,5 +1,14 @@
 <% content_for :title, "Add Depreciation Asset" %>
 
-<h1>Add Depreciation Asset</h1>
+<div class="page-header">
+  <div class="page-title-group">
+    <h1>Add Depreciation Asset</h1>
+    <p class="page-kicker">Add an asset for tax deduction estimates.</p>
+  </div>
+</div>
 
 <%= render "form", depreciation_asset: @depreciation_asset %>
+
+<div class="page-footer-actions">
+  <%= link_to "Back to Assets", depreciation_assets_path, class: "btn btn-secondary" %>
+</div>

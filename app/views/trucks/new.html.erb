@@ -1,5 +1,14 @@
 <% content_for :title, "Add Truck" %>
 
-<h1>Add Truck</h1>
+<div class="page-header">
+  <div class="page-title-group">
+    <h1>Add Truck</h1>
+    <p class="page-kicker">Add a truck so records can be filtered and reported accurately.</p>
+  </div>
+</div>
 
 <%= render "form", truck: @truck %>
+
+<div class="page-footer-actions">
+  <%= link_to "Back to Trucks", trucks_path, class: "btn btn-secondary" %>
+</div>

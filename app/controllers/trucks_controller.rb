@@ -52,6 +52,6 @@ class TrucksController < ApplicationController
   end
 
   def truck_params
-    params.expect(truck: [:name, :unit_number, :vin, :year, :make, :model, :active])
+    params.expect(truck: [ :name, :unit_number, :vin, :year, :make, :model, :active ])
   end
 end

@@ -1,5 +1,5 @@
 class DepreciationAsset < ApplicationRecord
-  METHODS = ["straight_line", "double_declining_balance", "section_179"].freeze
+  METHODS = [ "straight_line", "double_declining_balance", "section_179" ].freeze
 
   belongs_to :user
   belongs_to :truck, optional: true
@@ -11,7 +11,7 @@ class DepreciationAsset < ApplicationRecord
   validates :depreciation_method, inclusion: { in: METHODS }
 
   def depreciable_basis
-    [cost_basis.to_d - salvage_value.to_d, 0].max
+    [ cost_basis.to_d - salvage_value.to_d, 0 ].max
   end
 
   def annual_deduction
@@ -66,7 +66,7 @@ class DepreciationAsset < ApplicationRecord
         0.to_d
       end
 
-      amount = [amount.to_d.round(2), remaining_basis].min
+      amount = [ amount.to_d.round(2), remaining_basis ].min
       schedule << { year: current_year, amount: amount }
       remaining_basis -= amount
       current_basis = remaining_basis

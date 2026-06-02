@@ -1,11 +1,14 @@
-<% content_for :title, "New fuel log" %>
+<% content_for :title, "New Fuel Entry" %>
 
-<h1>New fuel log</h1>
+<div class="page-header">
+  <div class="page-title-group">
+    <h1>New Fuel Entry</h1>
+    <p class="page-kicker">Add a fill-up and keep MPG and fuel cost totals current.</p>
+  </div>
+</div>
 
 <%= render "form", fuel_log: @fuel_log %>
 
-<br>
-
-<div>
-  <%= link_to "Back to fuel logs", fuel_logs_path %>
+<div class="page-footer-actions">
+  <%= link_to "Back to Fuel Log", fuel_logs_path, class: "btn btn-secondary" %>
 </div>

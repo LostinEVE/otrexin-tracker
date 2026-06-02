@@ -1,5 +1,14 @@
 <% content_for :title, "Edit Per Diem Entry" %>
 
-<h1>Edit Per Diem Entry</h1>
+<div class="page-header">
+  <div class="page-title-group">
+    <h1>Edit Per Diem Entry</h1>
+    <p class="page-kicker">Update qualifying day and rate details.</p>
+  </div>
+</div>
 
 <%= render "form", per_diem_entry: @per_diem_entry %>
+
+<div class="page-footer-actions">
+  <%= link_to "Back to Per Diem", per_diem_entries_path, class: "btn btn-secondary" %>
+</div>

@@ -1,10 +1,10 @@
 class TaxEstimator
   FEDERAL_BRACKETS = [
-    [11_600, 0.10],
-    [47_150, 0.12],
-    [100_525, 0.22],
-    [191_950, 0.24],
-    [Float::INFINITY, 0.32]
+    [ 11_600, 0.10 ],
+    [ 47_150, 0.12 ],
+    [ 100_525, 0.22 ],
+    [ 191_950, 0.24 ],
+    [ Float::INFINITY, 0.32 ]
   ].freeze
   STANDARD_DEDUCTION = 15_000
 
@@ -45,15 +45,15 @@ class TaxEstimator
   end
 
   def adjusted_self_employment_income
-    [business_profit * 0.9235, 0].max.round(2)
+    [ business_profit * 0.9235, 0 ].max.round(2)
   end
 
   def self_employment_tax
-    [business_profit * 0.153, 0].max.round(2)
+    [ business_profit * 0.153, 0 ].max.round(2)
   end
 
   def taxable_income
-    [adjusted_self_employment_income - STANDARD_DEDUCTION, 0].max.round(2)
+    [ adjusted_self_employment_income - STANDARD_DEDUCTION, 0 ].max.round(2)
   end
 
   def income_tax
@@ -63,7 +63,7 @@ class TaxEstimator
     FEDERAL_BRACKETS.sum do |limit, rate|
       next 0 if remaining_income <= previous_limit
 
-      taxable_in_bracket = [remaining_income - previous_limit, limit - previous_limit].min
+      taxable_in_bracket = [ remaining_income - previous_limit, limit - previous_limit ].min
       previous_limit = limit
       taxable_in_bracket * rate
     end.round(2)
@@ -100,7 +100,7 @@ class TaxEstimator
   end
 
   def depreciation_scope
-    scope_by_truck(user.depreciation_assets.where('placed_in_service_date <= ?', year_end))
+    scope_by_truck(user.depreciation_assets.where("placed_in_service_date <= ?", year_end))
   end
 
   def scope_by_truck(scope)

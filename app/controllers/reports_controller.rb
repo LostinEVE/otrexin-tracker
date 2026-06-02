@@ -6,6 +6,7 @@ class ReportsController < ApplicationController
     paid_invoices = current_user.invoices.where(status: "paid", invoice_date: @start_date..@end_date)
     expense_rows = current_user.expenses.where(expense_date: @start_date..@end_date)
     maintenance_rows = current_user.maintenances.where(maintenance_date: @start_date..@end_date)
+    mileage_rows = current_user.mileages.where(trip_date: @start_date..@end_date)
     per_diem_rows = current_user.per_diem_entries
     depreciation_assets = current_user.depreciation_assets.where("placed_in_service_date <= ?", @end_date)
 
@@ -13,6 +14,7 @@ class ReportsController < ApplicationController
       paid_invoices = paid_invoices.where(truck: selected_truck)
       expense_rows = expense_rows.where(truck: selected_truck)
       maintenance_rows = maintenance_rows.where(truck: selected_truck)
+      mileage_rows = mileage_rows.where(truck: selected_truck)
       per_diem_rows = per_diem_rows.where(truck: selected_truck)
       depreciation_assets = depreciation_assets.where(truck: selected_truck)
     end
@@ -31,17 +33,9 @@ class ReportsController < ApplicationController
 
     @expense_by_category = expense_rows.group(:category).sum(:amount).sort_by { |_k, v| -v.to_f }
 
-    # Revenue and cost per mile both use fuel log odometer range within the date range
-    fuel_in_range = current_user.fuel_logs
-      .where(fuel_date: @start_date..@end_date)
-      .where("odometer IS NOT NULL")
-      .order(:odometer)
-    fuel_in_range = fuel_in_range.where(truck: selected_truck) if selected_truck
-    fuel_min_odo = fuel_in_range.first&.odometer.to_f
-    fuel_max_odo = fuel_in_range.last&.odometer.to_f
-    fuel_miles = fuel_max_odo - fuel_min_odo
-    @revenue_per_mile = fuel_miles > 0 ? (@revenue_total / fuel_miles).round(4) : nil
-    @cost_per_mile = fuel_miles > 0 ? (@operating_cost_total / fuel_miles).round(4) : nil
+    @total_miles = Mileage.total_miles(mileage_rows)
+    @revenue_per_mile = @total_miles.positive? ? (@revenue_total / @total_miles).round(4) : nil
+    @cost_per_mile = @total_miles.positive? ? (@operating_cost_total / @total_miles).round(4) : nil
 
     respond_to do |format|
       format.html
@@ -61,25 +55,25 @@ class ReportsController < ApplicationController
 
   def build_profit_loss_csv
     CSV.generate(headers: true) do |csv|
-      csv << ["OTR Tracker Profit & Loss"]
-      csv << ["Period", "#{@start_date} to #{@end_date}"]
+      csv << [ "OTR Tracker Profit & Loss" ]
+      csv << [ "Period", "#{@start_date} to #{@end_date}" ]
       csv << []
-      csv << ["Summary", "Amount"]
-      csv << ["Revenue", @revenue_total.round(2)]
-      csv << ["Expenses", @expense_total.round(2)]
-      csv << ["Maintenance", @maintenance_total.round(2)]
-      csv << ["Operating Cost Total", @operating_cost_total.round(2)]
-      csv << ["Net Profit", @net_profit.round(2)]
-      csv << ["Per Diem Deductions", @per_diem_total.round(2)]
-      csv << ["Depreciation Deductions", @depreciation_total.round(2)]
-      csv << ["Tax Adjustment Total", @tax_adjustment_total.round(2)]
-      csv << ["Taxable Profit Estimate", @taxable_profit_estimate.round(2)]
-      csv << ["Revenue per Mile", @revenue_per_mile]
-      csv << ["Cost per Mile", @cost_per_mile]
+      csv << [ "Summary", "Amount" ]
+      csv << [ "Revenue", @revenue_total.round(2) ]
+      csv << [ "Expenses", @expense_total.round(2) ]
+      csv << [ "Maintenance", @maintenance_total.round(2) ]
+      csv << [ "Operating Cost Total", @operating_cost_total.round(2) ]
+      csv << [ "Net Profit", @net_profit.round(2) ]
+      csv << [ "Per Diem Deductions", @per_diem_total.round(2) ]
+      csv << [ "Depreciation Deductions", @depreciation_total.round(2) ]
+      csv << [ "Tax Adjustment Total", @tax_adjustment_total.round(2) ]
+      csv << [ "Taxable Profit Estimate", @taxable_profit_estimate.round(2) ]
+      csv << [ "Revenue per Mile", @revenue_per_mile ]
+      csv << [ "Cost per Mile", @cost_per_mile ]
       csv << []
-      csv << ["Expense Category", "Amount"]
+      csv << [ "Expense Category", "Amount" ]
       @expense_by_category.each do |category, amount|
-        csv << [category, amount.to_f.round(2)]
+        csv << [ category, amount.to_f.round(2) ]
       end
     end
   end

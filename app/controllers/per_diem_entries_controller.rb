@@ -47,6 +47,6 @@ class PerDiemEntriesController < ApplicationController
   end
 
   def per_diem_entry_params
-    params.expect(per_diem_entry: [:truck_id, :start_date, :end_date, :qualifying_days, :daily_rate, :notes])
+    params.expect(per_diem_entry: [ :truck_id, :start_date, :end_date, :qualifying_days, :daily_rate, :notes ])
   end
 end
