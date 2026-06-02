@@ -41,6 +41,12 @@
   </div>
 </div>
 
+<% if @excluded_mpg_interval_count.to_i.positive? %>
+  <div class="note-box">
+    MPG is ignoring <%= pluralize(@excluded_mpg_interval_count, "odometer interval") %> that look unrealistic, such as repair/reset jumps over <%= number_with_delimiter(FuelLog::MAX_MPG_INTERVAL_MILES) %> miles or above <%= FuelLog::MAX_REASONABLE_MPG.to_i %> MPG.
+  </div>
+<% end %>
+
 <div id="fuel_logs" class="record-list">
   <% if @fuel_logs.any? %>
     <% @fuel_logs.each do |fuel_log| %>
