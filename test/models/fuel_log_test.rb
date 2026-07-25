@@ -181,6 +181,56 @@ class FuelLogTest < ActiveSupport::TestCase
     assert_equal 0, FuelLog.uncounted_miles(scope)
   end
 
+  test "a baseline that sits inside the recorded range is ignored" do
+    # A backfilled or guessed baseline can land in the middle of a fuel log that
+    # already goes back further. Trusting it would invent a negative leading
+    # interval and report a span shorter than the miles actually counted.
+    truck = Truck.create!(user: users(:one), name: "Backfilled", baseline_odometer: 1_371_354)
+    [ 1_351_066, 1_352_200, 1_353_300 ].each_with_index do |odometer, index|
+      FuelLog.create!(user: users(:one), truck: truck, fuel_date: Date.new(2026, 4, 1) + index,
+                      odometer: odometer, gallons: 160)
+    end
+
+    scope = FuelLog.where(truck: truck)
+
+    assert_equal 2_234, FuelLog.tracked_span(scope)
+    assert_equal 2_234, FuelLog.total_miles(scope)
+    assert_equal 0, FuelLog.uncounted_miles(scope)
+    assert_equal 0, FuelLog.excluded_mileage_interval_count(scope)
+  end
+
+  test "counted miles never exceed the tracked span" do
+    truck = Truck.create!(user: users(:one), name: "Consistency", baseline_odometer: 1_371_354)
+    [ 1_351_066, 1_352_200, 1_355_900, 1_357_000 ].each_with_index do |odometer, index|
+      FuelLog.create!(user: users(:one), truck: truck, fuel_date: Date.new(2026, 4, 1) + index,
+                      odometer: odometer, gallons: 160)
+    end
+
+    scope = FuelLog.where(truck: truck)
+    span = FuelLog.tracked_span(scope)
+    counted = FuelLog.total_miles(scope)
+
+    assert_operator counted, :<=, span
+    assert_equal span - counted, FuelLog.uncounted_miles(scope)
+  end
+
+  test "a repeated odometer reading costs no miles and is reported on its own" do
+    truck = Truck.create!(user: users(:one), name: "Duplicate")
+    [ 1_351_066, 1_352_200, 1_352_200, 1_353_300 ].each_with_index do |odometer, index|
+      FuelLog.create!(user: users(:one), truck: truck, fuel_date: Date.new(2026, 4, 1) + index,
+                      odometer: odometer, gallons: 160)
+    end
+
+    scope = FuelLog.where(truck: truck)
+
+    assert_equal 1, FuelLog.repeated_odometer_count(scope)
+    # The duplicate is dropped from miles and MPG but costs no distance, so it
+    # must not surface as missing miles.
+    assert_equal 2_234, FuelLog.tracked_span(scope)
+    assert_equal 2_234, FuelLog.total_miles(scope)
+    assert_equal 0, FuelLog.uncounted_miles(scope)
+  end
+
   test "tracked span ignores the baseline when earlier readings exist outside the scope" do
     truck = trucks(:one)
     truck.update!(baseline_odometer: 900)

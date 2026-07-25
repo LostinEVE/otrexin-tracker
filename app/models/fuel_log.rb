@@ -74,6 +74,13 @@ class FuelLog < ApplicationRecord
       [ tracked_span(scope) - total_miles(scope), 0 ].max
     end
 
+    # Fill-ups sharing an odometer reading with the entry before them. They are
+    # dropped from both miles and MPG, but they cost no distance, so they must
+    # not be reported as missing miles.
+    def repeated_odometer_count(scope = all)
+      odometer_intervals(scope).count { |interval| interval[:miles].zero? }
+    end
+
     # --- MPG -----------------------------------------------------------------
 
     def overall_mpg(scope = all)
@@ -169,6 +176,11 @@ class FuelLog < ApplicationRecord
     def baseline_start_for(truck, first_log)
       return nil if truck&.baseline_odometer.blank?
       return nil if first_log&.odometer.blank?
+      # A baseline at or above the first recorded reading cannot be where
+      # tracking started — the fuel log already goes back further than it does.
+      # This happens when a baseline was guessed or backfilled, and using it
+      # anyway would invent a negative interval and understate the real span.
+      return nil unless truck.baseline_odometer < first_log.odometer
       return nil if truck.fuel_logs.where(odometer: ...first_log.odometer).exists?
 
       truck.baseline_odometer
