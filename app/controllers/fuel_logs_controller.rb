@@ -15,6 +15,7 @@ class FuelLogsController < ApplicationController
     @excluded_mpg_interval_count = FuelLog.excluded_mpg_interval_count(@fuel_logs)
     @excluded_mileage_interval_count = FuelLog.excluded_mileage_interval_count(@fuel_logs)
     @repeated_odometer_count = FuelLog.repeated_odometer_count(@fuel_logs)
+    @odometer_discontinuity_count = FuelLog.odometer_discontinuity_count(@fuel_logs)
     @total_gallons_mtd = @fuel_logs.where("fuel_date >= ?", Date.current.beginning_of_month).sum(:gallons)
     @total_fuel_cost = FuelLog.total_cost(@fuel_logs)
   end

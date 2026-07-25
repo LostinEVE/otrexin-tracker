@@ -1,8 +1,12 @@
 class FuelLog < ApplicationRecord
-  # An odometer gap wider than this is a data problem, not miles that were
-  # actually driven: a cluster replacement, a unit swap, or a run of missed
-  # fill-ups. Counting it would inflate miles and deflate cost per mile.
+  # An odometer gap wider than this is not miles we can vouch for. Counting it
+  # would inflate miles and deflate cost per mile.
   MAX_INTERVAL_MILES = 2_000
+
+  # Past this, a gap is not a missed fill-up at all — no truck runs 25,000 miles
+  # between two logged fuel stops. See discontinuity?.
+  MAX_PLAUSIBLE_GAP_MILES = 25_000
+
   MAX_REASONABLE_MPG = 15.0
 
   belongs_to :user
@@ -42,36 +46,57 @@ class FuelLog < ApplicationRecord
       odometer_intervals(scope).select { |interval| plausible_miles?(interval) }
     end
 
-    def excluded_mileage_interval_count(scope = all)
-      odometer_intervals(scope).count { |interval| !plausible_miles?(interval) }
+    # A jump so large it cannot be driving: the odometer itself changed. A
+    # replacement cluster, a reset, a stretch logged against a trip meter, or a
+    # placeholder reading entered because the odometer was not working.
+    #
+    # The giveaway is scale. A genuine missed fill-up is small next to the
+    # reading it follows — 2,500 miles on top of 1,370,000. A scale change is
+    # larger than every mile recorded before it, because the number restarted
+    # from somewhere else entirely.
+    def discontinuity?(interval)
+      return false unless interval
+      return false unless interval[:miles] > MAX_INTERVAL_MILES
+
+      interval[:miles] > MAX_PLAUSIBLE_GAP_MILES || interval[:miles] > interval[:from].to_i
     end
 
-    # The distance a scope actually spans, per truck: earliest reference reading
-    # (the truck's baseline when this is its first fill-up, otherwise its first
-    # reading in scope) through to its last. This is the figure a driver gets by
-    # subtracting one odometer from another by hand.
-    def tracked_span(scope = all)
-      logs = scope.where.not(odometer: nil)
-        .reorder(:truck_id, :odometer, :fuel_date, :id)
-        .to_a
-      return 0 if logs.empty?
+    def odometer_discontinuity_count(scope = all)
+      odometer_intervals(scope).count { |interval| discontinuity?(interval) }
+    end
 
-      trucks = Truck.where(id: logs.map(&:truck_id).uniq).index_by(&:id)
-
-      logs.group_by(&:truck_id).sum do |truck_id, truck_logs|
-        first_log = truck_logs.first
-        starting_odometer = baseline_start_for(trucks[truck_id], first_log) || first_log.odometer
-
-        [ truck_logs.last.odometer - starting_odometer, 0 ].max
+    # Gaps that are too wide to trust but still look like real driving — the
+    # signature of a fill-up that was never logged. These are the ones worth
+    # chasing, because they are miles the truck almost certainly covered.
+    def unverified_intervals(scope = all)
+      odometer_intervals(scope).reject do |interval|
+        plausible_miles?(interval) || discontinuity?(interval) || interval[:miles] <= 0
       end
     end
 
-    # What the odometer moved but the miles guard would not vouch for — almost
-    # always a missed fill-up or a mistyped reading. Surfaced so the shortfall is
-    # visible instead of quietly deflating total miles and inflating cost per
-    # mile.
+    def excluded_mileage_interval_count(scope = all)
+      unverified_intervals(scope).size
+    end
+
+    # Miles the truck plausibly covered across the logged period: what was
+    # counted, plus what looks like real driving we could not verify.
+    #
+    # Deliberately NOT last odometer minus first. Subtracting across an odometer
+    # replacement reports the difference between two unrelated numbering schemes
+    # as distance — for a truck whose odometer was swapped that is over a million
+    # phantom miles. Building the span from the intervals instead keeps
+    # span - counted == uncounted true by construction, so the panel can never
+    # contradict itself.
+    def tracked_span(scope = all)
+      total_miles(scope) + uncounted_miles(scope)
+    end
+
+    # Miles that look like real driving but fall outside what the guard will
+    # vouch for — the signature of a fill-up that was never logged. Surfaced so
+    # the shortfall is visible instead of quietly inflating cost per mile.
+    # Odometer discontinuities are excluded: those are not miles at all.
     def uncounted_miles(scope = all)
-      [ tracked_span(scope) - total_miles(scope), 0 ].max
+      unverified_intervals(scope).sum { |interval| interval[:miles] }
     end
 
     # Fill-ups sharing an odometer reading with the entry before them. They are
@@ -113,6 +138,8 @@ class FuelLog < ApplicationRecord
     # an error the driver needs to fix.
     def excluded_mpg_interval_count(scope = all)
       odometer_intervals(scope).count do |interval|
+        next false if discontinuity?(interval)
+
         interval[:gallons].positive? && !(plausible_miles?(interval) && plausible_mpg?(interval))
       end
     end
@@ -213,6 +240,8 @@ class FuelLog < ApplicationRecord
       {
         id: current_log.id || 0,
         fuel_date: current_log.fuel_date || Date.new(1, 1, 1),
+        from: starting_odometer,
+        to: current_log.odometer,
         miles: miles,
         gallons: gallons,
         mpg: mpg

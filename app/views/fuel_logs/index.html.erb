@@ -58,17 +58,26 @@
 <% if @uncounted_miles.to_i.positive? %>
   <div class="note-box is-warning">
     <strong><%= number_with_delimiter(@uncounted_miles) %> miles are missing from your total.</strong>
-    Your odometer moved <%= number_with_delimiter(@tracked_span) %> miles from your first entry to
-    your last, but only <%= number_with_delimiter(@total_miles) %> could be counted. A gap between
-    fill-ups has to move forward and stay under
-    <%= number_with_delimiter(FuelLog::MAX_INTERVAL_MILES) %> miles to count — check for a mistyped
-    odometer or a fill-up you did not log. Until this is fixed your cost per mile reads higher than
-    it really is.
+    Your entries cover about <%= number_with_delimiter(@tracked_span) %> miles of driving, but only
+    <%= number_with_delimiter(@total_miles) %> could be counted. A gap between fill-ups has to stay
+    under <%= number_with_delimiter(FuelLog::MAX_INTERVAL_MILES) %> miles to count, so this is
+    usually a fill-up that was never logged. Until it is resolved your cost per mile reads higher
+    than it really is.
   </div>
 <% elsif @total_miles.to_i.positive? %>
   <div class="note-box">
-    Odometer moved <%= number_with_delimiter(@tracked_span) %> miles from your first entry to your
-    last, and all <%= number_with_delimiter(@total_miles) %> counted toward your cost per mile.
+    All <%= number_with_delimiter(@total_miles) %> miles from your odometer readings counted toward
+    your cost per mile.
+  </div>
+<% end %>
+
+<% if @odometer_discontinuity_count.to_i.positive? %>
+  <div class="note-box">
+    Your odometer readings restart at
+    <%= pluralize(@odometer_discontinuity_count, "point") %> — a replacement, a reset, or a stretch
+    logged without a working odometer. Miles are measured separately on each side of
+    <%= @odometer_discontinuity_count.to_i == 1 ? "that break" : "those breaks" %> rather than
+    subtracting across it, so <strong>no miles are lost</strong> and nothing needs fixing.
   </div>
 <% end %>
 

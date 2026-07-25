@@ -34,7 +34,23 @@ class FuelLogTest < ActiveSupport::TestCase
 
     assert_equal 10.0, FuelLog.overall_mpg(truck_scope)
     assert_equal 10.0, FuelLog.avg_mpg_last(truck_scope)
+    # A repair jump is the odometer changing, not a fill-up anyone forgot, so it
+    # is reported as a break rather than as an unbelievable MPG figure.
+    assert_equal 1, FuelLog.odometer_discontinuity_count(truck_scope)
+    assert_equal 0, FuelLog.excluded_mpg_interval_count(truck_scope)
+  end
+
+  test "an over cap gap on a high odometer is reported as an unbelievable mpg" do
+    truck = trucks(:one)
+    # 3,000 miles on top of a 900,000 reading: small next to it, so this reads as
+    # a skipped fill-up rather than the odometer being swapped.
+    FuelLog.create!(user: users(:one), truck: truck, fuel_date: Date.new(2026, 4, 1), odometer: 900_000, gallons: 30)
+    FuelLog.create!(user: users(:one), truck: truck, fuel_date: Date.new(2026, 4, 8), odometer: 903_000, gallons: 50)
+
+    truck_scope = FuelLog.where(truck: truck)
+
     assert_equal 1, FuelLog.excluded_mpg_interval_count(truck_scope)
+    assert_equal 3_000, FuelLog.uncounted_miles(truck_scope)
   end
 
   test "mpg stats do not compare odometers across trucks" do
@@ -73,7 +89,10 @@ class FuelLogTest < ActiveSupport::TestCase
     truck_scope = FuelLog.where(truck: truck)
 
     assert_equal 500, FuelLog.total_miles(truck_scope)
-    assert_equal 1, FuelLog.excluded_mileage_interval_count(truck_scope)
+    # The odometer restarted rather than the truck driving 88,500 unlogged miles,
+    # so nothing is reported as missing.
+    assert_equal 1, FuelLog.odometer_discontinuity_count(truck_scope)
+    assert_equal 0, FuelLog.uncounted_miles(truck_scope)
   end
 
   test "a backwards odometer reading does not subtract miles" do
@@ -179,6 +198,64 @@ class FuelLogTest < ActiveSupport::TestCase
     assert_equal 1_546, FuelLog.tracked_span(scope)
     assert_equal 1_546, FuelLog.total_miles(scope)
     assert_equal 0, FuelLog.uncounted_miles(scope)
+  end
+
+  # A truck that ran on a placeholder reading, then a trip meter, then a
+  # replacement odometer reading 1.37M. The two jumps are the odometer changing,
+  # not distance driven, and must not be reported as missing miles.
+  BLUEBONNET_ODOMETERS = [
+    1, 6_078, 6_636, 7_398, 9_321, 10_086, 10_789, 11_857, 12_931, 13_730, 14_464,
+    15_653, 16_551, 17_494, 18_528, 19_172, 20_007, 20_906, 22_134, 23_011, 23_835, 24_617,
+    1_369_605, 1_369_778, 1_370_357, 1_370_791, 1_371_354, 1_372_140, 1_373_019, 1_373_945,
+    1_374_506, 1_375_299, 1_376_218, 1_376_908, 1_377_738, 1_378_483, 1_379_150, 1_379_834,
+    1_380_692, 1_381_500, 1_382_057, 1_382_725, 1_383_431, 1_384_281, 1_385_051, 1_385_631
+  ].freeze
+
+  def bluebonnet_scope(baseline: 1_371_354)
+    truck = Truck.create!(user: users(:one), name: "Bluebonnet", baseline_odometer: baseline)
+    BLUEBONNET_ODOMETERS.each_with_index do |odometer, index|
+      FuelLog.create!(user: users(:one), truck: truck, fuel_date: Date.new(2026, 2, 12) + (index * 3),
+                      odometer: odometer, gallons: 150)
+    end
+    FuelLog.where(truck: truck)
+  end
+
+  test "an odometer replacement is not reported as missing miles" do
+    scope = bluebonnet_scope
+
+    # 18,539 on the old numbering plus 16,026 on the new one.
+    assert_equal 34_565, FuelLog.total_miles(scope)
+    assert_equal 0, FuelLog.uncounted_miles(scope)
+    assert_equal 2, FuelLog.odometer_discontinuity_count(scope)
+    assert_equal 0, FuelLog.excluded_mileage_interval_count(scope)
+  end
+
+  test "the span never contradicts the counted miles" do
+    scope = bluebonnet_scope
+
+    # Subtracting last from first would claim 1,385,630 miles and report over a
+    # million as missing.
+    assert_equal FuelLog.total_miles(scope), FuelLog.tracked_span(scope)
+    assert_equal(
+      FuelLog.tracked_span(scope) - FuelLog.total_miles(scope),
+      FuelLog.uncounted_miles(scope)
+    )
+  end
+
+  test "a missed fill-up is still reported even alongside an odometer change" do
+    scope = bluebonnet_scope
+    truck = scope.first.truck
+    # 4,500 miles on top of 1,385,631: small next to the reading it follows, so
+    # this is a skipped fill-up rather than the odometer changing.
+    FuelLog.create!(user: users(:one), truck: truck, fuel_date: Date.new(2026, 8, 1),
+                    odometer: 1_390_131, gallons: 150)
+
+    reloaded = FuelLog.where(truck: truck)
+
+    assert_equal 4_500, FuelLog.uncounted_miles(reloaded)
+    assert_equal 1, FuelLog.excluded_mileage_interval_count(reloaded)
+    assert_equal 2, FuelLog.odometer_discontinuity_count(reloaded)
+    assert_equal 34_565 + 4_500, FuelLog.tracked_span(reloaded)
   end
 
   test "a baseline that sits inside the recorded range is ignored" do
