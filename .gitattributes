@@ -3,6 +3,13 @@
 # Mark the database schema as having been generated.
 db/schema.rb linguist-generated
 
+# Binstubs are executed directly by CI and by the container entrypoint, so they
+# must keep Unix line endings whatever platform commits them. A CRLF shebang
+# makes the kernel look for an interpreter named "ruby\r" and the script dies
+# with "bad interpreter". The .cmd wrapper is for Windows and keeps CRLF.
+bin/* text eol=lf
+bin/*.cmd text eol=crlf
+
 # Mark any vendored files as having been vendored.
 vendor/* linguist-vendored
 config/credentials/*.yml.enc diff=rails_credentials
