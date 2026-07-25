@@ -46,6 +46,34 @@ class FuelLog < ApplicationRecord
       odometer_intervals(scope).count { |interval| !plausible_miles?(interval) }
     end
 
+    # The distance a scope actually spans, per truck: earliest reference reading
+    # (the truck's baseline when this is its first fill-up, otherwise its first
+    # reading in scope) through to its last. This is the figure a driver gets by
+    # subtracting one odometer from another by hand.
+    def tracked_span(scope = all)
+      logs = scope.where.not(odometer: nil)
+        .reorder(:truck_id, :odometer, :fuel_date, :id)
+        .to_a
+      return 0 if logs.empty?
+
+      trucks = Truck.where(id: logs.map(&:truck_id).uniq).index_by(&:id)
+
+      logs.group_by(&:truck_id).sum do |truck_id, truck_logs|
+        first_log = truck_logs.first
+        starting_odometer = baseline_start_for(trucks[truck_id], first_log) || first_log.odometer
+
+        [ truck_logs.last.odometer - starting_odometer, 0 ].max
+      end
+    end
+
+    # What the odometer moved but the miles guard would not vouch for — almost
+    # always a missed fill-up or a mistyped reading. Surfaced so the shortfall is
+    # visible instead of quietly deflating total miles and inflating cost per
+    # mile.
+    def uncounted_miles(scope = all)
+      [ tracked_span(scope) - total_miles(scope), 0 ].max
+    end
+
     # --- MPG -----------------------------------------------------------------
 
     def overall_mpg(scope = all)
@@ -126,14 +154,24 @@ class FuelLog < ApplicationRecord
     # starting point. Applied only when the log really is the truck's earliest,
     # so a date-filtered report never absorbs miles driven before its period.
     def baseline_interval(truck, first_log)
-      return nil if truck&.baseline_odometer.blank?
-      return nil if first_log&.odometer.blank?
-      return nil if truck.fuel_logs.where(odometer: ...first_log.odometer).exists?
+      starting_odometer = baseline_start_for(truck, first_log)
+      return nil unless starting_odometer
 
       # Miles only. The gallons on that first fill-up paid for driving done
       # before tracking started, and there is no way to know how full the tank
       # was at the baseline reading, so any MPG derived from it would be fiction.
-      build_interval(truck.baseline_odometer, first_log, include_fuel: false)
+      build_interval(starting_odometer, first_log, include_fuel: false)
+    end
+
+    # The truck's baseline reading, but only when it can legitimately stand in as
+    # the starting point for this log — that is, the log really is the truck's
+    # earliest, so a date-filtered report never absorbs miles from before it.
+    def baseline_start_for(truck, first_log)
+      return nil if truck&.baseline_odometer.blank?
+      return nil if first_log&.odometer.blank?
+      return nil if truck.fuel_logs.where(odometer: ...first_log.odometer).exists?
+
+      truck.baseline_odometer
     end
 
     def plausible_miles?(interval)

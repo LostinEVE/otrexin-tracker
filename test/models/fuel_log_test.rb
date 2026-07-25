@@ -131,6 +131,66 @@ class FuelLogTest < ActiveSupport::TestCase
     assert_equal 500, FuelLog.total_miles(FuelLog.where(truck: trucks(:one)))
   end
 
+  # --- Tracked span vs counted miles -----------------------------------------
+
+  test "a clean run counts every mile the odometer moved" do
+    truck = Truck.create!(user: users(:one), name: "Long Hauler", baseline_odometer: 1_371_354)
+    odometer = 1_371_354
+    12.times do |index|
+      odometer += 1_190
+      FuelLog.create!(user: users(:one), truck: truck, fuel_date: Date.new(2026, 1, 1) + (index * 7),
+                      odometer: odometer, gallons: 170)
+    end
+
+    scope = FuelLog.where(truck: truck)
+
+    assert_equal 1_385_634, odometer
+    assert_equal 14_280, FuelLog.tracked_span(scope)
+    assert_equal 14_280, FuelLog.total_miles(scope)
+    assert_equal 0, FuelLog.uncounted_miles(scope)
+    assert_equal 0, FuelLog.excluded_mileage_interval_count(scope)
+  end
+
+  test "a missed fill up leaves a visible shortfall rather than silently shrinking miles" do
+    truck = Truck.create!(user: users(:one), name: "Gap Hauler", baseline_odometer: 1_371_354)
+    # Three clean 1,000 mile legs, then a 3,600 mile jump where a fill-up went
+    # unlogged, then one more clean leg.
+    [ 1_372_354, 1_373_354, 1_374_354, 1_377_954, 1_378_954 ].each_with_index do |odometer, index|
+      FuelLog.create!(user: users(:one), truck: truck, fuel_date: Date.new(2026, 2, 1) + (index * 7),
+                      odometer: odometer, gallons: 150)
+    end
+
+    scope = FuelLog.where(truck: truck)
+
+    assert_equal 7_600, FuelLog.tracked_span(scope)
+    assert_equal 4_000, FuelLog.total_miles(scope)
+    assert_equal 3_600, FuelLog.uncounted_miles(scope)
+    assert_equal 1, FuelLog.excluded_mileage_interval_count(scope)
+  end
+
+  test "tracked span starts at the baseline when one is set" do
+    truck = Truck.create!(user: users(:one), name: "Baselined", baseline_odometer: 1_371_354)
+    FuelLog.create!(user: users(:one), truck: truck, fuel_date: Date.new(2026, 3, 1), odometer: 1_372_000, gallons: 90)
+    FuelLog.create!(user: users(:one), truck: truck, fuel_date: Date.new(2026, 3, 8), odometer: 1_372_900, gallons: 120)
+
+    scope = FuelLog.where(truck: truck)
+
+    # 646 from the baseline to the first fill, then 900 between the two fills.
+    assert_equal 1_546, FuelLog.tracked_span(scope)
+    assert_equal 1_546, FuelLog.total_miles(scope)
+    assert_equal 0, FuelLog.uncounted_miles(scope)
+  end
+
+  test "tracked span ignores the baseline when earlier readings exist outside the scope" do
+    truck = trucks(:one)
+    truck.update!(baseline_odometer: 900)
+
+    later_scope = FuelLog.where(truck: truck).where(fuel_date: Date.new(2026, 3, 25)..)
+
+    assert_equal 0, FuelLog.tracked_span(later_scope)
+    assert_equal 0, FuelLog.uncounted_miles(later_scope)
+  end
+
   test "baseline miles do not leak into a period that starts later" do
     truck = trucks(:one)
     truck.update!(baseline_odometer: 900)

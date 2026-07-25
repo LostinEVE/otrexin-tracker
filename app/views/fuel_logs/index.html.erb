@@ -57,11 +57,18 @@
 
 <% if @excluded_mileage_interval_count.to_i.positive? %>
   <div class="note-box is-warning">
-    <%= pluralize(@excluded_mileage_interval_count, "odometer gap") %> did not look like real
-    driving and <%= @excluded_mileage_interval_count.to_i == 1 ? "was" : "were" %> left out of
-    total miles — a gap has to move forward and stay under
-    <%= number_with_delimiter(FuelLog::MAX_INTERVAL_MILES) %> miles to count. Check for a
-    mistyped odometer or a missed fill-up.
+    <strong><%= number_with_delimiter(@uncounted_miles) %> miles are missing from your total.</strong>
+    Your odometer moved <%= number_with_delimiter(@tracked_span) %> miles overall, but
+    <%= pluralize(@excluded_mileage_interval_count, "gap") %> between fill-ups did not look like
+    real driving, so only <%= number_with_delimiter(@total_miles) %> could be counted. A gap has
+    to move forward and stay under <%= number_with_delimiter(FuelLog::MAX_INTERVAL_MILES) %>
+    miles to count — check for a mistyped odometer or a fill-up you did not log. Until this is
+    fixed your cost per mile reads higher than it really is.
+  </div>
+<% elsif @total_miles.to_i.positive? %>
+  <div class="note-box">
+    Odometer moved <%= number_with_delimiter(@tracked_span) %> miles across these entries and
+    all <%= number_with_delimiter(@total_miles) %> counted toward your cost per mile.
   </div>
 <% end %>
 

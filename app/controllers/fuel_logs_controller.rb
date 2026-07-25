@@ -8,6 +8,8 @@ class FuelLogsController < ApplicationController
     @fuel_logs = current_user.fuel_logs.includes(:truck)
     @fuel_logs = @fuel_logs.where(truck: selected_truck) if selected_truck
     @total_miles = FuelLog.total_miles(@fuel_logs)
+    @tracked_span = FuelLog.tracked_span(@fuel_logs)
+    @uncounted_miles = FuelLog.uncounted_miles(@fuel_logs)
     @overall_mpg = FuelLog.overall_mpg(@fuel_logs)
     @avg10 = FuelLog.avg_mpg_last(@fuel_logs)
     @excluded_mpg_interval_count = FuelLog.excluded_mpg_interval_count(@fuel_logs)
