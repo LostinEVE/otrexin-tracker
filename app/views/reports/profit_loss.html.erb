@@ -27,6 +27,11 @@
   </div>
 <% end %>
 
+<div class="statement-caption">
+  <strong><%= selected_truck&.display_name || "All trucks" %></strong>
+  &middot; <%= @start_date.strftime("%b %-d, %Y") %> through <%= @end_date.strftime("%b %-d, %Y") %>
+</div>
+
 <div class="action-bar">
   <%= link_to "Export CSV", reports_profit_loss_path(format: :csv, truck_id: selected_truck&.id, start_date: @start_date, end_date: @end_date), class: "btn btn-secondary" %>
   <a href="#" onclick="window.print();return false;" class="btn btn-secondary">Print / Save PDF</a>
@@ -35,82 +40,189 @@
 <div class="metric-grid">
   <div class="metric-card">
     <div class="metric-label">Revenue</div>
-    <div class="metric-value text-success">$<%= number_with_precision(@revenue_total, precision: 2, delimiter: ",") %></div>
+    <div class="metric-value text-success"><%= money(@summary.revenue) %></div>
+    <div class="metric-note">Paid invoices only</div>
   </div>
   <div class="metric-card">
-    <div class="metric-label">Operating Costs</div>
-    <div class="metric-value text-danger">$<%= number_with_precision(@operating_cost_total, precision: 2, delimiter: ",") %></div>
+    <div class="metric-label">Operating Expenses</div>
+    <div class="metric-value text-danger"><%= money(@summary.expense_total) %></div>
+    <div class="metric-note">All logged expenses</div>
   </div>
   <div class="metric-card">
     <div class="metric-label">Net Profit</div>
-    <div class="metric-value <%= @net_profit >= 0 ? 'text-success' : 'text-danger' %>">$<%= number_with_precision(@net_profit, precision: 2, delimiter: ",") %></div>
-  </div>
-  <div class="metric-card">
-    <div class="metric-label">Revenue / Mile</div>
-    <div class="metric-value"><%= @revenue_per_mile ? "$#{@revenue_per_mile}" : "-" %></div>
-  </div>
-  <div class="metric-card">
-    <div class="metric-label">Cost / Mile</div>
-    <div class="metric-value"><%= @cost_per_mile ? "$#{@cost_per_mile}" : "-" %></div>
-  </div>
-  <div class="metric-card">
-    <div class="metric-label">Tax Adjustments</div>
-    <div class="metric-value text-info">$<%= number_with_precision(@tax_adjustment_total, precision: 2, delimiter: ",") %></div>
+    <div class="metric-value <%= profit_class(@summary.net_profit) %>"><%= money(@summary.net_profit) %></div>
+    <div class="metric-note">
+      <% if @summary.revenue.positive? %>
+        <%= number_to_percentage(@summary.net_profit / @summary.revenue * 100, precision: 1) %> margin
+      <% else %>
+        No revenue in period
+      <% end %>
+    </div>
   </div>
   <div class="metric-card">
     <div class="metric-label">Taxable Profit Est.</div>
-    <div class="metric-value <%= @taxable_profit_estimate >= 0 ? 'text-success' : 'text-danger' %>">$<%= number_with_precision(@taxable_profit_estimate, precision: 2, delimiter: ",") %></div>
+    <div class="metric-value <%= profit_class(@summary.taxable_profit_estimate) %>"><%= money(@summary.taxable_profit_estimate) %></div>
+    <div class="metric-note">After per diem &amp; depreciation</div>
   </div>
 </div>
 
-<div class="content-grid">
-  <section class="panel">
-    <div class="panel-header">
-      <h3 class="panel-title">Statement Summary</h3>
-    </div>
-    <div class="table-wrap">
-      <table>
-        <tbody>
-          <tr><td>Revenue</td><td class="align-right">$<%= number_with_precision(@revenue_total, precision: 2) %></td></tr>
-          <tr><td>Expense Total</td><td class="align-right">$<%= number_with_precision(@expense_total, precision: 2) %></td></tr>
-          <tr><td>Maintenance Total</td><td class="align-right">$<%= number_with_precision(@maintenance_total, precision: 2) %></td></tr>
-          <tr><td><strong>Operating Cost Total</strong></td><td class="align-right"><strong>$<%= number_with_precision(@operating_cost_total, precision: 2) %></strong></td></tr>
-          <tr><td><strong>Net Profit</strong></td><td class="align-right"><strong>$<%= number_with_precision(@net_profit, precision: 2) %></strong></td></tr>
-          <tr><td>Per Diem Deductions</td><td class="align-right">$<%= number_with_precision(@per_diem_total, precision: 2) %></td></tr>
-          <tr><td>Depreciation Deductions</td><td class="align-right">$<%= number_with_precision(@depreciation_total, precision: 2) %></td></tr>
-          <tr><td><strong>Taxable Profit Estimate</strong></td><td class="align-right"><strong>$<%= number_with_precision(@taxable_profit_estimate, precision: 2) %></strong></td></tr>
-        </tbody>
-      </table>
-    </div>
-  </section>
-
-  <section class="panel">
-    <div class="panel-header">
-      <h3 class="panel-title">Expense Breakdown by Category</h3>
-    </div>
-    <% if @expense_by_category.any? %>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Category</th>
-              <th class="align-right">Amount</th>
-            </tr>
-          </thead>
-          <tbody>
-            <% @expense_by_category.each do |category, amount| %>
-              <tr>
-                <td><%= category.to_s.humanize %></td>
-                <td class="align-right">$<%= number_with_precision(amount, precision: 2) %></td>
-              </tr>
-            <% end %>
-          </tbody>
-        </table>
-      </div>
-    <% else %>
-      <div class="panel-body">
-        <p>No expense data for this period.</p>
-      </div>
-    <% end %>
-  </section>
+<h2 class="section-title">Per Mile</h2>
+<div class="metric-grid is-compact">
+  <div class="metric-card">
+    <div class="metric-label">Total Miles</div>
+    <div class="metric-value"><%= number_with_delimiter(@summary.total_miles) %></div>
+    <div class="metric-note">From fuel log odometer</div>
+  </div>
+  <div class="metric-card">
+    <div class="metric-label">Revenue / Mile</div>
+    <div class="metric-value text-success"><%= per_mile(@summary.revenue_per_mile) %></div>
+  </div>
+  <div class="metric-card">
+    <div class="metric-label">Cost / Mile</div>
+    <div class="metric-value text-danger"><%= per_mile(@summary.cost_per_mile) %></div>
+  </div>
+  <div class="metric-card">
+    <div class="metric-label">Profit / Mile</div>
+    <div class="metric-value <%= @summary.profit_per_mile ? profit_class(@summary.profit_per_mile) : "" %>"><%= per_mile(@summary.profit_per_mile) %></div>
+  </div>
 </div>
+
+<% if @summary.total_miles.zero? %>
+  <div class="note-box">
+    No miles could be derived for this period. Cost per mile needs at least two fuel
+    entries for the same truck so the odometer difference between them can be measured.
+  </div>
+<% end %>
+
+<h2 class="section-title">Statement</h2>
+<section class="panel">
+  <div class="table-wrap">
+    <table class="statement">
+      <tbody>
+        <tr class="statement-section">
+          <td>Revenue</td>
+          <td class="align-right"></td>
+        </tr>
+        <tr>
+          <td class="statement-item">Paid invoices</td>
+          <td class="align-right"><%= money(@summary.revenue) %></td>
+        </tr>
+        <tr class="statement-total">
+          <td>Total Revenue</td>
+          <td class="align-right text-success"><%= money(@summary.revenue) %></td>
+        </tr>
+
+        <tr class="statement-section">
+          <td>Operating Expenses</td>
+          <td class="align-right"></td>
+        </tr>
+        <% if @summary.expense_by_category.any? %>
+          <% @summary.expense_by_category.each do |category, amount| %>
+            <tr>
+              <td class="statement-item"><%= expense_category_label(category) %></td>
+              <td class="align-right"><%= money(amount) %></td>
+            </tr>
+          <% end %>
+        <% else %>
+          <tr>
+            <td class="statement-item text-muted">No expenses recorded in this period</td>
+            <td class="align-right"><%= money(0) %></td>
+          </tr>
+        <% end %>
+        <tr class="statement-total">
+          <td>Total Operating Expenses</td>
+          <td class="align-right text-danger"><%= money(@summary.expense_total) %></td>
+        </tr>
+
+        <tr class="statement-total is-emphasis">
+          <td>Net Profit</td>
+          <td class="align-right <%= profit_class(@summary.net_profit) %>"><%= money(@summary.net_profit) %></td>
+        </tr>
+
+        <tr class="statement-section">
+          <td>Tax Adjustments</td>
+          <td class="align-right"></td>
+        </tr>
+        <tr>
+          <td class="statement-item">Per diem deductions</td>
+          <td class="align-right"><%= money(@summary.per_diem_total) %></td>
+        </tr>
+        <tr>
+          <td class="statement-item">Depreciation deductions</td>
+          <td class="align-right"><%= money(@summary.depreciation_total) %></td>
+        </tr>
+        <tr class="statement-total">
+          <td>Total Tax Adjustments</td>
+          <td class="align-right text-info"><%= money(@summary.tax_adjustment_total) %></td>
+        </tr>
+
+        <tr class="statement-total is-emphasis">
+          <td>Taxable Profit Estimate</td>
+          <td class="align-right <%= profit_class(@summary.taxable_profit_estimate) %>"><%= money(@summary.taxable_profit_estimate) %></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<div class="note-box">
+  Expenses are the single source of truth for money spent. Fuel logs and maintenance
+  records track odometer readings and service history, and their cost fields are for
+  reference only, so a fill-up or repair entered in both places is never counted twice.
+</div>
+
+<% unless @summary.reconciled? %>
+  <h2 class="section-title">Needs Reconciling</h2>
+  <div class="note-box is-warning">
+    You logged <strong><%= money(@summary.unreconciled_total) %></strong> more in fuel and
+    maintenance costs this period than you recorded as expenses, so that money is
+    <strong>not</strong> in the statement above. The records below are the ones with no
+    expense that lines up with them. Add a matching expense if the cost is real, or clear
+    the cost field if it was only a note to yourself.
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Source</th>
+          <th>Date</th>
+          <th>Truck</th>
+          <th>Detail</th>
+          <th class="align-right">Unrecorded Amount</th>
+          <th class="align-right">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @summary.unmatched_fuel_logs.each do |log| %>
+          <tr>
+            <td><span class="badge badge-info">Fuel</span></td>
+            <td><%= log.fuel_date %></td>
+            <td><%= log.truck&.display_name %></td>
+            <td><%= log.station.presence || log.location.presence || "-" %></td>
+            <td class="align-right text-warning"><strong><%= money(log.total_cost) %></strong></td>
+            <td class="align-right">
+              <%= link_to "Add expense", new_expense_path(truck_id: log.truck_id, category: "fuel", amount: log.total_cost, expense_date: log.fuel_date, vendor: log.station.presence || log.location, gallons: log.gallons), class: "btn-link" %>
+            </td>
+          </tr>
+        <% end %>
+        <% @summary.unmatched_maintenances.each do |record| %>
+          <tr>
+            <td><span class="badge badge-neutral">Maintenance</span></td>
+            <td><%= record.maintenance_date %></td>
+            <td><%= record.truck&.display_name %></td>
+            <td><%= record.maintenance_type.to_s.humanize %></td>
+            <td class="align-right text-warning"><strong><%= money(record.cost) %></strong></td>
+            <td class="align-right">
+              <%= link_to "Add expense", new_expense_path(truck_id: record.truck_id, category: "maintenance", amount: record.cost, expense_date: record.maintenance_date, vendor: record.vendor), class: "btn-link" %>
+            </td>
+          </tr>
+        <% end %>
+        <tr class="statement-total">
+          <td colspan="4">Total not counted in this statement</td>
+          <td class="align-right text-warning"><strong><%= money(@summary.unreconciled_total) %></strong></td>
+          <td></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+<% end %>

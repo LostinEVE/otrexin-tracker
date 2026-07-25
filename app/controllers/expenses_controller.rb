@@ -34,7 +34,8 @@ class ExpensesController < ApplicationController
 
   # GET /expenses/new
   def new
-    @expense = current_user.expenses.new(truck: selected_truck || current_user.default_truck)
+    @expense = current_user.expenses.new(prefill_params)
+    @expense.truck ||= selected_truck || current_user.default_truck
   end
 
   # GET /expenses/1/edit
@@ -102,6 +103,20 @@ class ExpensesController < ApplicationController
     # Only allow a list of trusted parameters through.
     def expense_params
       params.expect(expense: [ :expense_date, :category, :vendor, :amount, :gallons, :notes, :truck_id ])
+    end
+
+    # Lets the P&L reconciliation table hand off an unrecorded fuel or
+    # maintenance cost straight into a prefilled expense form. The truck is
+    # resolved through the user's own trucks so a foreign id cannot be injected.
+    def prefill_params
+      permitted = params.permit(:expense_date, :category, :vendor, :amount, :gallons)
+      attributes = permitted.to_h.compact_blank
+
+      if params[:truck_id].present?
+        attributes[:truck] = current_user.trucks.find_by(id: params[:truck_id])
+      end
+
+      attributes.compact
     end
 
     def set_trucks

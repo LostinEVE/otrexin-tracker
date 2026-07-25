@@ -14,7 +14,6 @@ Rails.application.routes.draw do
   resources :per_diem_entries, except: [ :show ]
   resources :depreciation_assets, except: [ :show ]
   resources :tax_payments
-  resources :mileages
   resources :maintenances
   resources :fuel_logs
   resources :expenses

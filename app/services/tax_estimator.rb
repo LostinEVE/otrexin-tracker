@@ -1,12 +1,45 @@
+# Rough federal estimate for a single-filer owner-operator. Reads its money from
+# OperatingSummary so the tax page and the P&L can never disagree.
+#
+# The figures below are single-filer amounts and are not a substitute for a CPA:
+# no state tax, no filing status other than single, no credits, no QBI deduction.
 class TaxEstimator
-  FEDERAL_BRACKETS = [
-    [ 11_600, 0.10 ],
-    [ 47_150, 0.12 ],
-    [ 100_525, 0.22 ],
-    [ 191_950, 0.24 ],
-    [ Float::INFINITY, 0.32 ]
-  ].freeze
-  STANDARD_DEDUCTION = 15_000
+  # Verify against the current IRS publications each January before relying on a
+  # number here for an actual payment.
+  TAX_YEARS = {
+    2025 => {
+      standard_deduction: 15_750,
+      social_security_wage_base: 176_100,
+      brackets: [
+        [ 11_925, 0.10 ],
+        [ 48_475, 0.12 ],
+        [ 103_350, 0.22 ],
+        [ 197_300, 0.24 ],
+        [ 250_525, 0.32 ],
+        [ 626_350, 0.35 ],
+        [ Float::INFINITY, 0.37 ]
+      ]
+    },
+    2026 => {
+      standard_deduction: 16_100,
+      social_security_wage_base: 184_500,
+      brackets: [
+        [ 12_400, 0.10 ],
+        [ 50_400, 0.12 ],
+        [ 105_700, 0.22 ],
+        [ 201_775, 0.24 ],
+        [ 256_225, 0.32 ],
+        [ 640_600, 0.35 ],
+        [ Float::INFINITY, 0.37 ]
+      ]
+    }
+  }.freeze
+
+  # Self-employment tax applies to 92.35% of net profit, splits into a Social
+  # Security half that stops at the wage base and a Medicare half that does not.
+  NET_EARNINGS_FACTOR = 0.9235
+  SOCIAL_SECURITY_RATE = 0.124
+  MEDICARE_RATE = 0.029
 
   attr_reader :user, :year, :truck
 
@@ -25,42 +58,53 @@ class TaxEstimator
   end
 
   def revenue
-    invoice_scope.where(status: "paid").where(invoice_date: year_start..year_end).sum(:amount).to_f
+    summary.revenue.to_f
   end
 
   def operating_expenses
-    expense_scope.where(expense_date: year_start..year_end).sum(:amount).to_f
+    summary.expense_total.to_f
   end
 
   def per_diem_deductions
-    per_diem_scope.select { |entry| entry.overlaps_period?(year_start, year_end) }.sum(&:deduction_amount).to_f.round(2)
+    summary.per_diem_total.to_f.round(2)
   end
 
   def depreciation_deductions
-    depreciation_scope.sum { |asset| asset.deduction_for_period(year_start, year_end) }.to_f.round(2)
+    summary.depreciation_total.to_f.round(2)
   end
 
   def business_profit
     (revenue - operating_expenses - per_diem_deductions - depreciation_deductions).round(2)
   end
 
-  def adjusted_self_employment_income
-    [ business_profit * 0.9235, 0 ].max.round(2)
+  # Net earnings from self-employment: the base the SE tax is actually charged
+  # on, not the raw profit.
+  def net_earnings_from_self_employment
+    [ business_profit * NET_EARNINGS_FACTOR, 0 ].max.round(2)
   end
+  alias_method :adjusted_self_employment_income, :net_earnings_from_self_employment
 
   def self_employment_tax
-    [ business_profit * 0.153, 0 ].max.round(2)
+    earnings = net_earnings_from_self_employment
+    return 0.0 if earnings <= 0
+
+    social_security = [ earnings, social_security_wage_base ].min * SOCIAL_SECURITY_RATE
+    medicare = earnings * MEDICARE_RATE
+
+    (social_security + medicare).round(2)
   end
 
+  # Half the SE tax is deductible above the line, then the standard deduction
+  # comes off what is left.
   def taxable_income
-    [ adjusted_self_employment_income - STANDARD_DEDUCTION, 0 ].max.round(2)
+    [ business_profit - (self_employment_tax / 2.0) - standard_deduction, 0 ].max.round(2)
   end
 
   def income_tax
     remaining_income = taxable_income
     previous_limit = 0
 
-    FEDERAL_BRACKETS.sum do |limit, rate|
+    brackets.sum do |limit, rate|
       next 0 if remaining_income <= previous_limit
 
       taxable_in_bracket = [ remaining_income - previous_limit, limit - previous_limit ].min
@@ -85,27 +129,36 @@ class TaxEstimator
     (total_owed - ytd_paid).round(2)
   end
 
+  def standard_deduction
+    tax_year_table[:standard_deduction]
+  end
+
+  def social_security_wage_base
+    tax_year_table[:social_security_wage_base]
+  end
+
+  def brackets
+    tax_year_table[:brackets]
+  end
+
+  # True when the year requested has no published table and the most recent one
+  # is standing in for it, so the UI can say so rather than quietly implying the
+  # numbers are current.
+  def estimated_from_other_year?
+    !TAX_YEARS.key?(year)
+  end
+
+  def table_year
+    TAX_YEARS.key?(year) ? year : TAX_YEARS.keys.max
+  end
+
   private
 
-  def invoice_scope
-    scope_by_truck(user.invoices)
+  def summary
+    @summary ||= OperatingSummary.year(user: user, year: year, truck: truck)
   end
 
-  def expense_scope
-    scope_by_truck(user.expenses)
-  end
-
-  def per_diem_scope
-    scope_by_truck(user.per_diem_entries)
-  end
-
-  def depreciation_scope
-    scope_by_truck(user.depreciation_assets.where("placed_in_service_date <= ?", year_end))
-  end
-
-  def scope_by_truck(scope)
-    return scope unless truck
-
-    scope.where(truck: truck)
+  def tax_year_table
+    TAX_YEARS.fetch(table_year)
   end
 end

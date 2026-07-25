@@ -1,21 +1,7 @@
-<% category_labels = {
-  "fuel" => "Fuel",
-  "maintenance" => "Maintenance & Repairs",
-  "tolls" => "Tolls & Parking",
-  "food" => "Food & Meals",
-  "insurance" => "Insurance",
-  "permits" => "Permits & Licenses",
-  "truck_payment" => "Truck Payment / Lease",
-  "supplies" => "Supplies",
-  "drivers_pay" => "Drivers Pay",
-  "truck_wash_hopper_washout" => "Truck Wash / Hopper Washout",
-  "other" => "Other"
-} %>
-
 <div id="<%= dom_id expense %>" class="record-card">
   <div class="record-main">
     <div>
-      <h3 class="record-title"><%= category_labels[expense.category] || expense.category.to_s.humanize %></h3>
+      <h3 class="record-title"><%= expense_category_label(expense.category) %></h3>
       <div class="record-subtitle"><%= expense.expense_date %> - <%= expense.vendor.presence || "No vendor" %></div>
     </div>
     <div class="record-amount text-danger">$<%= number_with_precision(expense.amount, precision: 2) %></div>
@@ -28,7 +14,7 @@
     </div>
     <div class="meta-item">
       <div class="meta-label">Category</div>
-      <div class="meta-value"><%= category_labels[expense.category] || expense.category.to_s.humanize %></div>
+      <div class="meta-value"><%= expense_category_label(expense.category) %></div>
     </div>
     <% if expense.gallons.present? %>
       <div class="meta-item">

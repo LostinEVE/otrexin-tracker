@@ -42,6 +42,16 @@
       </div>
     </div>
 
+    <div class="field">
+      <%= form.label :baseline_odometer, "Starting Odometer" %>
+      <%= form.number_field :baseline_odometer, placeholder: "Optional" %>
+      <p class="field-hint">
+        The reading on this truck when you started tracking it. Without it, the miles you
+        drove before your very first fuel entry cannot be counted. Leave blank if you are
+        not sure — a wrong number here is ignored rather than trusted.
+      </p>
+    </div>
+
     <label class="checkbox-field">
       <%= form.check_box :active %>
       Active truck

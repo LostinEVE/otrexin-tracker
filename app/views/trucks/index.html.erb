@@ -33,7 +33,8 @@
 
         <div class="record-actions">
           <%= link_to "Edit", edit_truck_path(truck), class: "btn btn-secondary" %>
-          <%= link_to "View Trips", mileages_path(truck_id: truck.id), class: "btn btn-secondary" %>
+          <%= link_to "Fuel Log", fuel_logs_path(truck_id: truck.id), class: "btn btn-secondary" %>
+          <%= link_to "P&L", reports_profit_loss_path(truck_id: truck.id), class: "btn btn-secondary" %>
           <%= link_to "Delete", truck_path(truck), data: { turbo_method: :delete, turbo_confirm: "Delete this truck?" }, class: "btn btn-danger" %>
         </div>
       </div>

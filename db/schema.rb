@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_31_223439) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_25_000001) do
   create_table "company_profiles", force: :cascade do |t|
     t.string "address_line1"
     t.string "address_line2"
@@ -123,24 +123,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_31_223439) do
     t.index ["user_id"], name: "index_maintenances_on_user_id"
   end
 
-  create_table "mileages", force: :cascade do |t|
-    t.datetime "created_at", null: false
-    t.string "destination"
-    t.string "load_number"
-    t.decimal "miles"
-    t.text "notes"
-    t.string "origin"
-    t.decimal "revenue"
-    t.date "trip_date"
-    t.integer "truck_id", null: false
-    t.datetime "updated_at", null: false
-    t.integer "user_id", null: false
-    t.index ["trip_date"], name: "index_mileages_on_trip_date"
-    t.index ["truck_id"], name: "index_mileages_on_truck_id"
-    t.index ["user_id", "truck_id"], name: "index_mileages_on_user_id_and_truck_id"
-    t.index ["user_id"], name: "index_mileages_on_user_id"
-  end
-
   create_table "per_diem_entries", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.decimal "daily_rate", precision: 10, scale: 2, null: false
@@ -202,8 +184,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_31_223439) do
   add_foreign_key "invoices", "users"
   add_foreign_key "maintenances", "trucks"
   add_foreign_key "maintenances", "users"
-  add_foreign_key "mileages", "trucks"
-  add_foreign_key "mileages", "users"
   add_foreign_key "per_diem_entries", "trucks"
   add_foreign_key "per_diem_entries", "users"
   add_foreign_key "tax_payments", "users"

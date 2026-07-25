@@ -23,19 +23,11 @@
       </div>
       <div class="field">
         <%= form.label :category, "Category" %>
-        <%= form.select :category, [
-          ["Fuel", "fuel"],
-          ["Maintenance & Repairs", "maintenance"],
-          ["Tolls & Parking", "tolls"],
-          ["Food & Meals", "food"],
-          ["Insurance", "insurance"],
-          ["Permits & Licenses", "permits"],
-          ["Truck Payment / Lease", "truck_payment"],
-          ["Supplies", "supplies"],
-          ["Drivers Pay", "drivers_pay"],
-          ["Truck Wash / Hopper Washout", "truck_wash_hopper_washout"],
-          ["Other", "other"]
-        ], { prompt: "Select a category" }, id: "expense_category", onchange: "document.getElementById('gallons_group').classList.toggle('is-hidden', this.value !== 'fuel')" %>
+        <%= form.select :category,
+          Expense::CATEGORIES.map { |value, label| [ label, value ] },
+          { prompt: "Select a category" },
+          id: "expense_category",
+          onchange: "document.getElementById('gallons_group').classList.toggle('is-hidden', this.value !== 'fuel')" %>
       </div>
     </div>
 

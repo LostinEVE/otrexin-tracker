@@ -36,13 +36,24 @@ class DepreciationAsset < ApplicationRecord
     deduction_for_period(period_start, period_end)
   end
 
+  # Prorated by days, so a quarterly or monthly report shows that period's share
+  # of the year rather than the entire year's deduction. A full-year period still
+  # returns the full annual amount.
   def deduction_for_period(period_start, period_end)
     return 0.to_d if period_end < placed_in_service_date
 
     yearly_schedule.sum do |entry|
       year_start = Date.new(entry[:year], 1, 1)
       year_end = Date.new(entry[:year], 12, 31)
-      year_start <= period_end && year_end >= period_start ? entry[:amount] : 0.to_d
+
+      overlap_start = [ year_start, period_start ].max
+      overlap_end = [ year_end, period_end ].min
+      next 0.to_d if overlap_end < overlap_start
+
+      overlap_days = (overlap_end - overlap_start).to_i + 1
+      days_in_year = (year_end - year_start).to_i + 1
+
+      entry[:amount] * overlap_days / days_in_year
     end.round(2)
   end
 

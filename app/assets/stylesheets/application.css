@@ -465,6 +465,13 @@ p {
 	min-width: 0;
 }
 
+.field-hint {
+	margin: 0;
+	color: var(--muted);
+	font-size: 0.78rem;
+	line-height: 1.4;
+}
+
 label {
 	color: var(--muted-strong);
 	font-size: 0.83rem;
@@ -858,6 +865,58 @@ tbody tr:hover {
 	flex-wrap: wrap;
 	gap: 8px;
 	margin-top: 16px;
+}
+
+.note-box.is-warning {
+	color: #7a4f00;
+	background: var(--warning-soft);
+	border-color: #e6c76a;
+}
+
+.statement-caption {
+	margin: -4px 0 14px;
+	color: var(--muted-strong);
+	font-size: 0.9rem;
+}
+
+/* Profit & loss statement rows: section headers, indented line items, and
+   subtotals, so the page reads like a statement rather than a flat table. */
+.statement td {
+	font-variant-numeric: tabular-nums;
+}
+
+.statement .statement-section td {
+	padding-top: 16px;
+	color: var(--muted-strong);
+	background: var(--surface-soft);
+	font-size: 0.72rem;
+	font-weight: 800;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+}
+
+.statement .statement-item {
+	padding-left: 28px;
+	color: var(--muted-strong);
+}
+
+.statement .statement-total td {
+	border-top: 1px solid var(--line-strong);
+	font-weight: 800;
+}
+
+.statement .statement-total.is-emphasis td {
+	border-top: 2px solid var(--text);
+	border-bottom: 2px solid var(--text);
+	font-size: 1.02rem;
+}
+
+.statement tbody tr:hover {
+	background: transparent;
+}
+
+.statement .statement-total:hover td {
+	background: var(--surface-soft);
 }
 
 @media print {

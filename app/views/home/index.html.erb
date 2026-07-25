@@ -1,23 +1,9 @@
 <% content_for :title, "Dashboard" %>
 
-<% category_labels = {
-  "fuel" => "Fuel",
-  "maintenance" => "Maintenance & Repairs",
-  "tolls" => "Tolls & Parking",
-  "food" => "Food & Meals",
-  "insurance" => "Insurance",
-  "permits" => "Permits & Licenses",
-  "truck_payment" => "Truck Payment / Lease",
-  "supplies" => "Supplies",
-  "drivers_pay" => "Drivers Pay",
-  "truck_wash_hopper_washout" => "Truck Wash / Hopper Washout",
-  "other" => "Other"
-} %>
-
 <div class="page-header">
   <div class="page-title-group">
     <h1>Dashboard</h1>
-    <p class="page-kicker">A current snapshot of revenue, expenses, mileage, and unpaid invoices.</p>
+    <p class="page-kicker">A current snapshot of revenue, expenses, miles, and unpaid invoices.</p>
   </div>
 </div>
 
@@ -33,19 +19,28 @@
   </div>
 <% end %>
 
+<% unless @year.reconciled? %>
+  <div class="note-box is-warning">
+    <strong><%= money(@year.unreconciled_total) %></strong>
+    more has been logged in fuel and maintenance costs this year than you have recorded as
+    expenses, so that money is not in your profit, tax, or cost-per-mile figures.
+    <%= link_to "Review on the P&L", reports_profit_loss_path, class: "btn-link" %>
+  </div>
+<% end %>
+
 <h2 class="section-title">Revenue</h2>
 <div class="metric-grid">
   <div class="metric-card">
     <div class="metric-label">Unpaid Invoices</div>
-    <div class="metric-value text-warning">$<%= number_with_precision(@unpaid_total, precision: 2, delimiter: ",") %></div>
+    <div class="metric-value text-warning"><%= money(@unpaid_total) %></div>
   </div>
   <div class="metric-card">
     <div class="metric-label">Collected This Month</div>
-    <div class="metric-value text-success">$<%= number_with_precision(@paid_mtd, precision: 2, delimiter: ",") %></div>
+    <div class="metric-value text-success"><%= money(@month.revenue) %></div>
   </div>
   <div class="metric-card">
     <div class="metric-label">YTD Revenue</div>
-    <div class="metric-value text-success">$<%= number_with_precision(@ytd_revenue, precision: 2, delimiter: ",") %></div>
+    <div class="metric-value text-success"><%= money(@year.revenue) %></div>
   </div>
 </div>
 
@@ -53,15 +48,19 @@
 <div class="metric-grid">
   <div class="metric-card">
     <div class="metric-label">Expenses This Month</div>
-    <div class="metric-value text-danger">$<%= number_with_precision(@expenses_mtd, precision: 2, delimiter: ",") %></div>
+    <div class="metric-value text-danger"><%= money(@month.expense_total) %></div>
   </div>
   <div class="metric-card">
     <div class="metric-label">YTD Expenses</div>
-    <div class="metric-value text-danger">$<%= number_with_precision(@ytd_expenses, precision: 2, delimiter: ",") %></div>
+    <div class="metric-value text-danger"><%= money(@year.expense_total) %></div>
+  </div>
+  <div class="metric-card">
+    <div class="metric-label">YTD Net Profit</div>
+    <div class="metric-value <%= profit_class(@year.net_profit) %>"><%= money(@year.net_profit) %></div>
   </div>
 </div>
 
-<% if @expenses_by_category_mtd.any? %>
+<% if @month.expense_by_category.any? %>
   <section class="panel">
     <div class="panel-header">
       <h3 class="panel-title">This Month by Category</h3>
@@ -69,10 +68,10 @@
     <div class="table-wrap">
       <table>
         <tbody>
-          <% @expenses_by_category_mtd.each do |cat, amt| %>
+          <% @month.expense_by_category.each do |category, amount| %>
             <tr>
-              <td><%= category_labels[cat] || cat.to_s.humanize %></td>
-              <td class="align-right text-danger"><strong>$<%= number_with_precision(amt, precision: 2, delimiter: ",") %></strong></td>
+              <td><%= expense_category_label(category) %></td>
+              <td class="align-right text-danger"><strong><%= money(amount) %></strong></td>
             </tr>
           <% end %>
         </tbody>
@@ -81,20 +80,21 @@
   </section>
 <% end %>
 
-<h2 class="section-title">Performance</h2>
+<h2 class="section-title">Performance (Year to Date)</h2>
 <div class="metric-grid is-compact">
   <div class="metric-card">
     <div class="metric-label">Total Miles</div>
-    <div class="metric-value"><%= number_with_precision(@total_miles, precision: 1, delimiter: ",") %></div>
+    <div class="metric-value"><%= number_with_delimiter(@year.total_miles) %></div>
+    <div class="metric-note">From fuel log odometer</div>
   </div>
   <div class="metric-card">
     <div class="metric-label">Revenue / Mile</div>
-    <div class="metric-value"><%= @rpm ? "$#{@rpm}" : "-" %></div>
+    <div class="metric-value text-success"><%= per_mile(@year.revenue_per_mile) %></div>
   </div>
   <div class="metric-card">
     <div class="metric-label">Cost / Mile</div>
-    <div class="metric-value"><%= @cpm ? "$#{@cpm}" : "-" %></div>
-    <div class="metric-note">From mileage entries</div>
+    <div class="metric-value text-danger"><%= per_mile(@year.cost_per_mile) %></div>
+    <div class="metric-note">All expenses ÷ miles</div>
   </div>
   <div class="metric-card">
     <div class="metric-label">Overall MPG</div>
@@ -121,7 +121,7 @@
             <td><strong><%= inv.invoice_number %></strong></td>
             <td><%= inv.invoice_date %></td>
             <td><%= inv.customer_name %></td>
-            <td class="align-right text-warning"><strong>$<%= number_with_precision(inv.amount, precision: 2) %></strong></td>
+            <td class="align-right text-warning"><strong><%= money(inv.amount) %></strong></td>
             <td class="align-right"><%= link_to "Edit", edit_invoice_path(inv), class: "btn-link" %></td>
           </tr>
         <% end %>

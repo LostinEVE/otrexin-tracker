@@ -24,6 +24,11 @@
 
 <div class="metric-grid is-compact">
   <div class="metric-card">
+    <div class="metric-label">Total Miles</div>
+    <div class="metric-value"><%= number_with_delimiter(@total_miles) %></div>
+    <div class="metric-note">Drives cost per mile</div>
+  </div>
+  <div class="metric-card">
     <div class="metric-label">Overall MPG</div>
     <div class="metric-value"><%= @overall_mpg&.to_s || "-" %></div>
   </div>
@@ -37,13 +42,34 @@
   </div>
   <div class="metric-card">
     <div class="metric-label">Total Fuel Cost</div>
-    <div class="metric-value text-danger">$<%= number_with_precision(@total_fuel_cost, precision: 2) %></div>
+    <div class="metric-value text-danger"><%= money(@total_fuel_cost) %></div>
+    <div class="metric-note">Reference only</div>
   </div>
 </div>
 
+<div class="note-box">
+  Odometer readings here are where <strong>every mile</strong> in your P&amp;L and cost per
+  mile comes from, so keep them accurate. The fuel cost above is <strong>not</strong>
+  counted as money spent — record that as an expense under <strong>Fuel</strong> so it is
+  only counted once.
+  <%= link_to "Add the expense", new_expense_path(category: "fuel", truck_id: selected_truck&.id), class: "btn-link" %>
+</div>
+
+<% if @excluded_mileage_interval_count.to_i.positive? %>
+  <div class="note-box is-warning">
+    <%= pluralize(@excluded_mileage_interval_count, "odometer gap") %> did not look like real
+    driving and <%= @excluded_mileage_interval_count.to_i == 1 ? "was" : "were" %> left out of
+    total miles — a gap has to move forward and stay under
+    <%= number_with_delimiter(FuelLog::MAX_INTERVAL_MILES) %> miles to count. Check for a
+    mistyped odometer or a missed fill-up.
+  </div>
+<% end %>
+
 <% if @excluded_mpg_interval_count.to_i.positive? %>
   <div class="note-box">
-    MPG is ignoring <%= pluralize(@excluded_mpg_interval_count, "odometer interval") %> that look unrealistic, such as repair/reset jumps over <%= number_with_delimiter(FuelLog::MAX_MPG_INTERVAL_MILES) %> miles or above <%= FuelLog::MAX_REASONABLE_MPG.to_i %> MPG.
+    MPG is ignoring <%= pluralize(@excluded_mpg_interval_count, "fill-up") %> that could not
+    produce a believable figure — over <%= number_with_delimiter(FuelLog::MAX_INTERVAL_MILES) %>
+    miles on one tank, or above <%= FuelLog::MAX_REASONABLE_MPG.to_i %> MPG.
   </div>
 <% end %>
 

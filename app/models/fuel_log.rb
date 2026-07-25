@@ -1,5 +1,8 @@
 class FuelLog < ApplicationRecord
-  MAX_MPG_INTERVAL_MILES = 2_000
+  # An odometer gap wider than this is a data problem, not miles that were
+  # actually driven: a cluster replacement, a unit swap, or a run of missed
+  # fill-ups. Counting it would inflate miles and deflate cost per mile.
+  MAX_INTERVAL_MILES = 2_000
   MAX_REASONABLE_MPG = 15.0
 
   belongs_to :user
@@ -12,110 +15,180 @@ class FuelLog < ApplicationRecord
 
   scope :with_mpg_inputs, -> { where("odometer IS NOT NULL AND gallons IS NOT NULL AND gallons > 0") }
 
-  # Returns miles driven and MPG compared to the PREVIOUS entry by odometer order.
-  # Returns nil if there is no previous entry (first fill-up has no reference).
   def mpg_since_last_fill
-    mpg_interval_since_last_fill&.fetch(:mpg)
+    interval = interval_since_last_fill
+    return nil unless interval && self.class.plausible_mpg?(interval)
+
+    interval[:mpg]
   end
 
   def miles_since_last_fill
-    mpg_interval_since_last_fill&.fetch(:miles)
+    interval_since_last_fill&.fetch(:miles)
   end
 
-  def self.total_miles_safe(scope = all)
-    total = mpg_intervals(scope).sum { |interval| interval[:miles] }
+  class << self
+    # --- Miles ---------------------------------------------------------------
+    #
+    # Miles come from odometer movement between consecutive fill-ups, which means
+    # they no longer depend on gallons being recorded. A fill-up entered without
+    # gallons still contributes its miles; it just cannot contribute an MPG
+    # figure. This is the mileage that cost per mile and revenue per mile run on.
 
-    total > 0 ? total : nil
-  end
+    def total_miles(scope = all)
+      mileage_intervals(scope).sum { |interval| interval[:miles] }
+    end
 
-  # Class-level stats used by the index page
-  def self.overall_mpg(scope = all)
-    intervals = mpg_intervals(scope)
-    return nil if intervals.empty?
+    def mileage_intervals(scope = all)
+      odometer_intervals(scope).select { |interval| plausible_miles?(interval) }
+    end
 
-    total_miles = intervals.sum { |interval| interval[:miles] }
-    total_gallons = intervals.sum { |interval| interval[:gallons] }
-    return nil if total_miles <= 0 || total_gallons <= 0
+    def excluded_mileage_interval_count(scope = all)
+      odometer_intervals(scope).count { |interval| !plausible_miles?(interval) }
+    end
 
-    (total_miles.to_f / total_gallons).round(2)
-  end
+    # --- MPG -----------------------------------------------------------------
 
-  def self.avg_mpg_last(scope = all, n = 10)
-    intervals = mpg_intervals(scope)
-      .sort_by { |interval| [ interval[:fuel_date], interval[:id] ] }
-      .last(n)
+    def overall_mpg(scope = all)
+      intervals = mpg_intervals(scope)
+      return nil if intervals.empty?
 
-    return nil if intervals.empty?
-    (intervals.sum { |interval| interval[:mpg] } / intervals.size).round(2)
-  end
+      total_miles = intervals.sum { |interval| interval[:miles] }
+      total_gallons = intervals.sum { |interval| interval[:gallons] }
+      return nil if total_miles <= 0 || total_gallons <= 0
 
-  def self.total_gallons(scope = all)
-    scope.sum(:gallons).to_f
-  end
+      (total_miles.to_f / total_gallons).round(2)
+    end
 
-  def self.total_cost(scope = all)
-    scope.sum(:total_cost).to_f
-  end
+    def avg_mpg_last(scope = all, n = 10)
+      intervals = mpg_intervals(scope)
+        .sort_by { |interval| [ interval[:fuel_date], interval[:id] ] }
+        .last(n)
 
-  def self.excluded_mpg_interval_count(scope = all)
-    raw_mpg_intervals(scope).count { |interval| !valid_mpg_interval?(interval) }
-  end
+      return nil if intervals.empty?
 
-  def self.mpg_intervals(scope = all)
-    raw_mpg_intervals(scope).select { |interval| valid_mpg_interval?(interval) }
-  end
+      (intervals.sum { |interval| interval[:mpg] } / intervals.size).round(2)
+    end
 
-  def self.raw_mpg_intervals(scope = all)
-    logs = scope.where.not(odometer: nil)
-      .reorder(:truck_id, :odometer, :fuel_date, :id)
-      .to_a
+    def mpg_intervals(scope = all)
+      mileage_intervals(scope).select { |interval| plausible_mpg?(interval) }
+    end
 
-    logs.group_by(&:truck_id).values.flat_map do |truck_logs|
-      truck_logs.each_cons(2).filter_map do |previous_log, current_log|
-        mpg_interval_between(previous_log, current_log)
+    # Only counts intervals that recorded gallons — an interval with no gallons
+    # was never a candidate for MPG, so reporting it as "ignored" would read as
+    # an error the driver needs to fix.
+    def excluded_mpg_interval_count(scope = all)
+      odometer_intervals(scope).count do |interval|
+        interval[:gallons].positive? && !(plausible_miles?(interval) && plausible_mpg?(interval))
       end
     end
-  end
 
-  def self.mpg_interval_between(previous_log, current_log)
-    return nil unless previous_log&.odometer.present?
-    return nil unless current_log&.odometer.present?
-    return nil unless current_log.gallons.present? && current_log.gallons.positive?
+    def total_gallons(scope = all)
+      scope.sum(:gallons).to_f
+    end
 
-    miles = current_log.odometer - previous_log.odometer
-    mpg = miles.to_f / current_log.gallons.to_f if miles.positive?
+    # Reference only. Fuel spend that reaches the P&L comes from Expense records
+    # so a fill-up recorded in both places is not counted twice; see
+    # OperatingSummary.
+    def total_cost(scope = all)
+      scope.sum(:total_cost).to_f
+    end
 
-    {
-      id: current_log.id || 0,
-      fuel_date: current_log.fuel_date || Date.new(1, 1, 1),
-      miles: miles,
-      gallons: current_log.gallons.to_f,
-      mpg: mpg&.round(2)
-    }
-  end
+    # --- Interval construction -----------------------------------------------
 
-  def self.valid_mpg_interval?(interval)
-    return false unless interval
-    return false unless interval[:miles].positive?
-    return false if interval[:miles] > MAX_MPG_INTERVAL_MILES
-    return false unless interval[:mpg].present?
-    return false if interval[:mpg] > MAX_REASONABLE_MPG
+    def odometer_intervals(scope = all)
+      logs = scope.where.not(odometer: nil)
+        .reorder(:truck_id, :odometer, :fuel_date, :id)
+        .to_a
+      return [] if logs.empty?
 
-    true
+      trucks = Truck.where(id: logs.map(&:truck_id).uniq).index_by(&:id)
+
+      # Grouped by truck so one truck's odometer is never differenced against
+      # another's.
+      logs.group_by(&:truck_id).flat_map do |truck_id, truck_logs|
+        intervals = truck_logs.each_cons(2).filter_map do |previous_log, current_log|
+          interval_between(previous_log, current_log)
+        end
+
+        leading = baseline_interval(trucks[truck_id], truck_logs.first)
+        leading ? intervals.unshift(leading) : intervals
+      end
+    end
+
+    def interval_between(previous_log, current_log)
+      return nil if previous_log&.odometer.blank? || current_log&.odometer.blank?
+
+      build_interval(previous_log.odometer, current_log)
+    end
+
+    # A truck's very first fill-up has no preceding reading, so its miles would
+    # otherwise be lost forever. The truck's baseline_odometer stands in as that
+    # starting point. Applied only when the log really is the truck's earliest,
+    # so a date-filtered report never absorbs miles driven before its period.
+    def baseline_interval(truck, first_log)
+      return nil if truck&.baseline_odometer.blank?
+      return nil if first_log&.odometer.blank?
+      return nil if truck.fuel_logs.where(odometer: ...first_log.odometer).exists?
+
+      # Miles only. The gallons on that first fill-up paid for driving done
+      # before tracking started, and there is no way to know how full the tank
+      # was at the baseline reading, so any MPG derived from it would be fiction.
+      build_interval(truck.baseline_odometer, first_log, include_fuel: false)
+    end
+
+    def plausible_miles?(interval)
+      return false unless interval
+
+      interval[:miles].positive? && interval[:miles] <= MAX_INTERVAL_MILES
+    end
+
+    def plausible_mpg?(interval)
+      return false unless interval
+      return false if interval[:mpg].blank?
+
+      interval[:mpg] <= MAX_REASONABLE_MPG
+    end
+
+    def valid_mpg_interval?(interval)
+      plausible_miles?(interval) && plausible_mpg?(interval)
+    end
+
+    private
+
+    def build_interval(starting_odometer, current_log, include_fuel: true)
+      miles = current_log.odometer - starting_odometer
+      gallons = include_fuel ? current_log.gallons.to_f : 0.0
+      mpg = (miles.to_f / gallons).round(2) if miles.positive? && gallons.positive?
+
+      {
+        id: current_log.id || 0,
+        fuel_date: current_log.fuel_date || Date.new(1, 1, 1),
+        miles: miles,
+        gallons: gallons,
+        mpg: mpg
+      }
+    end
   end
 
   private
 
-  def mpg_interval_since_last_fill
-    return nil unless truck.present? && odometer.present?
+  def interval_since_last_fill
+    return @interval_since_last_fill if defined?(@interval_since_last_fill)
 
-    previous_log = truck.fuel_logs.where("odometer < ?", odometer)
-      .order(odometer: :desc)
-      .first
+    @interval_since_last_fill = begin
+      if truck.blank? || odometer.blank?
+        nil
+      else
+        previous_log = truck.fuel_logs.where(odometer: ...odometer).order(odometer: :desc).first
 
-    interval = self.class.mpg_interval_between(previous_log, self)
-    return nil unless self.class.valid_mpg_interval?(interval)
+        interval = if previous_log
+          self.class.interval_between(previous_log, self)
+        else
+          self.class.baseline_interval(truck, self)
+        end
 
-    interval
+        self.class.plausible_miles?(interval) ? interval : nil
+      end
+    end
   end
 end

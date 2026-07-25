@@ -42,12 +42,21 @@
   </div>
   <div class="metric-card">
     <div class="metric-label">Total Maintenance Cost</div>
-    <div class="metric-value text-danger">$<%= number_with_precision(total_cost, precision: 2, delimiter: ",") %></div>
+    <div class="metric-value text-danger"><%= money(total_cost) %></div>
+    <div class="metric-note">Reference only</div>
   </div>
   <div class="metric-card">
     <div class="metric-label">This Month</div>
-    <div class="metric-value text-danger">$<%= number_with_precision(mtd_cost, precision: 2, delimiter: ",") %></div>
+    <div class="metric-value text-danger"><%= money(mtd_cost) %></div>
+    <div class="metric-note">Reference only</div>
   </div>
+</div>
+
+<div class="note-box">
+  This log is your service history. The costs shown here are <strong>not</strong> counted
+  in your P&amp;L or cost per mile — record the money as an expense under
+  <strong>Maintenance &amp; Repairs</strong> so it is only counted once.
+  <%= link_to "Add the expense", new_expense_path(category: "maintenance", truck_id: selected_truck&.id), class: "btn-link" %>
 </div>
 
 <div id="maintenances" class="record-list">

@@ -1,7 +1,6 @@
 class Truck < ApplicationRecord
   belongs_to :user
 
-  has_many :mileages, dependent: :restrict_with_error
   has_many :fuel_logs, dependent: :restrict_with_error
   has_many :maintenances, dependent: :restrict_with_error
   has_many :expenses, dependent: :restrict_with_error
@@ -11,6 +10,7 @@ class Truck < ApplicationRecord
 
   validates :name, presence: true
   validates :name, uniqueness: { scope: :user_id }
+  validates :baseline_odometer, numericality: { only_integer: true, greater_than_or_equal_to: 0 }, allow_nil: true
 
   scope :active_first, -> { order(active: :desc, name: :asc, created_at: :asc) }
 
@@ -21,6 +21,6 @@ class Truck < ApplicationRecord
   end
 
   def in_use?
-    mileages.exists? || fuel_logs.exists? || maintenances.exists? || expenses.exists? || invoices.exists?
+    fuel_logs.exists? || maintenances.exists? || expenses.exists? || invoices.exists?
   end
 end

@@ -3,39 +3,16 @@ class ReportsController < ApplicationController
     @start_date = params[:start_date].present? ? Date.parse(params[:start_date]) : Date.current.beginning_of_year
     @end_date   = params[:end_date].present? ? Date.parse(params[:end_date]) : Date.current
 
-    paid_invoices = current_user.invoices.where(status: "paid", invoice_date: @start_date..@end_date)
-    expense_rows = current_user.expenses.where(expense_date: @start_date..@end_date)
-    maintenance_rows = current_user.maintenances.where(maintenance_date: @start_date..@end_date)
-    mileage_rows = current_user.mileages.where(trip_date: @start_date..@end_date)
-    per_diem_rows = current_user.per_diem_entries
-    depreciation_assets = current_user.depreciation_assets.where("placed_in_service_date <= ?", @end_date)
-
-    if selected_truck
-      paid_invoices = paid_invoices.where(truck: selected_truck)
-      expense_rows = expense_rows.where(truck: selected_truck)
-      maintenance_rows = maintenance_rows.where(truck: selected_truck)
-      mileage_rows = mileage_rows.where(truck: selected_truck)
-      per_diem_rows = per_diem_rows.where(truck: selected_truck)
-      depreciation_assets = depreciation_assets.where(truck: selected_truck)
+    if @end_date < @start_date
+      return redirect_to reports_profit_loss_path, alert: "End date must be on or after the start date."
     end
 
-    per_diem_rows = per_diem_rows.select { |entry| entry.overlaps_period?(@start_date, @end_date) }
-
-    @revenue_total = paid_invoices.sum(:amount).to_f
-    @expense_total = expense_rows.sum(:amount).to_f
-    @maintenance_total = maintenance_rows.sum(:cost).to_f
-    @operating_cost_total = @expense_total + @maintenance_total
-    @net_profit = @revenue_total - @operating_cost_total
-    @per_diem_total = per_diem_rows.sum(&:deduction_amount).to_f
-    @depreciation_total = depreciation_assets.sum { |asset| asset.deduction_for_period(@start_date, @end_date) }.to_f
-    @tax_adjustment_total = @per_diem_total + @depreciation_total
-    @taxable_profit_estimate = @net_profit - @tax_adjustment_total
-
-    @expense_by_category = expense_rows.group(:category).sum(:amount).sort_by { |_k, v| -v.to_f }
-
-    @total_miles = Mileage.total_miles(mileage_rows)
-    @revenue_per_mile = @total_miles.positive? ? (@revenue_total / @total_miles).round(4) : nil
-    @cost_per_mile = @total_miles.positive? ? (@operating_cost_total / @total_miles).round(4) : nil
+    @summary = OperatingSummary.new(
+      user: current_user,
+      start_date: @start_date,
+      end_date: @end_date,
+      truck: selected_truck
+    )
 
     respond_to do |format|
       format.html
@@ -47,7 +24,7 @@ class ReportsController < ApplicationController
         )
       end
     end
-  rescue ArgumentError
+  rescue Date::Error
     redirect_to reports_profit_loss_path, alert: "Invalid date range."
   end
 
@@ -57,24 +34,47 @@ class ReportsController < ApplicationController
     CSV.generate(headers: true) do |csv|
       csv << [ "OTR Tracker Profit & Loss" ]
       csv << [ "Period", "#{@start_date} to #{@end_date}" ]
+      csv << [ "Truck", selected_truck&.display_name || "All trucks" ]
       csv << []
       csv << [ "Summary", "Amount" ]
-      csv << [ "Revenue", @revenue_total.round(2) ]
-      csv << [ "Expenses", @expense_total.round(2) ]
-      csv << [ "Maintenance", @maintenance_total.round(2) ]
-      csv << [ "Operating Cost Total", @operating_cost_total.round(2) ]
-      csv << [ "Net Profit", @net_profit.round(2) ]
-      csv << [ "Per Diem Deductions", @per_diem_total.round(2) ]
-      csv << [ "Depreciation Deductions", @depreciation_total.round(2) ]
-      csv << [ "Tax Adjustment Total", @tax_adjustment_total.round(2) ]
-      csv << [ "Taxable Profit Estimate", @taxable_profit_estimate.round(2) ]
-      csv << [ "Revenue per Mile", @revenue_per_mile ]
-      csv << [ "Cost per Mile", @cost_per_mile ]
+      csv << [ "Revenue (paid invoices)", amount_cell(@summary.revenue) ]
+      csv << [ "Operating Expenses", amount_cell(@summary.expense_total) ]
+      csv << [ "Net Profit", amount_cell(@summary.net_profit) ]
+      csv << []
+      csv << [ "Per Diem Deductions", amount_cell(@summary.per_diem_total) ]
+      csv << [ "Depreciation Deductions", amount_cell(@summary.depreciation_total) ]
+      csv << [ "Tax Adjustment Total", amount_cell(@summary.tax_adjustment_total) ]
+      csv << [ "Taxable Profit Estimate", amount_cell(@summary.taxable_profit_estimate) ]
+      csv << []
+      csv << [ "Total Miles (from fuel odometer)", @summary.total_miles ]
+      csv << [ "Revenue per Mile", amount_cell(@summary.revenue_per_mile, precision: 3) ]
+      csv << [ "Cost per Mile", amount_cell(@summary.cost_per_mile, precision: 3) ]
+      csv << [ "Profit per Mile", amount_cell(@summary.profit_per_mile, precision: 3) ]
       csv << []
       csv << [ "Expense Category", "Amount" ]
-      @expense_by_category.each do |category, amount|
-        csv << [ category, amount.to_f.round(2) ]
+      @summary.expense_by_category.each do |category, amount|
+        csv << [ Expense.category_label(category), amount_cell(amount) ]
+      end
+
+      next if @summary.reconciled?
+
+      csv << []
+      csv << [ "Unreconciled records (logged with a cost but no matching expense)" ]
+      csv << [ "Type", "Date", "Truck", "Amount" ]
+      @summary.unmatched_fuel_logs.each do |log|
+        csv << [ "Fuel log", log.fuel_date, log.truck&.display_name, amount_cell(log.total_cost) ]
+      end
+      @summary.unmatched_maintenances.each do |record|
+        csv << [ "Maintenance", record.maintenance_date, record.truck&.display_name, amount_cell(record.cost) ]
       end
     end
+  end
+
+  # BigDecimal#to_s renders as "0.165e4", which spreadsheets read as text, so
+  # every money cell is formatted to a plain fixed-point string.
+  def amount_cell(value, precision: 2)
+    return nil if value.nil?
+
+    format("%.#{precision}f", value)
   end
 end

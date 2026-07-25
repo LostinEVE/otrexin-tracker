@@ -63,7 +63,14 @@
 </div>
 
 <div class="note-box">
-  This is an estimate only. Based on <%= year %> federal tax brackets for a single filer. It does not include state taxes, credits, or CPA review adjustments.
+  This is an estimate only. Based on <%= summary.table_year %> federal tax brackets for a
+  <strong>single filer</strong>, with self-employment tax charged on 92.35% of profit and
+  Social Security capped at <%= number_to_currency(summary.social_security_wage_base, precision: 0) %>.
+  It does not include state taxes, credits, the QBI deduction, or any filing status other than single.
+  <% if summary.estimated_from_other_year? %>
+    <br><strong>Note:</strong> <%= year %> figures have not been published here yet, so
+    <%= summary.table_year %> brackets are standing in.
+  <% end %>
 </div>
 
 <h2 class="section-title">Tax Adjustments</h2>

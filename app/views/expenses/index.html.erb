@@ -1,19 +1,5 @@
 <% content_for :title, "Expenses" %>
 
-<% category_labels = {
-  "fuel" => "Fuel",
-  "maintenance" => "Maintenance & Repairs",
-  "tolls" => "Tolls & Parking",
-  "food" => "Food & Meals",
-  "insurance" => "Insurance",
-  "permits" => "Permits & Licenses",
-  "truck_payment" => "Truck Payment / Lease",
-  "supplies" => "Supplies",
-  "drivers_pay" => "Drivers Pay",
-  "truck_wash_hopper_washout" => "Truck Wash / Hopper Washout",
-  "other" => "Other"
-} %>
-
 <div class="page-header">
   <div class="page-title-group">
     <h1>Expenses</h1>
@@ -61,7 +47,7 @@
         <tbody>
           <% @expense_by_category.each do |cat, amt| %>
             <tr>
-              <td><%= category_labels[cat] || cat.to_s.humanize %></td>
+              <td><%= expense_category_label(cat) %></td>
               <td class="align-right text-danger"><strong>$<%= number_with_precision(amt, precision: 2, delimiter: ",") %></strong></td>
             </tr>
           <% end %>
