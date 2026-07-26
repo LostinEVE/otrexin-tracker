@@ -25,11 +25,25 @@ class SettlementImportsController < ApplicationController
     end
 
     truck = current_user.trucks.find_by(id: params[:truck_id]) || current_user.default_truck
-    @outcomes = SettlementImporter.new(user: current_user, truck: truck).import_all(files)
+    replace = ActiveModel::Type::Boolean.new.cast(params[:replace_existing])
+
+    @outcomes = SettlementImporter.new(user: current_user, truck: truck)
+      .import_all(files, replace_existing: replace)
     @skipped_empty = empty.map(&:original_filename)
     @trucks = current_trucks
+    @overlapping_invoices = overlapping_invoices
 
     render :create
+  end
+
+  # Revenue is the sum of settlements and paid invoices. A driver who was
+  # recording these loads as invoices before will now have both, so the overlap
+  # is reported rather than left to be discovered on a tax return.
+  def overlapping_invoices
+    dates = @outcomes.filter_map { |outcome| outcome.settlement&.statement_date }
+    return Invoice.none if dates.empty?
+
+    current_user.invoices.where(status: "paid", invoice_date: dates.min - 7..dates.max + 7)
   end
 
   private

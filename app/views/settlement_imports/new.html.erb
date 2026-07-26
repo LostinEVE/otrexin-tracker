@@ -28,6 +28,16 @@
             include_blank: "Use my default truck" %>
     </div>
 
+    <label class="checkbox-field">
+      <%= check_box_tag :replace_existing, "1", false %>
+      Replace deductions I already entered by hand for these dates
+    </label>
+    <p class="field-hint">
+      Leave this off the first time. Any statement that looks like it was already typed in is held
+      back and reported rather than recorded twice, so you can see the overlap before deciding.
+      Tick it only once you have seen that list and want the imported version to win.
+    </p>
+
     <div class="action-bar">
       <%= submit_tag "Read Statements" %>
     </div>
@@ -38,6 +48,13 @@
   <strong>Every statement is checked against itself.</strong> The deductions read off the page are
   added back up and compared to the Total Deductions the statement prints. Anything that does not
   match to the cent is reported and left alone rather than imported half-read.
+</div>
+
+<div class="note-box is-warning">
+  <strong>If you have been entering settlements by hand, read this first.</strong> Importing a
+  statement you already typed in would record the same deductions twice. Any statement that overlaps
+  what is already on your books is held back and listed, and nothing is written until you say which
+  version should win.
 </div>
 
 <div class="note-box">

@@ -4,10 +4,21 @@
 # Deductions figure. A statement read only in part would quietly understate
 # costs, which is worse than being told to enter it by hand.
 class SettlementImporter
-  Outcome = Struct.new(:status, :settlement, :result, :message, keyword_init: true) do
-    def imported? = status == :imported
-    def skipped?  = status == :skipped
-    def failed?   = status == :failed
+  # A driver who has been entering settlements by hand already has those
+  # deductions on the books. Importing the same statement would record them a
+  # second time, so an overlap is detected and the statement held back unless
+  # the hand-typed rows are explicitly replaced.
+  #
+  # Matched on amount within a few days rather than on the exact date, because a
+  # statement dated the 8th is often typed up on the 9th.
+  CONFLICT_WINDOW = 3
+  CONFLICT_THRESHOLD = 3
+
+  Outcome = Struct.new(:status, :settlement, :result, :message, :conflicts, keyword_init: true) do
+    def imported?  = status == :imported
+    def skipped?   = status == :skipped
+    def failed?    = status == :failed
+    def conflict?  = status == :conflict
   end
 
   attr_reader :user, :truck
@@ -17,7 +28,7 @@ class SettlementImporter
     @truck = truck
   end
 
-  def import(result, filename: nil)
+  def import(result, filename: nil, replace_existing: false)
     return failure(result, "No settlement date could be read.") if result.statement_date.blank?
     return failure(result, result.errors.to_sentence) if result.errors.any?
 
@@ -32,29 +43,55 @@ class SettlementImporter
                          message: "Already imported (#{existing.statement_date}).")
     end
 
+    clashing = conflicting_expenses(result)
+    if clashing.size >= CONFLICT_THRESHOLD && !replace_existing
+      return Outcome.new(
+        status: :conflict, result: result, conflicts: clashing,
+        message: "#{clashing.size} expenses around #{result.statement_date} look like this " \
+                 "settlement already entered by hand (#{fmt(clashing.sum(&:amount))}). Nothing imported."
+      )
+    end
+
     settlement = nil
+    removed = 0
     ActiveRecord::Base.transaction do
+      removed = clashing.each(&:destroy!).size if replace_existing && clashing.any?
       settlement = create_settlement(result, filename)
       create_expenses(settlement, result)
     end
 
+    note = removed.positive? ? " Replaced #{removed} hand-entered rows." : ""
     Outcome.new(status: :imported, settlement: settlement, result: result,
-                message: "#{fmt(result.truck_revenue)} revenue, #{result.deductions.size} deductions.")
+                message: "#{fmt(result.truck_revenue)} revenue, #{result.deductions.size} deductions.#{note}")
   rescue ActiveRecord::RecordInvalid => e
     failure(result, e.record.errors.full_messages.to_sentence)
   end
 
   # Imports many statements, reporting each one rather than stopping at the
   # first that will not reconcile.
-  def import_all(files)
+  def import_all(files, replace_existing: false)
     files.filter_map do |file|
       name = filename_for(file)
       begin
-        import(SettlementStatementParser.call(open_for_read(file)), filename: name)
+        import(SettlementStatementParser.call(open_for_read(file)),
+               filename: name, replace_existing: replace_existing)
       rescue SettlementStatementParser::ParseError => e
         Outcome.new(status: :failed, result: nil, message: "#{name}: #{e.message}")
       end
     end
+  end
+
+  # Expenses that are not tied to any settlement but match this statement's
+  # deduction amounts around its date — the signature of the same money already
+  # recorded by hand.
+  def conflicting_expenses(result)
+    amounts = result.deductions.map { |line| line[:amount].to_d }.select(&:positive?).uniq
+    return [] if amounts.size < CONFLICT_THRESHOLD
+
+    scope = user.expenses.where(settlement_id: nil, amount: amounts)
+      .where(expense_date: (result.statement_date - CONFLICT_WINDOW)..(result.statement_date + CONFLICT_WINDOW))
+    scope = scope.where(truck: truck) if truck
+    scope.to_a
   end
 
   private

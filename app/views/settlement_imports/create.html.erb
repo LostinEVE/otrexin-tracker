@@ -3,6 +3,7 @@
 <% imported = @outcomes.select(&:imported?)
    skipped  = @outcomes.select(&:skipped?)
    failed   = @outcomes.select(&:failed?)
+   conflicted = @outcomes.select(&:conflict?)
    revenue  = imported.sum { |o| o.settlement.truck_revenue }
    deducted = imported.sum { |o| o.settlement.total_deductions } %>
 
@@ -35,6 +36,31 @@
     <div class="metric-value <%= failed.any? ? "text-warning" : "" %>"><%= skipped.size %> / <%= failed.size %></div>
   </div>
 </div>
+
+<% if conflicted.any? %>
+  <div class="note-box is-warning">
+    <strong><%= pluralize(conflicted.size, "statement") %> already looks to be on your books</strong>
+    and was <strong>not</strong> imported, so nothing has been counted twice. These are dates where
+    expenses matching the settlement's deductions already exist without a settlement behind them —
+    almost certainly the weeks you entered by hand.
+    <br><br>
+    If you would rather the imported version win, come back and tick
+    <em>"Replace deductions I already entered by hand"</em>. That deletes the matching hand-typed rows
+    and records the statement in their place. If you would rather keep what you typed, just leave
+    these alone — the revenue side is still missing for them, which you can add from a template.
+  </div>
+<% end %>
+
+<% if @overlapping_invoices.present? && @overlapping_invoices.any? %>
+  <div class="note-box is-warning">
+    <strong><%= pluralize(@overlapping_invoices.count, "paid invoice") %></strong> sits in the same
+    date range as the statements just imported, totalling
+    <strong><%= money(@overlapping_invoices.sum(:amount)) %></strong>. Revenue counts settlements and
+    invoices together, so if those invoices describe the same loads your income is now counted twice.
+    A driver leased to a carrier is normally paid on settlements only.
+    <%= link_to "Review invoices", invoices_path, class: "btn-link" %>
+  </div>
+<% end %>
 
 <% if @skipped_empty.present? %>
   <div class="note-box is-warning">
@@ -72,7 +98,9 @@
             <% if outcome.imported? %>
               <span class="badge badge-success">Imported</span>
             <% elsif outcome.skipped? %>
-              <span class="badge badge-neutral">Skipped</span>
+              <span class="badge badge-neutral">Already imported</span>
+            <% elsif outcome.conflict? %>
+              <span class="badge badge-warning">Already on books</span>
             <% else %>
               <span class="badge badge-warning">Not read</span>
             <% end %>

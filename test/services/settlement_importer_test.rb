@@ -82,4 +82,64 @@ class SettlementImporterTest < ActiveSupport::TestCase
 
     assert_includes outcome.settlement.notes, "1,377"
   end
+
+  # Guards the case that would quietly double a driver's books: the same
+  # settlement already typed in by hand.
+  test "a statement already entered by hand is held back rather than doubled" do
+    [ 33.46, 125.00, 175.00, 50.00 ].each_with_index do |amount, index|
+      Expense.create!(user: users(:one), truck: trucks(:one), expense_date: Date.new(2026, 7, 14),
+                      category: "insurance", vendor: "Kaplan", amount: amount, notes: "typed by hand #{index}")
+    end
+
+    outcome = nil
+    assert_no_difference [ "Settlement.count", "Expense.count" ] do
+      outcome = importer.import(result)
+    end
+
+    assert outcome.conflict?
+    assert_includes outcome.message, "entered by hand"
+    assert_operator outcome.conflicts.size, :>=, 3
+  end
+
+  test "a date typed up a day late is still recognised as the same settlement" do
+    [ 33.46, 125.00, 175.00, 50.00 ].each do |amount|
+      Expense.create!(user: users(:one), truck: trucks(:one), expense_date: Date.new(2026, 7, 15),
+                      category: "insurance", vendor: "Kaplan", amount: amount)
+    end
+
+    assert importer.import(result).conflict?
+  end
+
+  test "replacing removes the hand-typed rows and records the statement instead" do
+    4.times do |index|
+      Expense.create!(user: users(:one), truck: trucks(:one), expense_date: Date.new(2026, 7, 14),
+                      category: "insurance", vendor: "Kaplan", amount: [ 33.46, 125.00, 175.00, 50.00 ][index])
+    end
+
+    outcome = importer.import(result, replace_existing: true)
+
+    assert outcome.imported?
+    assert_includes outcome.message, "Replaced 4 hand-entered rows"
+    assert_equal 14, outcome.settlement.expenses.count
+    # Nothing hand-typed survives on that date to be counted a second time.
+    assert_empty Expense.where(settlement_id: nil, expense_date: Date.new(2026, 7, 14))
+  end
+
+  test "unrelated expenses on the same date are not mistaken for the settlement" do
+    Expense.create!(user: users(:one), truck: trucks(:one), expense_date: Date.new(2026, 7, 14),
+                    category: "fuel", vendor: "Pilot", amount: 812.44)
+
+    assert importer.import(result).imported?
+  end
+
+  test "expenses already tied to a settlement are never treated as a conflict" do
+    first = importer.import(result)
+    assert first.imported?
+
+    # A second statement on the same dates sees fourteen matching amounts, but
+    # they all belong to a settlement already, so they are not hand-typed rows.
+    second = result
+    second.statement_number = "OTHER"
+    assert_not importer.import(second).conflict?
+  end
 end
