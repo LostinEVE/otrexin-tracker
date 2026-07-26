@@ -82,4 +82,37 @@ class SettlementTest < ActiveSupport::TestCase
     assert_equal 800.to_d, summary.fuel_expense_total
     assert_equal(-70.00.to_d, summary.net_fuel_cost)
   end
+
+  test "the carrier's year to date figure is kept for checking the books against" do
+    settlement = kaplan_statement
+    settlement.update!(ytd_revenue: 40_650.01, ytd_load_count: 20)
+    summary = OperatingSummary.year(user: users(:one), year: 2026, truck: trucks(:one))
+
+    assert_equal 40_650.01.to_d, summary.carrier_ytd_revenue
+    assert_equal settlement, summary.latest_ytd_statement
+  end
+
+  test "revenue short of the carrier's figure means a statement was never imported" do
+    kaplan_statement.update!(ytd_revenue: 43_496.01)
+    summary = OperatingSummary.year(user: users(:one), year: 2026, truck: trucks(:one))
+
+    # 5,000 of paid invoices plus 2,846 of settlement against 43,496.01 stated.
+    assert_operator summary.ytd_difference, :<, 0
+    assert_equal(-35_650.01.to_d, summary.ytd_difference)
+  end
+
+  test "revenue over the carrier's figure means income counted twice" do
+    kaplan_statement.update!(ytd_revenue: 2_846.00)
+    summary = OperatingSummary.year(user: users(:one), year: 2026, truck: trucks(:one))
+
+    # The fixture invoices are the double count.
+    assert_equal 5_000.to_d, summary.ytd_difference
+  end
+
+  test "with no statements there is nothing to check against" do
+    summary = OperatingSummary.year(user: users(:one), year: 2026, truck: trucks(:one))
+
+    assert_nil summary.carrier_ytd_revenue
+    assert_nil summary.ytd_difference
+  end
 end

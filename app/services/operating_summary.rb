@@ -62,6 +62,36 @@ class OperatingSummary
     per_mile(net_fuel_cost)
   end
 
+  # The carrier prints a running 1099 total on every statement. Comparing the
+  # books against the most recent one is the closest thing to an independent
+  # audit available before the 1099 itself arrives: it catches a statement never
+  # imported, and income counted twice.
+  def latest_ytd_statement
+    return @latest_ytd_statement if defined?(@latest_ytd_statement)
+
+    @latest_ytd_statement = scoped_to_truck(user.settlements.where.not(ytd_revenue: nil))
+      .where(statement_date: ..end_date)
+      .order(:statement_date).last
+  end
+
+  def carrier_ytd_revenue
+    latest_ytd_statement&.ytd_revenue&.to_d
+  end
+
+  # Revenue recorded for the same year the carrier's figure covers.
+  def revenue_to_compare
+    return nil if latest_ytd_statement.nil?
+
+    year = latest_ytd_statement.statement_date.year
+    OperatingSummary.year(user: user, year: year, truck: truck).revenue
+  end
+
+  def ytd_difference
+    return nil if carrier_ytd_revenue.nil?
+
+    revenue_to_compare - carrier_ytd_revenue
+  end
+
   def load_count
     @load_count ||= settlements.sum { |settlement| settlement.load_count.to_i }
   end

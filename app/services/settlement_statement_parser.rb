@@ -36,6 +36,7 @@ class SettlementStatementParser
     :statement_date, :statement_number, :payer, :load_count, :miles,
     :gross_linehaul, :linehaul, :fuel_surcharge, :accessorials, :truck_revenue,
     :total_deductions, :balance, :fuel_advance, :deductions, :errors,
+    :ytd_revenue, :ytd_load_count,
     keyword_init: true
   ) do
     def deduction_sum
@@ -97,6 +98,8 @@ class SettlementStatementParser
       ),
       fuel_advance: fuel_advance,
       deductions: deduction_lines + trip_permit_lines,
+      ytd_revenue: year_to_date[:revenue],
+      ytd_load_count: year_to_date[:loads],
       errors: @errors
     )
   end
@@ -135,6 +138,22 @@ class SettlementStatementParser
         else
           { gross_linehaul: found.first }.merge(SUMMARY_FIELDS.zip(found.drop(1)).to_h)
         end
+      end
+    end
+  end
+
+  # The carrier's own running total for the year, printed as
+  # "20  $28,832.13  $10,923.13  $894.75  $0.00  $40,650.01" — load count, then
+  # line haul, surcharge, accessorials, non-taxable, and finally the 1099 figure.
+  def year_to_date
+    @year_to_date ||= begin
+      index = lines.index { |line| line.include?("Year to Date") }
+      row = lines[(index + 1)..(index + 3)]&.find { |line| line.match?(/\A\d+\s+\$/) } if index
+      amounts = row.to_s.scan(MONEY).flatten
+      if amounts.size >= 5
+        { loads: row[/\A(\d+)/, 1].to_i, revenue: to_amount(amounts.last) }
+      else
+        {}
       end
     end
   end

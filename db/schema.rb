@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_25_000004) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_25_000005) do
   create_table "company_profiles", force: :cascade do |t|
     t.string "address_line1"
     t.string "address_line2"
@@ -185,6 +185,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_25_000004) do
     t.integer "truck_id"
     t.datetime "updated_at", null: false
     t.integer "user_id", null: false
+    t.integer "ytd_load_count"
+    t.decimal "ytd_revenue", precision: 12, scale: 2
     t.index ["settlement_template_id"], name: "index_settlements_on_settlement_template_id"
     t.index ["truck_id"], name: "index_settlements_on_truck_id"
     t.index ["user_id", "statement_date"], name: "index_settlements_on_user_id_and_statement_date"

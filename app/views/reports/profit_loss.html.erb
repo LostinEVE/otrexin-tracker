@@ -41,7 +41,15 @@
   <div class="metric-card">
     <div class="metric-label">Revenue</div>
     <div class="metric-value text-success"><%= money(@summary.revenue) %></div>
-    <div class="metric-note">Paid invoices only</div>
+    <div class="metric-note">
+      <% if @summary.settlement_revenue.positive? && @summary.invoice_revenue.positive? %>
+        Settlements and paid invoices
+      <% elsif @summary.settlement_revenue.positive? %>
+        Carrier settlements
+      <% else %>
+        Paid invoices
+      <% end %>
+    </div>
   </div>
   <div class="metric-card">
     <div class="metric-label">Operating Expenses</div>
@@ -65,6 +73,29 @@
     <div class="metric-note">After per diem &amp; depreciation</div>
   </div>
 </div>
+
+
+<% if @summary.carrier_ytd_revenue.present? %>
+  <% diff = @summary.ytd_difference %>
+  <div class="note-box <%= diff.abs < 1 ? "" : "is-warning" %>">
+    <strong>Checked against your carrier's own figure.</strong>
+    Your <%= @summary.latest_ytd_statement.statement_date %> statement says
+    <strong><%= money(@summary.carrier_ytd_revenue) %></strong> of 1099 revenue for the year
+    <% if @summary.latest_ytd_statement.ytd_load_count %>
+      across <%= @summary.latest_ytd_statement.ytd_load_count %> loads<% end %>.
+    Your books show <strong><%= money(@summary.revenue_to_compare) %></strong>.
+    <% if diff.abs < 1 %>
+      They agree — that is the number the IRS will see.
+    <% elsif diff.negative? %>
+      You are <strong><%= money(diff.abs) %></strong> short, which usually means a statement was
+      never imported. Anything missing is income the 1099 will report but your books do not.
+    <% else %>
+      You are <strong><%= money(diff) %></strong> over, which usually means the same income is
+      recorded twice — most often loads entered as invoices as well as settlements.
+      <%= link_to "Check invoices", invoices_path, class: "btn-link" %>
+    <% end %>
+  </div>
+<% end %>
 
 <h2 class="section-title">Per Mile</h2>
 <div class="metric-grid is-compact">

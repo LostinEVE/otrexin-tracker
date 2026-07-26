@@ -108,6 +108,8 @@ class SettlementImporter
       fuel_surcharge: result.fuel_surcharge,
       accessorials: result.accessorials,
       fuel_advance: result.fuel_advance,
+      ytd_revenue: result.ytd_revenue,
+      ytd_load_count: result.ytd_load_count,
       source_filename: filename,
       notes: result.miles.positive? ? "#{ActiveSupport::NumberHelper.number_to_delimited(result.miles)} paid miles" : nil
     )
