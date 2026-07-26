@@ -6,6 +6,7 @@
     <p class="page-kicker">Save the deductions your carrier takes every week, then record them all at once.</p>
   </div>
   <div class="action-bar">
+    <%= link_to "Import PDFs Instead", new_settlement_import_path, class: "btn" %>
     <%= link_to "Start from a typical settlement", new_settlement_template_path(starter: 1), class: "btn" %>
     <%= link_to "Blank Template", new_settlement_template_path, class: "btn btn-secondary" %>
   </div>

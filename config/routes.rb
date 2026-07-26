@@ -15,6 +15,7 @@ Rails.application.routes.draw do
   resources :depreciation_assets, except: [ :show ]
   resources :tax_payments
   resource :expense_audit, only: [ :show, :update ]
+  resource :settlement_import, only: [ :new, :create ]
   resources :settlements, only: [ :index, :show, :destroy ]
   resources :settlement_templates, except: [ :show ] do
     member do

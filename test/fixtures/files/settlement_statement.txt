@@ -1,0 +1,88 @@
+Terminal:
+ (601) SOMEWHERE KY
+DRIVER SAMPLE
+Contractor Code:
+000000
+Statement#:
+00999001
+Payment Type:
+EFS
+Amount:
+$431.81
+SETTLEMENT STATEMENT 07/14/2026
+CONTRACTOR STATEMENT SUMMARY:    Load Count: 1
+Gross Linehaul:
+$2,600.00
+$1,976.00
+$870.00
+$0.00
+$2,846.00
+$0.00
+($2,414.19)
+($2,414.19)
+$431.81
+TRUCK REVENUE: Truck #99999
+Ship Date: 07/10/2026 SAMPLE SHIPPER - A, UT TO SAMPLE CONSIGNEE - B, IL
+Load #: 9999999 Weight/Miles 38,696 lbs 1377 miles
+Terminal: (517) SOMEPLACE MI         Line Haul Pay               Flat        $2,600.00       76 %        $1,976.00
+Fuel Surcharge              Flat                                    $870.00       100 %           $870.00
+EFS FUEL                    Ref# 999999999                                                     ($1,401.00)
+Trip Net: $1,445.00
+DEDUCTIONS: Truck#99999
+Permits Driver - 99999 - ($1,300.00) @ ($130.00)/Week                              this
+Deduction Statement Uncollected Collected          to Date     Balance
+07/13/2026 State: KY Permit Number: 000000, Permit Type: An          ($130.00)   ($130.00)
+Total: ($130.00)     ($130.00)                ($910.00) ($1,040.00)    ($260.00)
+Plates - 99999 - ($476.00) @ ($75.00)/Week                                         this
+Deduction Statement Uncollected Collected          to Date     Balance
+07/13/2026                                                            ($26.00)    ($26.00)
+Total:    ($26.00)    ($26.00)                ($450.00)   ($476.00)
+Plates - 99999 - ($2,100.00) @ ($75.00)/Week                                       this
+Deduction Statement Uncollected Collected          to Date     Balance
+07/13/2026                                                            ($75.00)    ($75.00)
+Total:    ($75.00)    ($75.00)                ($450.00)   ($525.00)  ($1,575.00)
+Bobtail Insurance - 99999 - ($6.92)/Week
+Deduction Statement Uncollected Collected          to Date     Balance
+07/13/2026                                                             ($6.92)     ($6.92)
+Total:     ($6.92)     ($6.92)
+Dash Cam - 99999 - ($8.50)/Week
+Deduction Statement Uncollected Collected          to Date     Balance
+07/13/2026                                                             ($8.50)     ($8.50)
+Total:     ($8.50)     ($8.50)
+E-Log - 99999 - ($6.00)/Week
+Deduction Statement Uncollected Collected          to Date     Balance
+07/13/2026                                                             ($6.00)     ($6.00)
+Total:     ($6.00)     ($6.00)
+Tractor Physical Damage - 99999 - ($32.31)/Week
+Deduction Statement Uncollected Collected          to Date     Balance
+07/13/2026                                                            ($32.31)    ($32.31)
+Total:    ($32.31)    ($32.31)
+CONTRACTOR DEDUCTIONS: DRIVER SAMPLE
+Contractor Escrow - ($500.00) @ ($50.00)/Week
+Deduction Statement Uncollected Collected          to Date     Balance
+07/13/2026                                                            ($50.00)    ($50.00)
+Total:    ($50.00)    ($50.00)                ($350.00)   ($400.00)   ($100.00)
+Loan - 000000 - ($1,219.31) @ ($300.00)/Week
+Deduction Statement Uncollected Collected          to Date     Balance
+07/13/2026                                                           ($300.00)   ($300.00)
+Total:   ($300.00)   ($300.00)                ($600.00)   ($900.00)   ($319.31)
+Loan Fee - 000000 - ($121.93) @ ($30.00)/Week
+Deduction Statement Uncollected Collected          to Date     Balance
+07/13/2026                                                            ($30.00)    ($30.00)
+Total:    ($30.00)    ($30.00)                 ($60.00)    ($90.00)    ($31.93)
+SSI Trailer Escrow - SSL0000 - ($2,000.00) @ ($125.00)/Week
+Deduction Statement Uncollected Collected          to Date     Balance
+07/13/2026                                                           ($125.00)   ($125.00)
+Total:   ($125.00)   ($125.00)                ($125.00)   ($250.00) ($1,750.00)
+SSI Trailer Lease Purchase - SSL0000 - ($62,500.00) @ ($175.00)/Week
+Deduction Statement Uncollected Collected          to Date     Balance
+07/13/2026                                                           ($175.00)   ($175.00)
+Total:   ($175.00)   ($175.00)                ($175.00)   ($350.00) ($62,150.00)
+Occupational Accident Insurance - SAMPLE - ($33.46)/Week
+Deduction Statement Uncollected Collected          to Date     Balance
+07/13/2026                                                            ($33.46)    ($33.46)
+Total:    ($33.46)    ($33.46)
+SSI Trailer Physical Damage - SSL0000 - ($15.00)/Week
+Deduction Statement Uncollected Collected          to Date     Balance
+07/13/2026                                                            ($15.00)    ($15.00)
+Total:    ($15.00)    ($15.00)

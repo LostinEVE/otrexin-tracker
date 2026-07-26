@@ -1,0 +1,80 @@
+<% content_for :title, "Import Results" %>
+
+<% imported = @outcomes.select(&:imported?)
+   skipped  = @outcomes.select(&:skipped?)
+   failed   = @outcomes.select(&:failed?)
+   revenue  = imported.sum { |o| o.settlement.truck_revenue }
+   deducted = imported.sum { |o| o.settlement.total_deductions } %>
+
+<div class="page-header">
+  <div class="page-title-group">
+    <h1>Import Results</h1>
+    <p class="page-kicker"><%= pluralize(@outcomes.size, "statement") %> read.</p>
+  </div>
+  <div class="action-bar">
+    <%= link_to "Recorded Settlements", settlements_path, class: "btn" %>
+    <%= link_to "Import More", new_settlement_import_path, class: "btn btn-secondary" %>
+  </div>
+</div>
+
+<div class="metric-grid is-compact">
+  <div class="metric-card">
+    <div class="metric-label">Imported</div>
+    <div class="metric-value text-success"><%= imported.size %></div>
+  </div>
+  <div class="metric-card">
+    <div class="metric-label">Revenue Added</div>
+    <div class="metric-value text-success"><%= money(revenue) %></div>
+  </div>
+  <div class="metric-card">
+    <div class="metric-label">Deductions Recorded</div>
+    <div class="metric-value text-danger"><%= money(deducted) %></div>
+  </div>
+  <div class="metric-card">
+    <div class="metric-label">Skipped / Failed</div>
+    <div class="metric-value <%= failed.any? ? "text-warning" : "" %>"><%= skipped.size %> / <%= failed.size %></div>
+  </div>
+</div>
+
+<% if failed.any? %>
+  <div class="note-box is-warning">
+    <strong><%= pluralize(failed.size, "statement") %> could not be read to the cent</strong> and was
+    left alone. Nothing partial was imported. Record these by hand from a template, or send me the
+    figures and I will teach the reader the format.
+  </div>
+<% end %>
+
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>Status</th>
+        <th>Date</th>
+        <th class="align-right">Revenue</th>
+        <th class="align-right">Deductions</th>
+        <th class="align-right">Fuel Advance</th>
+        <th>Detail</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @outcomes.each do |outcome| %>
+        <tr>
+          <td>
+            <% if outcome.imported? %>
+              <span class="badge badge-success">Imported</span>
+            <% elsif outcome.skipped? %>
+              <span class="badge badge-neutral">Skipped</span>
+            <% else %>
+              <span class="badge badge-warning">Not read</span>
+            <% end %>
+          </td>
+          <td><%= outcome.settlement&.statement_date || outcome.result&.statement_date || "-" %></td>
+          <td class="align-right"><%= outcome.settlement ? money(outcome.settlement.truck_revenue) : "-" %></td>
+          <td class="align-right"><%= outcome.settlement ? money(outcome.settlement.total_deductions) : "-" %></td>
+          <td class="align-right text-muted"><%= outcome.settlement ? money(outcome.settlement.fuel_advance) : "-" %></td>
+          <td class="text-muted"><%= outcome.message %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>

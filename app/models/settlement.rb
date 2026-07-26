@@ -24,9 +24,16 @@ class Settlement < ApplicationRecord
     expenses.sum(:amount).to_d
   end
 
-  # What actually landed in the bank, matching the settlement balance line.
+  # What actually landed in the bank, matching the settlement balance line. The
+  # fuel advance is subtracted even though it is not an expense, because the
+  # carrier really did hold it back.
   def net_balance
-    truck_revenue - total_deductions
+    truck_revenue - total_deductions - fuel_advance.to_d
+  end
+
+  # Everything the carrier withheld, expensed or not.
+  def total_withheld
+    total_deductions + fuel_advance.to_d
   end
 
   # The carrier's cut, when the gross was recorded.

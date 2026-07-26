@@ -1,0 +1,47 @@
+<% content_for :title, "Import Settlements" %>
+
+<div class="page-header">
+  <div class="page-title-group">
+    <h1>Import Settlement Statements</h1>
+    <p class="page-kicker">Upload the PDFs your carrier sends. Revenue and every deduction are read straight off them.</p>
+  </div>
+  <div class="action-bar">
+    <%= link_to "Recorded Settlements", settlements_path, class: "btn btn-secondary" %>
+  </div>
+</div>
+
+<%= form_with url: settlement_import_path, method: :post, multipart: true, class: "form-card" do %>
+  <div class="form-grid">
+    <div class="field">
+      <%= label_tag :statements, "Settlement PDFs" %>
+      <%= file_field_tag "statements[]", multiple: true, accept: "application/pdf" %>
+      <p class="field-hint">
+        Select as many as you like — a whole folder at once is fine. Anything already imported is
+        skipped, so re-uploading the same file is harmless.
+      </p>
+    </div>
+
+    <div class="field">
+      <%= label_tag :truck_id, "Truck" %>
+      <%= select_tag :truck_id,
+            options_from_collection_for_select(@trucks, :id, :display_name, current_user.default_truck&.id),
+            include_blank: "Use my default truck" %>
+    </div>
+
+    <div class="action-bar">
+      <%= submit_tag "Read Statements" %>
+    </div>
+  </div>
+<% end %>
+
+<div class="note-box">
+  <strong>Every statement is checked against itself.</strong> The deductions read off the page are
+  added back up and compared to the Total Deductions the statement prints. Anything that does not
+  match to the cent is reported and left alone rather than imported half-read.
+</div>
+
+<div class="note-box">
+  Fuel bought on the carrier's card is recorded against the settlement so the balance reconciles, but
+  it is <strong>not</strong> counted as an expense — you already enter the fuel receipts yourself, and
+  counting both would double your largest cost.
+</div>

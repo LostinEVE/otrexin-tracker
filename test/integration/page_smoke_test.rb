@@ -70,6 +70,7 @@ class PageSmokeTest < ActionDispatch::IntegrationTest
     assert_renders settlement_templates_url
     assert_renders new_settlement_template_url(starter: 1)
     assert_renders apply_settlement_template_url(settlement_templates(:kaplan))
+    assert_renders new_settlement_import_url
     assert_renders expense_audit_url
   end
 

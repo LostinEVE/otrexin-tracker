@@ -18,6 +18,9 @@ gem "stimulus-rails"
 gem "jbuilder"
 gem "csv"
 
+# Reads carrier settlement statements so a week of bookkeeping is one upload.
+gem "pdf-reader", "~> 2.14"
+
 # Use Active Model has_secure_password [https://guides.rubyonrails.org/active_model_basics.html#securepassword]
 gem "bcrypt", "~> 3.1.7"
 

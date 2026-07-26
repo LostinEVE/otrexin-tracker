@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_25_000003) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_25_000004) do
   create_table "company_profiles", force: :cascade do |t|
     t.string "address_line1"
     t.string "address_line2"
@@ -170,6 +170,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_25_000003) do
   create_table "settlements", force: :cascade do |t|
     t.decimal "accessorials", precision: 12, scale: 2, default: "0.0", null: false
     t.datetime "created_at", null: false
+    t.decimal "fuel_advance", precision: 12, scale: 2, default: "0.0", null: false
     t.decimal "fuel_surcharge", precision: 12, scale: 2, default: "0.0", null: false
     t.decimal "gross_linehaul", precision: 12, scale: 2, default: "0.0", null: false
     t.decimal "linehaul", precision: 12, scale: 2, default: "0.0", null: false
@@ -178,6 +179,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_25_000003) do
     t.decimal "other_income", precision: 12, scale: 2, default: "0.0", null: false
     t.string "payer"
     t.integer "settlement_template_id"
+    t.string "source_filename"
     t.date "statement_date", null: false
     t.string "statement_number"
     t.integer "truck_id"
@@ -186,6 +188,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_25_000003) do
     t.index ["settlement_template_id"], name: "index_settlements_on_settlement_template_id"
     t.index ["truck_id"], name: "index_settlements_on_truck_id"
     t.index ["user_id", "statement_date"], name: "index_settlements_on_user_id_and_statement_date"
+    t.index ["user_id", "statement_number"], name: "index_settlements_on_user_id_and_statement_number"
     t.index ["user_id"], name: "index_settlements_on_user_id"
   end
 

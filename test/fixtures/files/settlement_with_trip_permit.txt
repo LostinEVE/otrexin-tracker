@@ -1,0 +1,19 @@
+Statement#:
+00999002
+SETTLEMENT STATEMENT 06/05/2026
+CONTRACTOR STATEMENT SUMMARY:    Load Count: 1
+Gross Linehaul:
+$3,200.00
+$1,969.06
+$473.00
+$0.00
+$2,442.06
+$0.00
+($999.80)
+($999.80)
+$1,442.26
+TRUCK REVENUE: Truck #99999
+Load #: 8888888 Weight/Miles 40,000 lbs 509 miles
+EFS FUEL                    Ref# 888888888                                                     ($976.00)
+Permit                      State: IN Permit Number: 4080408273, Permit Type: Commodity        ($23.80)
+Trip Net: $1,442.26
