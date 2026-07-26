@@ -10,14 +10,30 @@ class Expense < ApplicationRecord
     "insurance" => "Insurance",
     "permits" => "Permits & Licenses",
     "truck_payment" => "Truck Payment / Lease",
+    "trailer_lease" => "Trailer Lease / Rent",
+    "loan_payment" => "Loan Payment",
+    "settlement_fee" => "Settlement / Broker Fees",
+    "escrow" => "Escrow (refundable)",
+    "phone_internet" => "Phone & Internet",
+    "eld_dashcam" => "ELD & Dash Cam",
+    "towing" => "Towing",
     "supplies" => "Supplies",
     "drivers_pay" => "Drivers Pay",
     "truck_wash_hopper_washout" => "Truck Wash / Hopper Washout",
     "other" => "Other"
   }.freeze
 
+  # Escrow is a refundable deposit held by the carrier, not money spent. It is
+  # recorded so the balance can be seen, but it must not reduce profit or cost
+  # per mile the way a real cost does.
+  NON_OPERATING_CATEGORIES = %w[ escrow ].freeze
+
   belongs_to :user
   belongs_to :truck
+  belongs_to :settlement_template_line, optional: true
+
+  scope :operating, -> { where.not(category: NON_OPERATING_CATEGORIES) }
+  scope :non_operating, -> { where(category: NON_OPERATING_CATEGORIES) }
 
   # Category is deliberately not an inclusion validation: records created before
   # this list existed must stay editable.
@@ -29,6 +45,10 @@ class Expense < ApplicationRecord
 
   def category_label
     self.class.category_label(category)
+  end
+
+  def operating?
+    !NON_OPERATING_CATEGORIES.include?(category.to_s)
   end
 
   def self.category_label(category)

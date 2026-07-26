@@ -1,0 +1,10 @@
+<% content_for :title, "Edit Settlement Template" %>
+
+<div class="page-header">
+  <div class="page-title-group">
+    <h1>Edit <%= @settlement_template.name %></h1>
+    <p class="page-kicker">Changing a default amount here does not touch expenses you already recorded.</p>
+  </div>
+</div>
+
+<%= render "form", settlement_template: @settlement_template %>

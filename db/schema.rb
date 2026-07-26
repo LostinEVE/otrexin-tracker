@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_25_000001) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_25_000002) do
   create_table "company_profiles", force: :cascade do |t|
     t.string "address_line1"
     t.string "address_line2"
@@ -53,11 +53,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_25_000001) do
     t.date "expense_date"
     t.decimal "gallons"
     t.text "notes"
+    t.integer "settlement_template_line_id"
     t.integer "truck_id", null: false
     t.datetime "updated_at", null: false
     t.integer "user_id", null: false
     t.string "vendor"
     t.index ["expense_date"], name: "index_expenses_on_expense_date"
+    t.index ["settlement_template_line_id"], name: "index_expenses_on_settlement_template_line_id"
     t.index ["truck_id"], name: "index_expenses_on_truck_id"
     t.index ["user_id", "truck_id"], name: "index_expenses_on_user_id_and_truck_id"
     t.index ["user_id"], name: "index_expenses_on_user_id"
@@ -138,6 +140,31 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_25_000001) do
     t.index ["user_id"], name: "index_per_diem_entries_on_user_id"
   end
 
+  create_table "settlement_template_lines", force: :cascade do |t|
+    t.boolean "active", default: true, null: false
+    t.decimal "amount", precision: 10, scale: 2
+    t.decimal "balance_target", precision: 12, scale: 2
+    t.string "category", null: false
+    t.datetime "created_at", null: false
+    t.string "label", null: false
+    t.integer "position", default: 0, null: false
+    t.integer "settlement_template_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["settlement_template_id"], name: "index_settlement_template_lines_on_settlement_template_id"
+  end
+
+  create_table "settlement_templates", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.text "notes"
+    t.integer "truck_id"
+    t.datetime "updated_at", null: false
+    t.integer "user_id", null: false
+    t.string "vendor"
+    t.index ["truck_id"], name: "index_settlement_templates_on_truck_id"
+    t.index ["user_id"], name: "index_settlement_templates_on_user_id"
+  end
+
   create_table "tax_payments", force: :cascade do |t|
     t.decimal "amount"
     t.datetime "created_at", null: false
@@ -176,6 +203,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_25_000001) do
   add_foreign_key "company_profiles", "users"
   add_foreign_key "depreciation_assets", "trucks"
   add_foreign_key "depreciation_assets", "users"
+  add_foreign_key "expenses", "settlement_template_lines"
   add_foreign_key "expenses", "trucks"
   add_foreign_key "expenses", "users"
   add_foreign_key "fuel_logs", "trucks"
@@ -186,6 +214,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_25_000001) do
   add_foreign_key "maintenances", "users"
   add_foreign_key "per_diem_entries", "trucks"
   add_foreign_key "per_diem_entries", "users"
+  add_foreign_key "settlement_template_lines", "settlement_templates"
+  add_foreign_key "settlement_templates", "trucks"
+  add_foreign_key "settlement_templates", "users"
   add_foreign_key "tax_payments", "users"
   add_foreign_key "trucks", "users"
 end

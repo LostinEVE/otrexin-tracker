@@ -1,0 +1,92 @@
+<% content_for :title, "Record Settlement" %>
+
+<div class="page-header">
+  <div class="page-title-group">
+    <h1>Record <%= @settlement_template.name %></h1>
+    <p class="page-kicker">
+      Check the amounts against your statement, change anything that moved, and save the whole
+      settlement at once.
+    </p>
+  </div>
+</div>
+
+<% if @failed.present? %>
+  <div class="form-errors">
+    <h3><%= pluralize(@failed.size, "line") %> could not be saved:</h3>
+    <ul>
+      <% @failed.each do |expense| %>
+        <li><%= expense.notes %>: <%= expense.errors.full_messages.to_sentence %></li>
+      <% end %>
+    </ul>
+  </div>
+<% end %>
+
+<%= form_with url: apply_settlement_template_path(@settlement_template), method: :post, class: "form-card" do |form| %>
+  <div class="form-grid">
+    <div class="two-col">
+      <div class="field">
+        <%= label_tag :expense_date, "Settlement Date" %>
+        <%= date_field_tag :expense_date, @expense_date %>
+        <p class="field-hint">Every line below is recorded on this date.</p>
+      </div>
+      <div class="field">
+        <%= label_tag :truck, "Truck" %>
+        <input type="text" value="<%= (@settlement_template.truck || current_user.default_truck)&.display_name %>" disabled>
+        <p class="field-hint">Set on the template itself.</p>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th class="align-center">Include</th>
+            <th>Line</th>
+            <th>Category</th>
+            <th class="align-right">Amount</th>
+            <th class="align-right">Balance Left After This</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @lines.each do |line| %>
+            <tr>
+              <td class="align-center">
+                <%= hidden_field_tag "lines[#{line.id}][include]", "0" %>
+                <%= check_box_tag "lines[#{line.id}][include]", "1", true, id: "include_#{line.id}" %>
+              </td>
+              <td><%= line.label %></td>
+              <td><%= line.category_label %></td>
+              <td>
+                <%= number_field_tag "lines[#{line.id}][amount]", line.amount, step: "0.01", class: "align-right" %>
+              </td>
+              <td class="align-right">
+                <% if line.tracks_balance? %>
+                  <% projected = [ line.remaining - line.amount.to_d, 0.to_d ].max %>
+                  <strong class="<%= projected.zero? ? "text-success" : "text-warning" %>"><%= money(projected) %></strong>
+                  <div class="text-muted"><%= money(line.collected) %> paid of <%= money(line.balance_target) %></div>
+                <% else %>
+                  <span class="text-muted">&mdash;</span>
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+          <tr class="statement-total">
+            <td colspan="3">Expected total</td>
+            <td class="align-right"><strong><%= money(@settlement_template.expected_total) %></strong></td>
+            <td></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="action-bar">
+      <%= submit_tag "Record #{pluralize(@lines.size, 'Expense')}" %>
+      <%= link_to "Cancel", settlement_templates_path, class: "btn btn-secondary" %>
+    </div>
+  </div>
+<% end %>
+
+<div class="note-box">
+  Uncheck any line your carrier did not take this week — a permit that is paid off, or a week with
+  no loan deduction. Nothing is recorded until you save.
+</div>

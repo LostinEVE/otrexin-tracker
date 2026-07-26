@@ -1,0 +1,86 @@
+<% content_for :title, "Settlements" %>
+
+<div class="page-header">
+  <div class="page-title-group">
+    <h1>Settlement Templates</h1>
+    <p class="page-kicker">Save the deductions your carrier takes every week, then record them all at once.</p>
+  </div>
+  <div class="action-bar">
+    <%= link_to "Start from a typical settlement", new_settlement_template_path(starter: 1), class: "btn" %>
+    <%= link_to "Blank Template", new_settlement_template_path, class: "btn btn-secondary" %>
+  </div>
+</div>
+
+<% if @settlement_templates.any? %>
+  <% @settlement_templates.each do |template| %>
+    <section class="panel">
+      <div class="panel-header">
+        <h3 class="panel-title">
+          <%= template.name %>
+          <% if template.vendor.present? %><span class="text-muted">&middot; <%= template.vendor %></span><% end %>
+        </h3>
+        <div class="action-bar">
+          <%= link_to "Record a Settlement", apply_settlement_template_path(template), class: "btn" %>
+          <%= link_to "Edit", edit_settlement_template_path(template), class: "btn btn-secondary" %>
+          <%= link_to "Delete", settlement_template_path(template),
+                data: { turbo_method: :delete, turbo_confirm: "Delete this template? Expenses already recorded are kept." },
+                class: "btn btn-danger" %>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Line</th>
+              <th>Category</th>
+              <th class="align-right">Amount</th>
+              <th class="align-right">Paid to Date</th>
+              <th class="align-right">Balance Left</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% template.lines.each do |line| %>
+              <tr>
+                <td>
+                  <%= line.label %>
+                  <% unless line.active? %><span class="badge badge-neutral">Off</span><% end %>
+                </td>
+                <td><%= line.category_label %></td>
+                <td class="align-right"><%= money(line.amount) %></td>
+                <td class="align-right"><%= money(line.collected) %></td>
+                <td class="align-right">
+                  <% if line.tracks_balance? %>
+                    <% if line.paid_off? %>
+                      <span class="badge badge-success">Paid off</span>
+                    <% else %>
+                      <strong class="text-warning"><%= money(line.remaining) %></strong>
+                      <span class="text-muted">of <%= money(line.balance_target) %></span>
+                    <% end %>
+                  <% else %>
+                    <span class="text-muted">&mdash;</span>
+                  <% end %>
+                </td>
+              </tr>
+            <% end %>
+            <tr class="statement-total">
+              <td colspan="2">Per settlement</td>
+              <td class="align-right"><strong><%= money(template.expected_total) %></strong></td>
+              <td colspan="2"></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  <% end %>
+<% else %>
+  <div class="empty-state">
+    No templates yet. If your carrier takes the same deductions every week, start from a typical
+    settlement and edit the amounts to match yours.
+  </div>
+<% end %>
+
+<div class="note-box">
+  Escrow lines are recorded but kept out of your profit and cost per mile, because escrow is a
+  refundable deposit rather than money spent. The balance column shows what has built up.
+</div>

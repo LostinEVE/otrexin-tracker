@@ -1,0 +1,32 @@
+occ_acc:
+  settlement_template: kaplan
+  label: Occupational Accident Ins
+  category: insurance
+  amount: 33.46
+  position: 0
+  active: true
+
+trailer_escrow:
+  settlement_template: kaplan
+  label: Trailer Escrow
+  category: escrow
+  amount: 125.00
+  position: 1
+  active: true
+
+ky_permit:
+  settlement_template: kaplan
+  label: KY Permit
+  category: permits
+  amount: 130.00
+  balance_target: 1300.00
+  position: 2
+  active: true
+
+retired:
+  settlement_template: kaplan
+  label: Old deduction no longer taken
+  category: other
+  amount: 10.00
+  position: 3
+  active: false

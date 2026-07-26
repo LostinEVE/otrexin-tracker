@@ -160,10 +160,34 @@
           <td>Taxable Profit Estimate</td>
           <td class="align-right <%= profit_class(@summary.taxable_profit_estimate) %>"><%= money(@summary.taxable_profit_estimate) %></td>
         </tr>
+
+        <% if @summary.escrow_total.positive? || @summary.escrow_balance.positive? %>
+          <tr class="statement-section">
+            <td>Not an Expense</td>
+            <td class="align-right"></td>
+          </tr>
+          <tr>
+            <td class="statement-item">Escrow withheld this period</td>
+            <td class="align-right"><%= money(@summary.escrow_total) %></td>
+          </tr>
+          <tr>
+            <td class="statement-item">Escrow balance held to date</td>
+            <td class="align-right"><strong><%= money(@summary.escrow_balance) %></strong></td>
+          </tr>
+        <% end %>
       </tbody>
     </table>
   </div>
 </section>
+
+<% if @summary.escrow_balance.positive? %>
+  <div class="note-box">
+    <strong><%= money(@summary.escrow_balance) %></strong> of escrow is held by your carrier. It is
+    recorded but deliberately kept out of the figures above, because escrow is a refundable deposit
+    rather than money spent — counting it would understate your profit and overstate your cost per
+    mile. Confirm the deduction treatment with your accountant before filing.
+  </div>
+<% end %>
 
 <div class="note-box">
   Expenses are the single source of truth for money spent. Fuel logs and maintenance

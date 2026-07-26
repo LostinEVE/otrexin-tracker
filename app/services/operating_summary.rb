@@ -31,13 +31,26 @@ class OperatingSummary
     @revenue ||= paid_invoices.sum(:amount).to_d
   end
 
+  # Escrow is deliberately absent. It is a refundable deposit, not a cost, so
+  # counting it here would understate profit and overstate cost per mile.
   def expense_total
-    @expense_total ||= expenses.sum(:amount).to_d
+    @expense_total ||= expenses.operating.sum(:amount).to_d
   end
 
   def expense_by_category
-    @expense_by_category ||= expenses.group(:category).sum(:amount)
+    @expense_by_category ||= expenses.operating.group(:category).sum(:amount)
       .sort_by { |_category, amount| -amount.to_d }
+  end
+
+  # Money handed to the carrier and still owed back to you.
+  def escrow_total
+    @escrow_total ||= expenses.non_operating.sum(:amount).to_d
+  end
+
+  # Escrow accumulates across the whole relationship, not just this report
+  # period, so the running balance ignores the date filter.
+  def escrow_balance
+    @escrow_balance ||= scoped_to_truck(user.expenses.non_operating).sum(:amount).to_d
   end
 
   def net_profit
