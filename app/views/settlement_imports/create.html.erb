@@ -36,6 +36,15 @@
   </div>
 </div>
 
+<% if @skipped_empty.present? %>
+  <div class="note-box is-warning">
+    <strong><%= pluralize(@skipped_empty.size, "file") %> arrived empty</strong> and was skipped:
+    <%= @skipped_empty.to_sentence %>. A file stored in OneDrive or iCloud but not downloaded to this
+    device uploads as nothing. Right-click the folder, choose "Always keep on this device", wait for it
+    to sync, then import again.
+  </div>
+<% end %>
+
 <% if failed.any? %>
   <div class="note-box is-warning">
     <strong><%= pluralize(failed.size, "statement") %> could not be read to the cent</strong> and was
