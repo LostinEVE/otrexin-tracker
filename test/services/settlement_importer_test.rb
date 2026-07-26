@@ -116,10 +116,10 @@ class SettlementImporterTest < ActiveSupport::TestCase
                       category: "insurance", vendor: "Kaplan", amount: [ 33.46, 125.00, 175.00, 50.00 ][index])
     end
 
-    outcome = importer.import(result, replace_existing: true)
+    outcome = importer.import(result, on_conflict: :replace)
 
     assert outcome.imported?
-    assert_includes outcome.message, "Replaced 4 hand-entered rows"
+    assert_includes outcome.message, "4 hand-entered rows replaced"
     assert_equal 14, outcome.settlement.expenses.count
     # Nothing hand-typed survives on that date to be counted a second time.
     assert_empty Expense.where(settlement_id: nil, expense_date: Date.new(2026, 7, 14))
@@ -141,5 +141,80 @@ class SettlementImporterTest < ActiveSupport::TestCase
     second = result
     second.statement_number = "OTHER"
     assert_not importer.import(second).conflict?
+  end
+
+  # The option that matters most to a driver who has been typing settlements in:
+  # keep the work already done, add only what is missing, double nothing.
+  test "merging adopts the rows already typed instead of adding a second copy" do
+    typed = [ 33.46, 125.00, 175.00, 50.00 ].map do |amount|
+      Expense.create!(user: users(:one), truck: trucks(:one), expense_date: Date.new(2026, 7, 14),
+                      category: "other", vendor: "Kaplan", amount: amount, notes: "my note #{amount}")
+    end
+
+    outcome = nil
+    # Fourteen deductions, four of which already exist, so only ten are new.
+    assert_difference "Expense.count", 10 do
+      outcome = importer.import(result, on_conflict: :merge)
+    end
+
+    assert outcome.imported?
+    assert_equal 14, outcome.settlement.expenses.count
+    assert typed.all? { |expense| expense.reload.settlement == outcome.settlement }
+  end
+
+  test "merging records the revenue that holding leaves behind" do
+    4.times { |i| Expense.create!(user: users(:one), truck: trucks(:one), expense_date: Date.new(2026, 7, 14),
+                                  category: "other", vendor: "Kaplan", amount: [ 33.46, 125.00, 175.00, 50.00 ][i]) }
+
+    outcome = importer.import(result, on_conflict: :merge)
+
+    assert_equal 2_846.00.to_d, outcome.settlement.truck_revenue
+    assert_includes outcome.message, "matched to what you already entered"
+  end
+
+  test "merging corrects the category of an adopted row from the statement" do
+    escrow = Expense.create!(user: users(:one), truck: trucks(:one), expense_date: Date.new(2026, 7, 14),
+                             category: "other", vendor: "Kaplan", amount: 125.00, notes: "Trailer escrow")
+    3.times { |i| Expense.create!(user: users(:one), truck: trucks(:one), expense_date: Date.new(2026, 7, 14),
+                                  category: "other", vendor: "Kaplan", amount: [ 33.46, 175.00, 50.00 ][i]) }
+
+    importer.import(result, on_conflict: :merge)
+
+    # Filed under Other by hand, it belongs in escrow — and therefore out of
+    # operating cost entirely.
+    assert_equal "escrow", escrow.reload.category
+  end
+
+  test "merging keeps the driver's own note" do
+    typed = Expense.create!(user: users(:one), truck: trucks(:one), expense_date: Date.new(2026, 7, 14),
+                            category: "other", vendor: "Kaplan", amount: 130.00, notes: "Ky permit Bal(260.00)")
+    3.times { |i| Expense.create!(user: users(:one), truck: trucks(:one), expense_date: Date.new(2026, 7, 14),
+                                  category: "other", vendor: "Kaplan", amount: [ 33.46, 175.00, 50.00 ][i]) }
+
+    importer.import(result, on_conflict: :merge)
+
+    assert_equal "Ky permit Bal(260.00)", typed.reload.notes
+  end
+
+  test "merging does not count the same money twice" do
+    4.times { |i| Expense.create!(user: users(:one), truck: trucks(:one), expense_date: Date.new(2026, 7, 14),
+                                  category: "other", vendor: "Kaplan", amount: [ 33.46, 125.00, 175.00, 50.00 ][i]) }
+
+    outcome = importer.import(result, on_conflict: :merge)
+
+    # Deductions on the books for that day equal the statement's own total, not
+    # the total plus the four rows that were already there.
+    recorded = Expense.where(expense_date: Date.new(2026, 7, 14)).sum(:amount)
+    assert_equal outcome.settlement.total_deductions, recorded
+    assert_equal 1_013.19.to_d, recorded
+  end
+
+  test "an unknown strategy falls back to holding rather than writing" do
+    4.times { |i| Expense.create!(user: users(:one), truck: trucks(:one), expense_date: Date.new(2026, 7, 14),
+                                  category: "other", vendor: "Kaplan", amount: [ 33.46, 125.00, 175.00, 50.00 ][i]) }
+
+    assert_no_difference "Settlement.count" do
+      assert importer.import(result, on_conflict: :something_else).conflict?
+    end
   end
 end

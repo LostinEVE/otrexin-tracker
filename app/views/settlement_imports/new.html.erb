@@ -35,15 +35,20 @@
             include_blank: "Use my default truck" %>
     </div>
 
-    <label class="checkbox-field">
-      <%= check_box_tag :replace_existing, "1", false %>
-      Replace deductions I already entered by hand for these dates
-    </label>
-    <p class="field-hint">
-      Leave this off the first time. Any statement that looks like it was already typed in is held
-      back and reported rather than recorded twice, so you can see the overlap before deciding.
-      Tick it only once you have seen that list and want the imported version to win.
-    </p>
+    <div class="field">
+      <%= label_tag :on_conflict, "If a statement is already on my books by hand" %>
+      <%= select_tag :on_conflict, options_for_select([
+            [ "Hold it back and show me — nothing is written", "hold" ],
+            [ "Match it up: keep my rows, add the revenue and anything missing", "merge" ],
+            [ "Replace my rows with the statement's own", "replace" ]
+          ], params[:on_conflict] || "hold") %>
+      <p class="field-hint">
+        <strong>Match it up</strong> is usually what you want. It links the deductions you already
+        typed to the settlement instead of adding a second copy, records the revenue that was
+        missing, adds only the lines you did not have, and corrects each row's category from the
+        statement. Nothing is deleted and nothing is doubled.
+      </p>
+    </div>
 
     <div class="action-bar">
       <%= submit_tag "Read Statements" %>

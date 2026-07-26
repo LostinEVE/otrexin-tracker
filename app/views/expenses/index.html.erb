@@ -8,6 +8,7 @@
   <div class="action-bar">
     <%= link_to "Export CSV", expenses_path(format: :csv, truck_id: selected_truck&.id, start_date: @start_date, end_date: @end_date), class: "btn btn-secondary" %>
     <%= link_to "New Expense", new_expense_path(truck_id: selected_truck&.id), class: "btn" %>
+    <%= link_to "Clean Up", expense_audit_path, class: "btn btn-secondary" %>
   </div>
 </div>
 

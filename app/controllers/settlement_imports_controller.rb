@@ -25,10 +25,10 @@ class SettlementImportsController < ApplicationController
     end
 
     truck = current_user.trucks.find_by(id: params[:truck_id]) || current_user.default_truck
-    replace = ActiveModel::Type::Boolean.new.cast(params[:replace_existing])
+    @on_conflict = params[:on_conflict].presence&.to_sym || :hold
 
     @outcomes = SettlementImporter.new(user: current_user, truck: truck)
-      .import_all(files, replace_existing: replace)
+      .import_all(files, on_conflict: @on_conflict)
     @skipped_empty = empty.map(&:original_filename)
     @trucks = current_trucks
     @overlapping_invoices = overlapping_invoices

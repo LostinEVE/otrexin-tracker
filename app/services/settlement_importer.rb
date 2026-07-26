@@ -28,7 +28,20 @@ class SettlementImporter
     @truck = truck
   end
 
-  def import(result, filename: nil, replace_existing: false)
+  # What to do when the statement's deductions are already on the books by hand:
+  #
+  #   :hold    report the overlap and import nothing
+  #   :merge   adopt the hand-typed rows into the settlement and create only the
+  #            lines that are genuinely missing — no duplicate, nothing deleted
+  #   :replace discard the hand-typed rows and record the statement's own
+  #
+  # Merge is the useful one. Holding leaves the revenue unrecorded, and replacing
+  # throws away work for no gain when the two describe the same money.
+  CONFLICT_STRATEGIES = %i[ hold merge replace ].freeze
+
+  def import(result, filename: nil, on_conflict: :hold)
+    strategy = CONFLICT_STRATEGIES.include?(on_conflict.to_sym) ? on_conflict.to_sym : :hold
+
     return failure(result, "No settlement date could be read.") if result.statement_date.blank?
     return failure(result, result.errors.to_sentence) if result.errors.any?
 
@@ -44,7 +57,7 @@ class SettlementImporter
     end
 
     clashing = conflicting_expenses(result)
-    if clashing.size >= CONFLICT_THRESHOLD && !replace_existing
+    if clashing.size >= CONFLICT_THRESHOLD && strategy == :hold
       return Outcome.new(
         status: :conflict, result: result, conflicts: clashing,
         message: "#{clashing.size} expenses around #{result.statement_date} look like this " \
@@ -54,27 +67,28 @@ class SettlementImporter
 
     settlement = nil
     removed = 0
+    tally = { created: 0, adopted: 0 }
+
     ActiveRecord::Base.transaction do
-      removed = clashing.each(&:destroy!).size if replace_existing && clashing.any?
+      removed = clashing.each(&:destroy!).size if strategy == :replace && clashing.any?
       settlement = create_settlement(result, filename)
-      create_expenses(settlement, result)
+      tally = record_deductions(settlement, result, adoptable: (strategy == :merge ? clashing : []))
     end
 
-    note = removed.positive? ? " Replaced #{removed} hand-entered rows." : ""
     Outcome.new(status: :imported, settlement: settlement, result: result,
-                message: "#{fmt(result.truck_revenue)} revenue, #{result.deductions.size} deductions.#{note}")
+                message: import_message(result, tally, removed))
   rescue ActiveRecord::RecordInvalid => e
     failure(result, e.record.errors.full_messages.to_sentence)
   end
 
   # Imports many statements, reporting each one rather than stopping at the
   # first that will not reconcile.
-  def import_all(files, replace_existing: false)
+  def import_all(files, on_conflict: :hold)
     files.filter_map do |file|
       name = filename_for(file)
       begin
         import(SettlementStatementParser.call(open_for_read(file)),
-               filename: name, replace_existing: replace_existing)
+               filename: name, on_conflict: on_conflict)
       rescue SettlementStatementParser::ParseError => e
         Outcome.new(status: :failed, result: nil, message: "#{name}: #{e.message}")
       end
@@ -115,20 +129,55 @@ class SettlementImporter
     )
   end
 
-  def create_expenses(settlement, result)
-    result.deductions.each do |line|
-      next unless line[:amount].to_d.positive?
+  # Records each deduction, preferring to adopt a row the driver already typed
+  # over creating a second one for the same money.
+  #
+  # Adopting links the existing expense to the settlement and corrects its
+  # category from the statement — which is how a trailer escrow filed under
+  # "Other" ends up in Escrow, and out of operating cost, without anyone having
+  # to find it. The driver's own note is left alone; it is their record.
+  def record_deductions(settlement, result, adoptable: [])
+    pool = adoptable.dup
+    tally = { created: 0, adopted: 0 }
 
-      user.expenses.create!(
-        truck: truck,
-        settlement: settlement,
-        expense_date: result.statement_date,
-        category: line[:category],
-        vendor: result.payer,
-        amount: line[:amount],
-        notes: [ line[:label], line[:detail] ].compact_blank.join(" — ")
-      )
+    result.deductions.each do |line|
+      amount = line[:amount].to_d
+      next unless amount.positive?
+
+      match = pool.find { |expense| expense.amount.to_d == amount }
+
+      if match
+        pool.delete(match)
+        match.update!(
+          settlement: settlement,
+          category: line[:category],
+          notes: match.notes.presence || [ line[:label], line[:detail] ].compact_blank.join(" — ")
+        )
+        tally[:adopted] += 1
+      else
+        user.expenses.create!(
+          truck: truck,
+          settlement: settlement,
+          expense_date: result.statement_date,
+          category: line[:category],
+          vendor: result.payer,
+          amount: amount,
+          notes: [ line[:label], line[:detail] ].compact_blank.join(" — ")
+        )
+        tally[:created] += 1
+      end
     end
+
+    tally
+  end
+
+  def import_message(result, tally, removed)
+    parts = [ "#{fmt(result.truck_revenue)} revenue" ]
+    parts << "#{tally[:adopted]} deductions matched to what you already entered" if tally[:adopted].positive?
+    parts << "#{tally[:created]} deductions added" if tally[:created].positive?
+    parts << "#{removed} hand-entered rows replaced" if removed.positive?
+
+    "#{parts.to_sentence}."
   end
 
   def duplicate_of(result)
