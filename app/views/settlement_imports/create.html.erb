@@ -18,6 +18,23 @@
   </div>
 </div>
 
+<% if imported.empty? %>
+  <div class="note-box is-warning">
+    <strong>Nothing was imported.</strong> No settlement was recorded, so your books are unchanged.
+    The rows below say why for each file. The usual causes, in order:
+    <br><br>
+    <strong>1.</strong> The PDFs are stored in OneDrive but not on this device, so they uploaded as
+    empty. In File Explorer, right-click the <em>settlements</em> folder, choose
+    <em>"Always keep on this device"</em>, wait for green checkmarks, then import again.
+    <br>
+    <strong>2.</strong> The statements are already on your books by hand — those show as
+    <em>Already on books</em> and are held back on purpose.
+    <br>
+    <strong>3.</strong> The statement is a format the reader does not know yet, shown as
+    <em>Not read</em> with the amount it could not account for.
+  </div>
+<% end %>
+
 <div class="metric-grid is-compact">
   <div class="metric-card">
     <div class="metric-label">Imported</div>

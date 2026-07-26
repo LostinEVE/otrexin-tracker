@@ -106,7 +106,23 @@
   </div>
 <% else %>
   <div class="empty-state">
-    No settlements recorded in this period.
-    <%= link_to "Record one from a template", settlement_templates_path, class: "btn-link" %>
+    <p>No settlements recorded between <%= @start_date %> and <%= @end_date %>.</p>
+    <% if current_user.settlements.any? %>
+      <p>
+        You have <strong><%= pluralize(current_user.settlements.count, "settlement") %></strong> on file
+        dated <%= current_user.settlements.minimum(:statement_date) %> to
+        <%= current_user.settlements.maximum(:statement_date) %><%= " on another truck" if selected_truck %>.
+        Widen the dates above<%= " or choose All trucks" if selected_truck %> to see them.
+      </p>
+    <% else %>
+      <p>
+        Nothing has been recorded yet. If you just ran an import and expected to see statements here,
+        it means none were actually written — go back and read the reasons on the results page.
+      </p>
+    <% end %>
+    <div class="action-bar">
+      <%= link_to "Import Settlement PDFs", new_settlement_import_path, class: "btn" %>
+      <%= link_to "Record one from a template", settlement_templates_path, class: "btn btn-secondary" %>
+    </div>
   </div>
 <% end %>
