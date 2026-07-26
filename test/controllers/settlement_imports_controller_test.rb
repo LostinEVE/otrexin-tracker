@@ -20,6 +20,54 @@ class SettlementImportsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[type=file][name=?][multiple]", "statements[]"
   end
 
+  # This action answers with a report instead of redirecting, and Turbo throws
+  # away a 200 OK HTML response to a form submission. Without opting out the
+  # upload silently does nothing: the import runs, the response is discarded,
+  # and the page never changes.
+  test "the upload form opts out of turbo because it renders its result" do
+    get new_settlement_import_url
+
+    assert_select "form[data-turbo=?]", "false"
+  end
+
+  # The regression that made every upload fail: PDF::Reader takes a path or a
+  # real IO, and an uploaded file is neither. Handing the wrapper straight over
+  # raises ArgumentError, which surfaced as "this statement could not be read"
+  # for a perfectly good PDF. The earlier tests stubbed extraction and so drove
+  # straight past the broken line; this one checks what extraction is handed.
+  test "extraction is handed a real IO rather than the upload wrapper" do
+    seen = {}
+    original = SettlementStatementParser.method(:extract)
+    text = file_fixture("settlement_statement.txt").read
+    # Inspected inside the call: the tempfile is closed once the request ends.
+    SettlementStatementParser.define_singleton_method(:extract) do |source|
+      seen = {
+        wrapper: source.is_a?(ActionDispatch::Http::UploadedFile),
+        seekable: source.respond_to?(:seek),
+        pos: (source.pos if source.respond_to?(:pos))
+      }
+      text
+    end
+
+    begin
+      post settlement_import_url, params: { statements: [ upload ] }
+    ensure
+      SettlementStatementParser.singleton_class.undef_method(:extract)
+      SettlementStatementParser.define_singleton_method(:extract, original)
+    end
+
+    assert_not seen[:wrapper], "the upload wrapper must be unwrapped before parsing"
+    assert seen[:seekable], "PDF::Reader needs a seekable IO"
+    assert_equal 0, seen[:pos], "the IO must be rewound before it is read"
+  end
+
+  test "the create action answers with a rendered report" do
+    post settlement_import_url, params: { statements: [ upload ] }
+
+    assert_response :ok
+    assert_select "h1", "Import Results"
+  end
+
   # Turning a PDF into text is a thin call into the gem, verified separately
   # against real statements. Stubbing it here keeps these tests on the part this
   # controller is responsible for: which files it accepts and where they land.

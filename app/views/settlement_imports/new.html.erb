@@ -10,7 +10,14 @@
   </div>
 </div>
 
-<%= form_with url: settlement_import_path, method: :post, multipart: true, class: "form-card" do %>
+<%# Turbo discards a 200 OK HTML response to a form submission — it expects a
+    redirect or a non-200 status. This form answers with a full results report
+    rather than redirecting, because the per-file outcome is the whole point, so
+    it opts out of Turbo and submits the ordinary way. Without this the upload
+    appears to do nothing at all: the request runs, the response is thrown away,
+    and the page never changes. %>
+<%= form_with url: settlement_import_path, method: :post, multipart: true,
+              class: "form-card", data: { turbo: false } do %>
   <div class="form-grid">
     <div class="field">
       <%= label_tag :statements, "Settlement PDFs" %>

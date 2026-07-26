@@ -147,8 +147,15 @@ class SettlementImporter
     file.try(:original_filename) || file.try(:path)&.then { |p| File.basename(p) }
   end
 
+  # PDF::Reader needs a path or a real IO. An uploaded file is neither — it is a
+  # wrapper that delegates only part of the IO interface, and handing it over
+  # raises ArgumentError, which reads as "this statement could not be read" even
+  # though the PDF is perfectly good. Unwrap it to the tempfile underneath.
   def open_for_read(file)
-    file.is_a?(String) ? file : file.tap { |f| f.rewind if f.respond_to?(:rewind) }
+    return file if file.is_a?(String)
+    return file.tempfile.tap { |io| io.rewind } if file.respond_to?(:tempfile)
+
+    file.tap { |io| io.rewind if io.respond_to?(:rewind) }
   end
 
   def fmt(amount)
