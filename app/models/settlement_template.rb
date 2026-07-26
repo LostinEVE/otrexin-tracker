@@ -7,6 +7,8 @@ class SettlementTemplate < ApplicationRecord
            dependent: :destroy,
            inverse_of: :settlement_template
 
+  has_many :settlements, dependent: :nullify
+
   accepts_nested_attributes_for :lines, allow_destroy: true, reject_if: :all_blank
 
   validates :name, presence: true

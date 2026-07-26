@@ -103,9 +103,21 @@
           <td>Revenue</td>
           <td class="align-right"></td>
         </tr>
+        <% if @summary.settlement_revenue.positive? %>
+          <tr>
+            <td class="statement-item">Carrier settlements</td>
+            <td class="align-right"><%= money(@summary.settlement_revenue) %></td>
+          </tr>
+          <% if @summary.fuel_surcharge_total.positive? %>
+            <tr>
+              <td class="statement-item text-muted">&mdash; of which fuel surcharge</td>
+              <td class="align-right text-muted"><%= money(@summary.fuel_surcharge_total) %></td>
+            </tr>
+          <% end %>
+        <% end %>
         <tr>
           <td class="statement-item">Paid invoices</td>
-          <td class="align-right"><%= money(@summary.revenue) %></td>
+          <td class="align-right"><%= money(@summary.invoice_revenue) %></td>
         </tr>
         <tr class="statement-total">
           <td>Total Revenue</td>

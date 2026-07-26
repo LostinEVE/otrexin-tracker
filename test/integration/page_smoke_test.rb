@@ -65,6 +65,14 @@ class PageSmokeTest < ActionDispatch::IntegrationTest
     assert_renders edit_maintenance_url(maintenances(:one))
   end
 
+  test "settlement pages render" do
+    assert_renders settlements_url
+    assert_renders settlement_templates_url
+    assert_renders new_settlement_template_url(starter: 1)
+    assert_renders apply_settlement_template_url(settlement_templates(:kaplan))
+    assert_renders expense_audit_url
+  end
+
   test "truck pages render" do
     assert_renders trucks_url
     assert_renders new_truck_url

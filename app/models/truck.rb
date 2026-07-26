@@ -8,6 +8,7 @@ class Truck < ApplicationRecord
   has_many :per_diem_entries, dependent: :restrict_with_error
   has_many :depreciation_assets, dependent: :restrict_with_error
   has_many :settlement_templates, dependent: :nullify
+  has_many :settlements, dependent: :restrict_with_error
 
   validates :name, presence: true
   validates :name, uniqueness: { scope: :user_id }

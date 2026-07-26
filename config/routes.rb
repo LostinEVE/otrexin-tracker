@@ -14,6 +14,8 @@ Rails.application.routes.draw do
   resources :per_diem_entries, except: [ :show ]
   resources :depreciation_assets, except: [ :show ]
   resources :tax_payments
+  resource :expense_audit, only: [ :show, :update ]
+  resources :settlements, only: [ :index, :show, :destroy ]
   resources :settlement_templates, except: [ :show ] do
     member do
       get :apply

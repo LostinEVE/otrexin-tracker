@@ -31,6 +31,7 @@ class Expense < ApplicationRecord
   belongs_to :user
   belongs_to :truck
   belongs_to :settlement_template_line, optional: true
+  belongs_to :settlement, optional: true
 
   scope :operating, -> { where.not(category: NON_OPERATING_CATEGORIES) }
   scope :non_operating, -> { where(category: NON_OPERATING_CATEGORIES) }

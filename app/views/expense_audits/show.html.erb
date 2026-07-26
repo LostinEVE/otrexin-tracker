@@ -1,0 +1,121 @@
+<% content_for :title, "Clean Up Expenses" %>
+
+<div class="page-header">
+  <div class="page-title-group">
+    <h1>Clean Up Expenses</h1>
+    <p class="page-kicker">
+      Entries whose vendor or note disagrees with the category they were filed under, plus the entry
+      mistakes that distort a P&amp;L. Nothing changes until you tick it and save.
+    </p>
+  </div>
+</div>
+
+<% if @audit.any? %>
+  <div class="note-box">
+    <strong><%= pluralize(@audit.total_affected, "expense") %></strong> worth a look. Your totals and
+    cost per mile are already correct — an expense counts wherever it is filed. What this fixes is the
+    category breakdown, which is the screen that tells you where the money actually goes.
+  </div>
+<% end %>
+
+<%= form_with url: expense_audit_path, method: :patch, class: "form-card" do %>
+  <div class="form-grid">
+    <% {
+      unknown_category: [ "Categories that never merge",
+        "These were saved under an older category name, so they sit in their own rows on the P&L instead of adding to the matching category." ],
+      miscategorized: [ "Filed under the wrong category",
+        "The vendor or note says one thing, the category says another. Suggestions come from what you actually wrote." ],
+      suspicious_amount: [ "Amount looks wrong",
+        "The amount is smaller than the gallons recorded, which usually means a price per gallon landed in the amount field. Fix these by editing the expense." ],
+      possible_duplicate: [ "Possible duplicates",
+        "Same truck, same day, nearly the same amount. Tick to delete the extra copy — check it is really a duplicate first." ]
+    }.each do |kind, (heading, blurb)| %>
+      <% rows = @grouped[kind] %>
+      <% next if rows.blank? %>
+
+      <h2 class="section-title"><%= heading %> <span class="text-muted">(<%= rows.size %>)</span></h2>
+      <p class="field-hint"><%= blurb %></p>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th class="align-center"><%= kind == :possible_duplicate ? "Delete" : "Apply" %></th>
+              <th>Date</th>
+              <th>Vendor / Note</th>
+              <th class="align-right">Amount</th>
+              <th>Now</th>
+              <% if %i[ unknown_category miscategorized ].include?(kind) %><th>Change To</th><% end %>
+              <th>Why</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% rows.each do |finding| %>
+              <% expense = finding.expense %>
+              <tr>
+                <td class="align-center">
+                  <% if kind == :possible_duplicate %>
+                    <%= check_box_tag "delete_ids[]", expense.id, false, id: "del_#{expense.id}" %>
+                  <% elsif finding.suggested_category.present? %>
+                    <%= hidden_field_tag "recategorize[#{expense.id}][apply]", "0" %>
+                    <%= check_box_tag "recategorize[#{expense.id}][apply]", "1", true, id: "app_#{expense.id}" %>
+                  <% end %>
+                </td>
+                <td><%= expense.expense_date %></td>
+                <td>
+                  <strong><%= expense.vendor.presence || "No vendor" %></strong>
+                  <% if expense.notes.present? %>
+                    <div class="text-muted"><%= truncate(expense.notes, length: 60) %></div>
+                  <% end %>
+                </td>
+                <td class="align-right"><%= money(expense.amount) %></td>
+                <td><%= expense.category_label %></td>
+                <% if %i[ unknown_category miscategorized ].include?(kind) %>
+                  <td>
+                    <%= select_tag "recategorize[#{expense.id}][category]",
+                          options_for_select(Expense::CATEGORIES.map { |v, l| [ l, v ] }, finding.suggested_category) %>
+                  </td>
+                <% end %>
+                <td class="text-muted"><%= finding.reason %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% end %>
+
+    <% if @trucks.size > 1 %>
+      <h2 class="section-title">Move every expense from one truck to another</h2>
+      <p class="field-hint">
+        For entries that landed on the wrong truck — a leftover truck from setup, for instance. This
+        moves <strong>all</strong> expenses on the truck you pick, so check the count first.
+      </p>
+      <div class="two-col">
+        <div class="field">
+          <%= label_tag :move_from_truck_id, "Move from" %>
+          <%= select_tag :move_from_truck_id,
+                options_from_collection_for_select(@trucks, :id, ->(t) { "#{t.display_name} (#{t.expenses.count} expenses)" }),
+                include_blank: "Leave alone" %>
+        </div>
+        <div class="field">
+          <%= label_tag :move_to_truck_id, "Move to" %>
+          <%= select_tag :move_to_truck_id,
+                options_from_collection_for_select(@trucks, :id, :display_name),
+                include_blank: "Leave alone" %>
+        </div>
+      </div>
+    <% end %>
+
+    <% if @audit.any? || @trucks.size > 1 %>
+      <div class="action-bar">
+        <%= submit_tag "Apply Selected Changes" %>
+      </div>
+    <% end %>
+  </div>
+<% end %>
+
+<% unless @audit.any? %>
+  <div class="empty-state">
+    Nothing looks out of place. Every expense sits in a category that matches its vendor and note.
+  </div>
+<% end %>

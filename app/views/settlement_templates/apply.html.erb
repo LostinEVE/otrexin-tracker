@@ -36,6 +36,42 @@
       </div>
     </div>
 
+    <h2 class="section-title">Revenue</h2>
+    <p class="field-hint">
+      From the truck revenue summary on your statement. Gross linehaul is what the customer was
+      billed — it is recorded for reference but never counted as your income, since only your share
+      reaches the truck.
+    </p>
+    <div class="three-col">
+      <div class="field">
+        <%= label_tag "settlement[linehaul]", "Line Haul Settlement ($)" %>
+        <%= number_field_tag "settlement[linehaul]", @settlement&.linehaul, step: "0.01", placeholder: "0.00" %>
+      </div>
+      <div class="field">
+        <%= label_tag "settlement[fuel_surcharge]", "Fuel Surcharge ($)" %>
+        <%= number_field_tag "settlement[fuel_surcharge]", @settlement&.fuel_surcharge, step: "0.01", placeholder: "0.00" %>
+      </div>
+      <div class="field">
+        <%= label_tag "settlement[accessorials]", "Accessorials ($)" %>
+        <%= number_field_tag "settlement[accessorials]", @settlement&.accessorials, step: "0.01", placeholder: "0.00" %>
+      </div>
+    </div>
+    <div class="three-col">
+      <div class="field">
+        <%= label_tag "settlement[gross_linehaul]", "Gross Linehaul ($)" %>
+        <%= number_field_tag "settlement[gross_linehaul]", @settlement&.gross_linehaul, step: "0.01", placeholder: "Reference only" %>
+      </div>
+      <div class="field">
+        <%= label_tag "settlement[load_count]", "Load Count" %>
+        <%= number_field_tag "settlement[load_count]", @settlement&.load_count, placeholder: "1" %>
+      </div>
+      <div class="field">
+        <%= label_tag "settlement[statement_number]", "Statement / Load #" %>
+        <%= text_field_tag "settlement[statement_number]", @settlement&.statement_number, placeholder: "Optional" %>
+      </div>
+    </div>
+
+    <h2 class="section-title">Deductions</h2>
     <div class="table-wrap">
       <table>
         <thead>

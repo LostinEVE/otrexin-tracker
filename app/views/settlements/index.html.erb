@@ -1,0 +1,111 @@
+<% content_for :title, "Settlements" %>
+
+<div class="page-header">
+  <div class="page-title-group">
+    <h1>Recorded Settlements</h1>
+    <p class="page-kicker">What the carrier paid you, what it held back, and what actually landed.</p>
+  </div>
+  <div class="action-bar">
+    <%= link_to "Templates", settlement_templates_path, class: "btn btn-secondary" %>
+  </div>
+</div>
+
+<%= form_with url: settlements_path, method: :get, local: true, class: "filter-bar is-wide" do |f| %>
+  <div class="field">
+    <%= f.label :truck_id, "Truck" %>
+    <%= f.select :truck_id,
+      options_from_collection_for_select(current_trucks, :id, :display_name, selected_truck&.id),
+      { include_blank: "All trucks" } %>
+  </div>
+  <div class="field">
+    <%= f.label :start_date, "From" %>
+    <%= f.date_field :start_date, value: @start_date %>
+  </div>
+  <div class="field">
+    <%= f.label :end_date, "To" %>
+    <%= f.date_field :end_date, value: @end_date %>
+  </div>
+  <div class="field"><%= f.submit "Filter" %></div>
+<% end %>
+
+<div class="metric-grid is-compact">
+  <div class="metric-card">
+    <div class="metric-label">Settlement Revenue</div>
+    <div class="metric-value text-success"><%= money(@summary.settlement_revenue) %></div>
+    <div class="metric-note">What the 1099 reports</div>
+  </div>
+  <div class="metric-card">
+    <div class="metric-label">Fuel Surcharge</div>
+    <div class="metric-value text-success"><%= money(@summary.fuel_surcharge_total) %></div>
+    <div class="metric-note">Included above</div>
+  </div>
+  <div class="metric-card">
+    <div class="metric-label">Fuel Cost After Surcharge</div>
+    <div class="metric-value text-danger"><%= money(@summary.net_fuel_cost) %></div>
+    <div class="metric-note"><%= money(@summary.fuel_expense_total) %> spent on diesel</div>
+  </div>
+  <div class="metric-card">
+    <div class="metric-label">Loads</div>
+    <div class="metric-value"><%= number_with_delimiter(@summary.load_count) %></div>
+  </div>
+</div>
+
+<% if @summary.invoice_revenue.positive? && @summary.settlement_revenue.positive? %>
+  <div class="note-box is-warning">
+    You have <strong><%= money(@summary.settlement_revenue) %></strong> of settlement revenue and
+    <strong><%= money(@summary.invoice_revenue) %></strong> of paid invoices in this period. Both
+    count toward your profit. If those describe the same loads, one of them is double counting your
+    income — a leased driver is normally paid on settlements only.
+  </div>
+<% end %>
+
+<% if @settlements.any? %>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Payer</th>
+          <th class="align-right">Line Haul</th>
+          <th class="align-right">Fuel Surcharge</th>
+          <th class="align-right">Truck Revenue</th>
+          <th class="align-right">Deductions</th>
+          <th class="align-right">Net</th>
+          <th class="align-right">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @settlements.each do |settlement| %>
+          <tr>
+            <td><strong><%= settlement.statement_date %></strong></td>
+            <td>
+              <%= settlement.payer.presence || "-" %>
+              <% if settlement.linehaul_percentage %>
+                <div class="text-muted"><%= settlement.linehaul_percentage %>% of gross</div>
+              <% end %>
+            </td>
+            <td class="align-right"><%= money(settlement.linehaul) %></td>
+            <td class="align-right"><%= money(settlement.fuel_surcharge) %></td>
+            <td class="align-right text-success"><strong><%= money(settlement.truck_revenue) %></strong></td>
+            <td class="align-right text-danger"><%= money(settlement.total_deductions) %></td>
+            <td class="align-right <%= profit_class(settlement.net_balance) %>">
+              <strong><%= money(settlement.net_balance) %></strong>
+            </td>
+            <td class="align-right">
+              <%= link_to "View", settlement_path(settlement), class: "btn-link" %>
+              <%= link_to "Delete", settlement_path(settlement),
+                    data: { turbo_method: :delete,
+                            turbo_confirm: "Delete this settlement and the #{settlement.expenses.size} deductions it recorded?" },
+                    class: "btn-link text-danger" %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+<% else %>
+  <div class="empty-state">
+    No settlements recorded in this period.
+    <%= link_to "Record one from a template", settlement_templates_path, class: "btn-link" %>
+  </div>
+<% end %>

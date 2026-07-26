@@ -27,8 +27,43 @@ class OperatingSummary
 
   # --- Money -----------------------------------------------------------------
 
+  # Both earning shapes are counted and shown separately: a leased driver is paid
+  # on carrier settlements, an independent one invoices customers. Keeping the
+  # two lines distinct means a figure entered twice is visible rather than hidden
+  # inside one total.
   def revenue
-    @revenue ||= paid_invoices.sum(:amount).to_d
+    invoice_revenue + settlement_revenue
+  end
+
+  def invoice_revenue
+    @invoice_revenue ||= paid_invoices.sum(:amount).to_d
+  end
+
+  def settlement_revenue
+    @settlement_revenue ||= settlements.sum { |settlement| settlement.truck_revenue }.to_d
+  end
+
+  # Paid specifically to offset diesel, so it belongs against fuel rather than
+  # sitting anonymously in revenue.
+  def fuel_surcharge_total
+    @fuel_surcharge_total ||= settlements.sum { |settlement| settlement.fuel_surcharge.to_d }.to_d
+  end
+
+  def fuel_expense_total
+    @fuel_expense_total ||= expenses.where(category: "fuel").sum(:amount).to_d
+  end
+
+  # What diesel actually cost after the surcharge covered part of it.
+  def net_fuel_cost
+    fuel_expense_total - fuel_surcharge_total
+  end
+
+  def net_fuel_cost_per_mile
+    per_mile(net_fuel_cost)
+  end
+
+  def load_count
+    @load_count ||= settlements.sum { |settlement| settlement.load_count.to_i }
   end
 
   # Escrow is deliberately absent. It is a refundable deposit, not a cost, so
@@ -163,6 +198,10 @@ class OperatingSummary
 
   def paid_invoices
     scoped_to_truck(user.invoices.where(status: "paid", invoice_date: start_date..end_date))
+  end
+
+  def settlements
+    @settlements ||= scoped_to_truck(user.settlements.for_period(start_date, end_date)).to_a
   end
 
   def expenses

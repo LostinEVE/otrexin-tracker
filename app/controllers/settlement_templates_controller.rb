@@ -64,25 +64,57 @@ class SettlementTemplatesController < ApplicationController
     truck = @settlement_template.truck || current_user.default_truck
     return redirect_to apply_settlement_template_path(@settlement_template), alert: "Assign a truck to this template first." if truck.blank?
 
-    created = build_expenses(expense_date, truck)
+    settlement = build_settlement(expense_date, truck)
+    created = []
 
-    if created.empty?
-      redirect_to apply_settlement_template_path(@settlement_template, expense_date: expense_date),
-                  alert: "Nothing to record — every line was zero or unchecked."
-    elsif created.all?(&:persisted?)
-      redirect_to expenses_path(start_date: expense_date, end_date: expense_date),
-                  notice: "Recorded #{helpers.pluralize(created.size, 'expense')} for #{expense_date}."
-    else
+    # The statement's revenue and its deductions are one document, so they are
+    # written together or not at all.
+    ActiveRecord::Base.transaction do
+      settlement.save!
+      created = build_expenses(settlement, expense_date, truck)
+      raise ActiveRecord::Rollback if created.any? { |expense| !expense.persisted? }
+    end
+
+    if !settlement.persisted?
       @expense_date = expense_date
+      @settlement = settlement
       @lines = @settlement_template.active_lines
-      @failed = created.reject(&:persisted?)
       render :apply, status: :unprocessable_entity
+    elsif created.empty? && settlement.truck_revenue.zero?
+      settlement.destroy
+      redirect_to apply_settlement_template_path(@settlement_template, expense_date: expense_date),
+                  alert: "Nothing to record — no revenue entered and every deduction was zero or unchecked."
+    else
+      redirect_to settlements_path,
+                  notice: "Recorded #{expense_date} settlement: " \
+                          "#{helpers.number_to_currency(settlement.truck_revenue)} revenue, " \
+                          "#{helpers.pluralize(created.size, 'deduction')}."
     end
   end
 
   private
 
-  def build_expenses(expense_date, truck)
+  def build_settlement(statement_date, truck)
+    current_user.settlements.new(
+      truck: truck,
+      settlement_template: @settlement_template,
+      statement_date: statement_date,
+      payer: @settlement_template.vendor.presence,
+      **settlement_params
+    )
+  end
+
+  def settlement_params
+    permitted = params.fetch(:settlement, {}).permit(
+      :statement_number, :load_count, :gross_linehaul, :linehaul,
+      :fuel_surcharge, :accessorials, :other_income, :notes
+    ).to_h.symbolize_keys
+
+    Settlement::MONEY_FIELDS.each { |field| permitted[field] = permitted[field].presence || 0 }
+    permitted
+  end
+
+  def build_expenses(settlement, expense_date, truck)
     submitted = params[:lines] || {}
 
     @settlement_template.active_lines.filter_map do |line|
@@ -95,6 +127,7 @@ class SettlementTemplatesController < ApplicationController
 
       current_user.expenses.create(
         truck: truck,
+        settlement: settlement,
         settlement_template_line: line,
         expense_date: expense_date,
         category: line.category,

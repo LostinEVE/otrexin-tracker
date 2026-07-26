@@ -1,0 +1,65 @@
+<% content_for :title, "Settlement #{@settlement.statement_date}" %>
+
+<div class="page-header">
+  <div class="page-title-group">
+    <h1>Settlement <%= @settlement.statement_date %></h1>
+    <p class="page-kicker">
+      <%= @settlement.payer.presence || "Carrier" %>
+      <% if @settlement.statement_number.present? %> &middot; <%= @settlement.statement_number %><% end %>
+      <% if @settlement.truck %> &middot; <%= @settlement.truck.display_name %><% end %>
+    </p>
+  </div>
+  <div class="action-bar">
+    <%= link_to "All Settlements", settlements_path, class: "btn btn-secondary" %>
+  </div>
+</div>
+
+<section class="panel">
+  <div class="table-wrap">
+    <table class="statement">
+      <tbody>
+        <tr class="statement-section"><td>Revenue</td><td class="align-right"></td></tr>
+        <tr><td class="statement-item">Line haul settlement</td><td class="align-right"><%= money(@settlement.linehaul) %></td></tr>
+        <tr><td class="statement-item">Fuel surcharge</td><td class="align-right"><%= money(@settlement.fuel_surcharge) %></td></tr>
+        <tr><td class="statement-item">Accessorials</td><td class="align-right"><%= money(@settlement.accessorials) %></td></tr>
+        <% if @settlement.other_income.to_d.positive? %>
+          <tr><td class="statement-item">Other</td><td class="align-right"><%= money(@settlement.other_income) %></td></tr>
+        <% end %>
+        <tr class="statement-total">
+          <td>Truck Revenue</td>
+          <td class="align-right text-success"><%= money(@settlement.truck_revenue) %></td>
+        </tr>
+
+        <tr class="statement-section"><td>Deductions</td><td class="align-right"></td></tr>
+        <% @settlement.expenses.sort_by { |e| -e.amount.to_d }.each do |expense| %>
+          <tr>
+            <td class="statement-item">
+              <%= expense.notes.presence || expense.category_label %>
+              <% unless expense.operating? %><span class="badge badge-info">Refundable</span><% end %>
+            </td>
+            <td class="align-right"><%= money(expense.amount) %></td>
+          </tr>
+        <% end %>
+        <tr class="statement-total">
+          <td>Total Deductions</td>
+          <td class="align-right text-danger"><%= money(@settlement.total_deductions) %></td>
+        </tr>
+
+        <tr class="statement-total is-emphasis">
+          <td>Settlement Balance</td>
+          <td class="align-right <%= profit_class(@settlement.net_balance) %>"><%= money(@settlement.net_balance) %></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<% if @settlement.gross_linehaul.to_d.positive? %>
+  <div class="note-box">
+    The customer was billed <strong><%= money(@settlement.gross_linehaul) %></strong> and you were
+    settled <strong><%= money(@settlement.linehaul) %></strong> of it
+    <% if @settlement.linehaul_percentage %>(<%= @settlement.linehaul_percentage %>%)<% end %>.
+    The gross is recorded for reference only — it is the carrier's revenue, not yours, so it is never
+    counted as income.
+  </div>
+<% end %>
