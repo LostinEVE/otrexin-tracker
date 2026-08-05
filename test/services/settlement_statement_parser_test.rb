@@ -108,6 +108,41 @@ class SettlementStatementParserTest < ActiveSupport::TestCase
     assert_equal 0.to_d, plates[:new_balance]
   end
 
+  test "a first-week payoff row is not mistaken for a finished one" do
+    # As the real 05/27 statement prints it: the first collection toward a
+    # payoff has no Previous Amount Collected, so the Total row's four figures
+    # end with what REMAINS — $50.00 collected of the $500.00 target, $450.00
+    # left. The tell is arithmetic: 50.00 + 450.00 equals the header's target,
+    # where a finished row's last figure IS the target.
+    result = SettlementStatementParser.new(<<~TEXT).parse
+      SETTLEMENT STATEMENT 05/27/2026
+      Contractor Escrow - ($500.00) @ ($50.00)/Week
+      Total:    ($50.00)     ($50.00)                                ($50.00)    ($450.00)
+    TEXT
+
+    line = result.deductions.first
+    assert_equal 50.00.to_d, line[:amount]
+    assert_equal 0.to_d, line[:previous_collected]
+    assert_equal 50.00.to_d, line[:total_collected_to_date]
+    assert_equal 450.00.to_d, line[:new_balance]
+  end
+
+  test "a loan's first week keeps its full remaining balance" do
+    # Real 06/29 row: Loan - ($1,219.31) @ ($300.00)/Week collected its first
+    # $300.00, leaving $919.31 — not a finished loan with $919.31 collected.
+    result = SettlementStatementParser.new(<<~TEXT).parse
+      SETTLEMENT STATEMENT 06/29/2026
+      Loan - 000000 - ($1,219.31) @ ($300.00)/Week
+      Total:    ($300.00)     ($300.00)                               ($300.00)    ($919.31)
+    TEXT
+
+    line = result.deductions.first
+    assert_equal 300.00.to_d, line[:amount]
+    assert_equal 0.to_d, line[:previous_collected]
+    assert_equal 300.00.to_d, line[:total_collected_to_date]
+    assert_equal 919.31.to_d, line[:new_balance]
+  end
+
   test "a flat weekly line carries no balance at all" do
     # Total: ($6.92) ($6.92) — no running totals, no balance, nothing to pay off.
     bobtail = parse("settlement_statement").deductions
