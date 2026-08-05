@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_04_000003) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_04_000004) do
   create_table "company_profiles", force: :cascade do |t|
     t.string "address_line1"
     t.string "address_line2"
@@ -161,6 +161,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_04_000003) do
     t.index ["user_id"], name: "index_per_diem_entries_on_user_id"
   end
 
+  create_table "settlement_accessorials", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.decimal "gross_amount", precision: 12, scale: 2, default: "0.0", null: false
+    t.string "label", null: false
+    t.decimal "net_amount", precision: 12, scale: 2, default: "0.0", null: false
+    t.decimal "percentage_applied", precision: 6, scale: 3, null: false
+    t.integer "settlement_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["settlement_id"], name: "index_settlement_accessorials_on_settlement_id"
+  end
+
   create_table "settlement_deductions", force: :cascade do |t|
     t.decimal "balance_target", precision: 12, scale: 2
     t.string "category", null: false
@@ -216,7 +227,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_04_000003) do
     t.integer "miles"
     t.text "notes"
     t.decimal "other_income", precision: 12, scale: 2, default: "0.0", null: false
+    t.text "pay_deviation"
     t.string "payer"
+    t.decimal "realized_fuel_surcharge_rate", precision: 10, scale: 8
+    t.decimal "realized_linehaul_rate", precision: 10, scale: 8
     t.integer "settlement_template_id"
     t.string "source_filename"
     t.date "statement_date", null: false
@@ -286,6 +300,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_04_000003) do
   add_foreign_key "maintenances", "users"
   add_foreign_key "per_diem_entries", "trucks"
   add_foreign_key "per_diem_entries", "users"
+  add_foreign_key "settlement_accessorials", "settlements"
   add_foreign_key "settlement_deductions", "settlements"
   add_foreign_key "settlement_template_lines", "settlement_templates"
   add_foreign_key "settlement_templates", "trucks"
