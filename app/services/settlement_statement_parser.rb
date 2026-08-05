@@ -290,7 +290,7 @@ class SettlementStatementParser
         category: category_for(label),
         weekly: weekly,
         balance_target: target,
-        **sub_table_after(index)
+        **sub_table_after(index, target)
       ).to_h
     end
   end
@@ -320,12 +320,12 @@ class SettlementStatementParser
 
   # Each block closes with a Total row: the whole amortization line for this
   # deduction, not just the amount collected.
-  def sub_table_after(index)
+  def sub_table_after(index, target = nil)
     lines[(index + 1)..(index + 12)]&.each do |candidate|
       next unless candidate.start_with?("Total:")
 
       amounts = candidate.scan(MONEY).flatten.map { |value| to_amount(value) }
-      return map_total_row(amounts)
+      return map_total_row(amounts, target)
     end
     { amount: 0.to_d }
   end
@@ -337,7 +337,7 @@ class SettlementStatementParser
   # running totals is the statement's way of printing zero — the payoff just
   # finished — so it is recorded as 0.00, while a flat weekly line, which has
   # no balance at all, stays nil.
-  def map_total_row(found)
+  def map_total_row(found, target = nil)
     scheduled, collected = found.first(2)
     base = { scheduled_amount: scheduled || 0.to_d, amount: collected || 0.to_d,
              uncollected: 0.to_d, previous_collected: 0.to_d, total_collected_to_date: 0.to_d }
@@ -345,8 +345,18 @@ class SettlementStatementParser
 
     case found.size
     when 3 then base.merge(uncollected: found[2])
-    when 4 then base.merge(previous_collected: found[2], total_collected_to_date: found[3],
-                           new_balance: 0.to_d)
+    when 4
+      if target && found[2] + found[3] == target
+        # The payoff's first collection: no Previous Amount Collected is
+        # printed, so the four figures end with what REMAINS — collected so
+        # far plus the last figure add up to the header's target. A finished
+        # row's four figures end with the target itself instead.
+        base.merge(previous_collected: found[2] - found[1],
+                   total_collected_to_date: found[2], new_balance: found[3])
+      else
+        base.merge(previous_collected: found[2], total_collected_to_date: found[3],
+                   new_balance: 0.to_d)
+      end
     when 5
       if shortfall && found[2] == shortfall
         # Nothing previously collected; the third figure is the shortfall.
