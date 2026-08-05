@@ -85,6 +85,30 @@ class SettlementImporterTest < ActiveSupport::TestCase
     assert_nil outcome.settlement.notes
   end
 
+  test "the statement's amortization detail is kept per deduction" do
+    outcome = importer.import(result)
+    details = outcome.settlement.settlement_deductions
+
+    assert_equal 14, details.count
+
+    loan = details.find_by(label: "Loan")
+    assert_equal 300.00.to_d, loan.scheduled_amount
+    assert_equal 300.00.to_d, loan.collected_this_statement
+    assert_equal 600.00.to_d, loan.previous_collected
+    assert_equal 900.00.to_d, loan.total_collected_to_date
+    assert_equal 319.31.to_d, loan.new_balance
+    assert_equal 300.00.to_d, loan.weekly_amount
+    assert_equal 1_219.31.to_d, loan.balance_target
+    assert_not loan.finished?
+
+    # The single most valuable fact on the statement: a recurring deduction
+    # that just ended. $450.00 + $26.00 reached the $476.00 target.
+    finished = details.find_by(balance_target: 476.00.to_d)
+    assert_equal "Plates", finished.label
+    assert_equal 0.to_d, finished.new_balance
+    assert finished.finished?
+  end
+
   # Guards the case that would quietly double a driver's books: the same
   # settlement already typed in by hand.
   test "a statement already entered by hand is held back rather than doubled" do

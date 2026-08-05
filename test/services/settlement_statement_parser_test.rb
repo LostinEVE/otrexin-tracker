@@ -74,6 +74,50 @@ class SettlementStatementParserTest < ActiveSupport::TestCase
     assert_equal 6.92.to_d, bobtail[:weekly]
   end
 
+  test "the amortization sub-table is read in full" do
+    deductions = parse("settlement_statement").deductions
+
+    # Total: ($130.00) ($130.00) ($910.00) ($1,040.00) ($260.00)
+    permits = deductions.find { |line| line[:label] == "Permits Driver" }
+    assert_equal 130.00.to_d, permits[:scheduled_amount]
+    assert_equal 130.00.to_d, permits[:amount]
+    assert_equal 0.to_d, permits[:uncollected]
+    assert_equal 910.00.to_d, permits[:previous_collected]
+    assert_equal 1_040.00.to_d, permits[:total_collected_to_date]
+    assert_equal 260.00.to_d, permits[:new_balance]
+
+    # Total: ($300.00) ($300.00) ($600.00) ($900.00) ($319.31)
+    loan = deductions.find { |line| line[:label] == "Loan" }
+    assert_equal 300.00.to_d, loan[:scheduled_amount]
+    assert_equal 600.00.to_d, loan[:previous_collected]
+    assert_equal 900.00.to_d, loan[:total_collected_to_date]
+    assert_equal 319.31.to_d, loan[:new_balance]
+  end
+
+  test "a payoff that reached its target on this statement reads as finished" do
+    # Plates - ($476.00) @ ($75.00)/Week: $450.00 previously collected plus a
+    # final $26.00 this statement reaches the $476.00 target. The statement
+    # prints no New Balance figure on that Total row, which means zero.
+    plates = parse("settlement_statement").deductions
+      .find { |line| line[:label] == "Plates" && line[:balance_target] == 476.00.to_d }
+
+    assert_equal 26.00.to_d, plates[:scheduled_amount]
+    assert_equal 26.00.to_d, plates[:amount]
+    assert_equal 450.00.to_d, plates[:previous_collected]
+    assert_equal 476.00.to_d, plates[:total_collected_to_date]
+    assert_equal 0.to_d, plates[:new_balance]
+  end
+
+  test "a flat weekly line carries no balance at all" do
+    # Total: ($6.92) ($6.92) — no running totals, no balance, nothing to pay off.
+    bobtail = parse("settlement_statement").deductions
+      .find { |line| line[:label] == "Bobtail Insurance" }
+
+    assert_equal 6.92.to_d, bobtail[:scheduled_amount]
+    assert_equal 6.92.to_d, bobtail[:amount]
+    assert_nil bobtail[:new_balance]
+  end
+
   test "a permit charged against the load is picked up" do
     result = parse("settlement_with_trip_permit")
 
