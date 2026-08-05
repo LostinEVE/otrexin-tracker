@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_04_000004) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_04_000005) do
   create_table "company_profiles", force: :cascade do |t|
     t.string "address_line1"
     t.string "address_line2"
@@ -127,6 +127,20 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_04_000004) do
     t.index ["truck_id"], name: "index_invoices_on_truck_id"
     t.index ["user_id", "truck_id"], name: "index_invoices_on_user_id_and_truck_id"
     t.index ["user_id"], name: "index_invoices_on_user_id"
+  end
+
+  create_table "lease_terms", force: :cascade do |t|
+    t.decimal "balance_target", precision: 12, scale: 2
+    t.string "category"
+    t.datetime "created_at", null: false
+    t.string "kind", default: "deduction", null: false
+    t.string "label"
+    t.text "notes"
+    t.decimal "percentage", precision: 6, scale: 3
+    t.datetime "updated_at", null: false
+    t.integer "user_id", null: false
+    t.decimal "weekly_amount", precision: 12, scale: 2
+    t.index ["user_id"], name: "index_lease_terms_on_user_id"
   end
 
   create_table "maintenances", force: :cascade do |t|
@@ -296,6 +310,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_04_000004) do
   add_foreign_key "fuel_logs", "users"
   add_foreign_key "invoices", "trucks"
   add_foreign_key "invoices", "users"
+  add_foreign_key "lease_terms", "users"
   add_foreign_key "maintenances", "trucks"
   add_foreign_key "maintenances", "users"
   add_foreign_key "per_diem_entries", "trucks"
