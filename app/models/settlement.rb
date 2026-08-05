@@ -22,8 +22,10 @@ class Settlement < ApplicationRecord
     linehaul.to_d + fuel_surcharge.to_d + accessorials.to_d + other_income.to_d
   end
 
+  # Everything the statement deducted: costs in expenses plus escrow deposits
+  # in the ledger. Matches the statement's own Total Deductions figure.
   def total_deductions
-    expenses.sum(:amount).to_d
+    expenses.sum(:amount).to_d + escrow_ledger_entries.sum(:deposit_amount).to_d
   end
 
   # What actually landed in the bank, matching the settlement balance line. The

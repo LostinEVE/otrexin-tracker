@@ -147,6 +147,15 @@ class SettlementImporter
 
       match = pool.find { |expense| expense.amount.to_d == amount }
 
+      # Escrow is a refundable deposit, not a cost: it goes to the ledger, and
+      # a hand-typed row for the same money goes with it rather than lingering
+      # as an expense.
+      if line[:category] == "escrow"
+        pool.delete(match) if match
+        record_escrow_deposit(settlement, result, line, replacing: match)
+        next
+      end
+
       if match
         pool.delete(match)
         match.update!(
@@ -170,6 +179,22 @@ class SettlementImporter
     end
 
     tally
+  end
+
+  def record_escrow_deposit(settlement, result, line, replacing: nil)
+    kept_note = replacing&.notes.presence
+    replacing&.destroy!
+
+    user.escrow_ledger_entries.create!(
+      truck: truck,
+      settlement: settlement,
+      name: line[:label],
+      entry_date: result.statement_date,
+      deposit_amount: line[:amount].to_d,
+      running_balance: line[:total_collected_to_date] || line[:amount].to_d,
+      target: line[:balance_target],
+      notes: kept_note
+    )
   end
 
   # The statement's own amortization sub-table, one row per printed line. This

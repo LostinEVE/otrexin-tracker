@@ -107,15 +107,23 @@ class OperatingSummary
       .sort_by { |_category, amount| -amount.to_d }
   end
 
-  # Money handed to the carrier and still owed back to you.
+  # Money handed to the carrier and still owed back to you. Read from the
+  # escrow ledger; any legacy escrow still sitting in expenses is also counted
+  # so the figure survives the transition, and the two sources never overlap —
+  # the migrator moves rows, it does not copy them.
   def escrow_total
-    @escrow_total ||= expenses.non_operating.sum(:amount).to_d
+    @escrow_total ||= escrow_entries.sum(:deposit_amount).to_d +
+                      expenses.non_operating.sum(:amount).to_d
   end
 
   # Escrow accumulates across the whole relationship, not just this report
   # period, so the running balance ignores the date filter.
   def escrow_balance
-    @escrow_balance ||= scoped_to_truck(user.expenses.non_operating).sum(:amount).to_d
+    @escrow_balance ||= begin
+      ledger = scoped_to_truck(user.escrow_ledger_entries)
+      ledger.sum(:deposit_amount).to_d + ledger.sum(:interest_credited).to_d +
+        scoped_to_truck(user.expenses.non_operating).sum(:amount).to_d
+    end
   end
 
   def net_profit
@@ -236,6 +244,10 @@ class OperatingSummary
 
   def expenses
     scoped_to_truck(user.expenses.where(expense_date: start_date..end_date))
+  end
+
+  def escrow_entries
+    scoped_to_truck(user.escrow_ledger_entries.for_period(start_date, end_date))
   end
 
   def fuel_logs
