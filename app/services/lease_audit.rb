@@ -91,21 +91,21 @@ class LeaseAudit
     end
   end
 
+  # The aggregate linehaul-to-gross ratio is noisy: CWT-priced loads round to
+  # the cent per line, so a fully compliant statement lands at 75.9997%. The
+  # parser's per-line check is exact and is the arbiter here — a settlement is
+  # underpaid when a pay line's stated rate sits below the agreed one.
   def underpaid_percentages
     settlements.filter_map do |settlement|
-      rate = settlement.realized_linehaul_rate
-      next if rate.blank?
-
-      term = pay_terms.find { |candidate| candidate.label == "Line Haul Pay" }
-      next if term.nil? || rate >= term.percentage / 100
+      next if settlement.pay_deviation.blank?
+      next unless settlement.pay_deviation.match?(/below the agreed/)
 
       Finding.new(
         kind: :underpaid_percentage,
         settlement: settlement,
         label: "Line Haul Pay",
-        reason: "The #{cite(settlement)} statement realized " \
-                "#{(rate * 100).round(4).to_s("F")}% of gross linehaul against the lease's " \
-                "#{term.percentage.to_s("F")}% — review it against the lease."
+        reason: "The #{cite(settlement)} statement reports: #{settlement.pay_deviation} — " \
+                "review it against the lease."
       )
     end
   end
@@ -128,19 +128,32 @@ class LeaseAudit
     @terms ||= user.lease_terms.to_a
   end
 
-  def pay_terms
-    terms.select { |term| term.kind == "pay_percentage" }
+  # Terms in force on a given date: an effective_from in the future doesn't
+  # apply yet, and among competing terms the most recent one wins — a
+  # superseded term judges only the settlements of its own era.
+  def applicable(candidates, date)
+    candidates
+      .select { |term| term.effective_from.nil? || (date && term.effective_from <= date) }
+      .max_by { |term| term.effective_from || Date.new(1, 1, 1) }
   end
 
   # A term authorizes a deduction when its label matches the printed label, or
-  # when it names no label and covers the whole category.
+  # when it names no label and covers the whole category. Escrow lines appear
+  # in the deduction detail too, so escrow-kind terms authorize them as well.
   def term_for(deduction)
-    terms.find { |term| term.kind == "deduction" && term.label&.casecmp?(deduction.label) } ||
-      terms.find { |term| term.kind == "deduction" && term.label.blank? && term.category == deduction.category }
+    date = deduction.settlement&.statement_date
+    by_label = terms.select do |term|
+      %w[ deduction escrow ].include?(term.kind) && term.label&.casecmp?(deduction.label)
+    end
+    by_category = terms.select do |term|
+      term.kind == "deduction" && term.label.blank? && term.category == deduction.category
+    end
+    applicable(by_label, date) || applicable(by_category, date)
   end
 
   def escrow_term_for(entry)
-    terms.find { |term| term.kind == "escrow" && term.label&.casecmp?(entry.name) }
+    candidates = terms.select { |term| term.kind == "escrow" && term.label&.casecmp?(entry.name) }
+    applicable(candidates, entry.settlement&.statement_date || entry.entry_date)
   end
 
   def cite(settlement)

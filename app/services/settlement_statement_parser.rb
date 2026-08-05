@@ -97,8 +97,9 @@ class SettlementStatementParser
           format("%s pays $%.2f but %s%% of $%.2f is $%.2f",
                  line[:label], line[:net], line[:percentage].to_s("F"), line[:gross], expected)
         elsif agreed && line[:percentage] != agreed
-          format("%s at %s%% differs from the agreed %s%%",
-                 line[:label], line[:percentage].to_s("F"), agreed.to_s("F"))
+          direction = line[:percentage] < agreed ? "below" : "above"
+          format("%s at %s%% is %s the agreed %s%%",
+                 line[:label], line[:percentage].to_s("F"), direction, agreed.to_s("F"))
         end
       end
     end
