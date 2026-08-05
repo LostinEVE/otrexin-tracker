@@ -11,35 +11,35 @@ class TaxEstimator
       standard_deduction: 15_750,
       social_security_wage_base: 176_100,
       brackets: [
-        [ 11_925, 0.10 ],
-        [ 48_475, 0.12 ],
-        [ 103_350, 0.22 ],
-        [ 197_300, 0.24 ],
-        [ 250_525, 0.32 ],
-        [ 626_350, 0.35 ],
-        [ Float::INFINITY, 0.37 ]
+        [ 11_925, 0.10.to_d ],
+        [ 48_475, 0.12.to_d ],
+        [ 103_350, 0.22.to_d ],
+        [ 197_300, 0.24.to_d ],
+        [ 250_525, 0.32.to_d ],
+        [ 626_350, 0.35.to_d ],
+        [ BigDecimal::INFINITY, 0.37.to_d ]
       ]
     },
     2026 => {
       standard_deduction: 16_100,
       social_security_wage_base: 184_500,
       brackets: [
-        [ 12_400, 0.10 ],
-        [ 50_400, 0.12 ],
-        [ 105_700, 0.22 ],
-        [ 201_775, 0.24 ],
-        [ 256_225, 0.32 ],
-        [ 640_600, 0.35 ],
-        [ Float::INFINITY, 0.37 ]
+        [ 12_400, 0.10.to_d ],
+        [ 50_400, 0.12.to_d ],
+        [ 105_700, 0.22.to_d ],
+        [ 201_775, 0.24.to_d ],
+        [ 256_225, 0.32.to_d ],
+        [ 640_600, 0.35.to_d ],
+        [ BigDecimal::INFINITY, 0.37.to_d ]
       ]
     }
   }.freeze
 
   # Self-employment tax applies to 92.35% of net profit, splits into a Social
   # Security half that stops at the wage base and a Medicare half that does not.
-  NET_EARNINGS_FACTOR = 0.9235
-  SOCIAL_SECURITY_RATE = 0.124
-  MEDICARE_RATE = 0.029
+  NET_EARNINGS_FACTOR = 0.9235.to_d
+  SOCIAL_SECURITY_RATE = 0.124.to_d
+  MEDICARE_RATE = 0.029.to_d
 
   attr_reader :user, :year, :truck
 
@@ -58,19 +58,19 @@ class TaxEstimator
   end
 
   def revenue
-    summary.revenue.to_f
+    summary.revenue.to_d
   end
 
   def operating_expenses
-    summary.expense_total.to_f
+    summary.expense_total.to_d
   end
 
   def per_diem_deductions
-    summary.per_diem_total.to_f.round(2)
+    summary.per_diem_total.to_d.round(2)
   end
 
   def depreciation_deductions
-    summary.depreciation_total.to_f.round(2)
+    summary.depreciation_total.to_d.round(2)
   end
 
   def business_profit
@@ -80,13 +80,13 @@ class TaxEstimator
   # Net earnings from self-employment: the base the SE tax is actually charged
   # on, not the raw profit.
   def net_earnings_from_self_employment
-    [ business_profit * NET_EARNINGS_FACTOR, 0 ].max.round(2)
+    [ business_profit * NET_EARNINGS_FACTOR, 0.to_d ].max.round(2)
   end
   alias_method :adjusted_self_employment_income, :net_earnings_from_self_employment
 
   def self_employment_tax
     earnings = net_earnings_from_self_employment
-    return 0.0 if earnings <= 0
+    return 0.to_d if earnings <= 0
 
     social_security = [ earnings, social_security_wage_base ].min * SOCIAL_SECURITY_RATE
     medicare = earnings * MEDICARE_RATE
@@ -97,15 +97,15 @@ class TaxEstimator
   # Half the SE tax is deductible above the line, then the standard deduction
   # comes off what is left.
   def taxable_income
-    [ business_profit - (self_employment_tax / 2.0) - standard_deduction, 0 ].max.round(2)
+    [ business_profit - (self_employment_tax / 2) - standard_deduction, 0.to_d ].max.round(2)
   end
 
   def income_tax
     remaining_income = taxable_income
     previous_limit = 0
 
-    brackets.sum do |limit, rate|
-      next 0 if remaining_income <= previous_limit
+    brackets.sum(0.to_d) do |limit, rate|
+      next 0.to_d if remaining_income <= previous_limit
 
       taxable_in_bracket = [ remaining_income - previous_limit, limit - previous_limit ].min
       previous_limit = limit
@@ -118,11 +118,11 @@ class TaxEstimator
   end
 
   def quarterly_estimate
-    (total_owed / 4.0).round(2)
+    (total_owed / 4).round(2)
   end
 
   def ytd_paid
-    user.tax_payments.where(payment_date: year_start..year_end).sum(:amount).to_f.round(2)
+    user.tax_payments.where(payment_date: year_start..year_end).sum(:amount).to_d.round(2)
   end
 
   def remaining_balance
