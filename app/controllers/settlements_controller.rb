@@ -1,5 +1,5 @@
 class SettlementsController < ApplicationController
-  before_action :set_settlement, only: %i[ show destroy ]
+  before_action :set_settlement, only: %i[ show destroy review unreview ]
 
   def index
     @start_date = parse_date(params[:start_date]) || Date.current.beginning_of_year
@@ -22,7 +22,24 @@ class SettlementsController < ApplicationController
   end
 
   def show
-    @review_notes = settlement_review_notes([ @settlement ]).fetch(@settlement.id, [])
+    @review_notes = settlement_review_notes([ @settlement ], include_reviewed: true)
+      .fetch(@settlement.id, [])
+  end
+
+  # Acceptance, not deletion: the findings stay on the page as a record; they
+  # just stop warning. Reopening brings the warning back.
+  def review
+    @settlement.update!(reviewed_at: Time.current)
+    redirect_to settlement_path(@settlement),
+                notice: "Marked as reviewed — this settlement will no longer warn.",
+                status: :see_other
+  end
+
+  def unreview
+    @settlement.update!(reviewed_at: nil)
+    redirect_to settlement_path(@settlement),
+                notice: "Review reopened — this settlement warns again.",
+                status: :see_other
   end
 
   def destroy

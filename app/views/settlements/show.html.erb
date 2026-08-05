@@ -15,15 +15,30 @@
 </div>
 
 <% if @review_notes.any? %>
-  <div class="note-box is-warning">
-    <strong>This settlement needs review.</strong>
-    <ul>
-      <% @review_notes.each do |note| %>
-        <li><%= note %></li>
-      <% end %>
-    </ul>
-    <div class="text-muted"><%= LeaseAudit::DISCLAIMER %></div>
-  </div>
+  <% if @settlement.reviewed_at.present? %>
+    <div class="note-box">
+      <strong>Reviewed and accepted</strong> on <%= @settlement.reviewed_at.to_date %>.
+      <ul>
+        <% @review_notes.each do |note| %>
+          <li><%= note %></li>
+        <% end %>
+      </ul>
+      <%= button_to "Reopen review", review_settlement_path(@settlement),
+            method: :delete, class: "btn btn-secondary" %>
+    </div>
+  <% else %>
+    <div class="note-box is-warning">
+      <strong>This settlement needs review.</strong>
+      <ul>
+        <% @review_notes.each do |note| %>
+          <li><%= note %></li>
+        <% end %>
+      </ul>
+      <div class="text-muted"><%= LeaseAudit::DISCLAIMER %></div>
+      <%= button_to "Mark as reviewed", review_settlement_path(@settlement),
+            method: :post, class: "btn" %>
+    </div>
+  <% end %>
 <% end %>
 
 <section class="panel">

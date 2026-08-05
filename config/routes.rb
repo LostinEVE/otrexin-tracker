@@ -16,7 +16,12 @@ Rails.application.routes.draw do
   resources :tax_payments
   resource :expense_audit, only: [ :show, :update ]
   resource :settlement_import, only: [ :new, :create ]
-  resources :settlements, only: [ :index, :show, :destroy ]
+  resources :settlements, only: [ :index, :show, :destroy ] do
+    member do
+      post :review
+      delete :review, action: :unreview
+    end
+  end
   resources :settlement_templates, except: [ :show ] do
     member do
       get :apply

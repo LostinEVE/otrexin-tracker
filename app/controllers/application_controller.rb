@@ -41,8 +41,11 @@ class ApplicationController < ActionController::Base
   # Settlements worth a second look, keyed by settlement id: the pay deviation
   # caught at import plus any lease-audit findings. The audit contributes only
   # once lease terms are on file — with none, every line would read as
-  # unauthorized, which is noise rather than review material.
-  def settlement_review_notes(settlements)
+  # unauthorized, which is noise rather than review material. A settlement the
+  # driver has marked reviewed stays quiet unless explicitly asked for.
+  def settlement_review_notes(settlements, include_reviewed: false)
+    settlements = settlements.reject { |s| s.reviewed_at.present? } unless include_reviewed
+
     notes = {}
     settlements.each do |settlement|
       (notes[settlement.id] ||= []) << settlement.pay_deviation if settlement.pay_deviation.present?
