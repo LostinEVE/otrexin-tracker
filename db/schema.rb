@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_04_000002) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_04_000003) do
   create_table "company_profiles", force: :cascade do |t|
     t.string "address_line1"
     t.string "address_line2"
@@ -44,6 +44,25 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_04_000002) do
     t.index ["truck_id"], name: "index_depreciation_assets_on_truck_id"
     t.index ["user_id", "placed_in_service_date"], name: "idx_on_user_id_placed_in_service_date_0fe1fd55a2"
     t.index ["user_id"], name: "index_depreciation_assets_on_user_id"
+  end
+
+  create_table "escrow_ledger_entries", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.decimal "deposit_amount", precision: 12, scale: 2, default: "0.0", null: false
+    t.date "entry_date", null: false
+    t.decimal "interest_credited", precision: 12, scale: 2
+    t.string "name", null: false
+    t.text "notes"
+    t.decimal "running_balance", precision: 12, scale: 2, default: "0.0", null: false
+    t.integer "settlement_id"
+    t.decimal "target", precision: 12, scale: 2
+    t.integer "truck_id"
+    t.datetime "updated_at", null: false
+    t.integer "user_id", null: false
+    t.index ["settlement_id"], name: "index_escrow_ledger_entries_on_settlement_id"
+    t.index ["truck_id"], name: "index_escrow_ledger_entries_on_truck_id"
+    t.index ["user_id", "entry_date"], name: "index_escrow_ledger_entries_on_user_id_and_entry_date"
+    t.index ["user_id"], name: "index_escrow_ledger_entries_on_user_id"
   end
 
   create_table "expenses", force: :cascade do |t|
@@ -252,6 +271,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_04_000002) do
   add_foreign_key "company_profiles", "users"
   add_foreign_key "depreciation_assets", "trucks"
   add_foreign_key "depreciation_assets", "users"
+  add_foreign_key "escrow_ledger_entries", "settlements"
+  add_foreign_key "escrow_ledger_entries", "trucks"
+  add_foreign_key "escrow_ledger_entries", "users"
   add_foreign_key "expenses", "settlement_template_lines"
   add_foreign_key "expenses", "settlements"
   add_foreign_key "expenses", "trucks"

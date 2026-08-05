@@ -6,6 +6,7 @@ class Settlement < ApplicationRecord
   # The deductions were created by this statement, so removing it removes them.
   has_many :expenses, dependent: :destroy
   has_many :settlement_deductions, dependent: :destroy
+  has_many :escrow_ledger_entries, dependent: :destroy
 
   MONEY_FIELDS = %i[ gross_linehaul linehaul fuel_surcharge accessorials other_income ].freeze
 
