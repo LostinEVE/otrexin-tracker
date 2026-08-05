@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_04_000006) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_04_000007) do
   create_table "company_profiles", force: :cascade do |t|
     t.string "address_line1"
     t.string "address_line2"
@@ -246,6 +246,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_04_000006) do
     t.string "payer"
     t.decimal "realized_fuel_surcharge_rate", precision: 10, scale: 8
     t.decimal "realized_linehaul_rate", precision: 10, scale: 8
+    t.datetime "reviewed_at"
     t.integer "settlement_template_id"
     t.string "source_filename"
     t.date "statement_date", null: false
