@@ -1,3 +1,5 @@
+require "bigdecimal/math"
+
 # Single source of truth for every money figure the app reports.
 #
 # Expenses are the only record of what was spent. Fuel logs supply odometer
@@ -128,6 +130,101 @@ class OperatingSummary
 
   def net_profit
     revenue - expense_total
+  end
+
+  # --- Settlement metrics ----------------------------------------------------
+
+  # How many trailing settlements the rolling rate statistics look back over.
+  RATE_WINDOW = 8
+
+  # Settlements whose realized linehaul rate sits more than two standard
+  # deviations from the trailing window's mean. A history with no variance at
+  # all makes any change an outlier, which is exactly right: at a contractual
+  # 76%, any drift is worth a look.
+  def linehaul_rate_outliers
+    rated = settlements.select { |settlement| settlement.realized_linehaul_rate.present? }
+      .sort_by(&:statement_date)
+
+    rated.each_with_index.filter_map do |settlement, index|
+      trailing = rated[[ index - RATE_WINDOW, 0 ].max...index].map { |s| s.realized_linehaul_rate.to_d }
+      next if trailing.size < 2
+
+      mean = (trailing.sum / trailing.size).round(8)
+      sigma = stddev(trailing, mean)
+      settlement if (settlement.realized_linehaul_rate.to_d - mean).abs > 2 * sigma
+    end
+  end
+
+  # Everything the carrier withheld — costs, escrow, and the fuel advance —
+  # over what the truck earned. This matches the statement's own Total
+  # Deductions figure, not just the expensed part.
+  def deduction_rate
+    return nil unless settlement_revenue.positive?
+
+    withheld = settlements.sum(0.to_d) { |settlement| settlement.total_withheld }
+    (withheld / settlement_revenue).round(8)
+  end
+
+  # EFS fuel bought on the carrier's card as a share of what the truck earned.
+  def fuel_share_of_revenue
+    return nil unless settlement_revenue.positive?
+
+    advances = settlements.sum(0.to_d) { |settlement| settlement.fuel_advance.to_d }
+    (advances / settlement_revenue).round(8)
+  end
+
+  # What comes out every week as of the latest statement: flat weekly lines
+  # (no balance to finish) plus payoffs still carrying a balance. This is the
+  # number that drops when a deduction finishes.
+  def weekly_recurring_obligation
+    return 0.to_d if latest_settlement.nil?
+
+    latest_settlement.settlement_deductions
+      .where.not(weekly_amount: nil)
+      .where("new_balance IS NULL OR new_balance > 0")
+      .sum(:weekly_amount).to_d
+  end
+
+  # Deductions on the latest statement that finish within the next N weeks,
+  # from the statement's own balance and weekly figures.
+  def deductions_completing_within(weeks)
+    return [] if latest_settlement.nil?
+
+    latest_settlement.settlement_deductions
+      .where("new_balance > 0").where("weekly_amount > 0")
+      .select { |row| (row.new_balance / row.weekly_amount).ceil <= weeks }
+  end
+
+  # --- Cost per paid mile ----------------------------------------------------
+  #
+  # Paid miles come from the settlements, so these are rates against the miles
+  # the carrier actually paid for — unlike cost_per_mile below, which runs on
+  # odometer miles from the fuel log.
+
+  def paid_miles
+    @paid_miles ||= settlements.sum { |settlement| settlement.miles.to_i }
+  end
+
+  def fixed_cost_per_mile
+    per_paid_mile(expenses.operating.where(category: Expense::FIXED_CATEGORIES).sum(:amount).to_d)
+  end
+
+  def variable_cost_per_mile
+    per_paid_mile(expenses.operating.where.not(category: Expense::FIXED_CATEGORIES).sum(:amount).to_d)
+  end
+
+  # Profit per day the truck actually ran. Days are counted from fuel-log
+  # dates — the best record available of the truck working — so a week with a
+  # layover reads differently from five hard days.
+  def net_revenue_per_working_day
+    days = working_days
+    return nil unless days.positive?
+
+    (net_profit / days).round(2)
+  end
+
+  def working_days
+    @working_days ||= fuel_logs.distinct.count(:fuel_date)
   end
 
   # --- Miles -----------------------------------------------------------------
@@ -274,6 +371,15 @@ class OperatingSummary
 
   private
 
+  def latest_settlement
+    @latest_settlement ||= settlements.max_by(&:statement_date)
+  end
+
+  def stddev(values, mean)
+    variance = values.sum(0.to_d) { |value| (value - mean)**2 } / values.size
+    BigMath.sqrt(variance, 16)
+  end
+
   def scoped_to_truck(scope)
     truck ? scope.where(truck: truck) : scope
   end
@@ -282,6 +388,12 @@ class OperatingSummary
     return nil unless total_miles.positive?
 
     (amount / total_miles).round(4)
+  end
+
+  def per_paid_mile(amount)
+    return nil unless paid_miles.positive?
+
+    (amount / paid_miles).round(4)
   end
 
   # Pairs each record against at most one expense, so two fill-ups on the same

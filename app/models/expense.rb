@@ -28,6 +28,11 @@ class Expense < ApplicationRecord
   # per mile the way a real cost does.
   NON_OPERATING_CATEGORIES = %w[ escrow ].freeze
 
+  # Costs that arrive every week whether the truck moves or not. Everything
+  # else operating is treated as variable with the work.
+  FIXED_CATEGORIES = %w[ insurance permits truck_payment trailer_lease
+                         loan_payment phone_internet eld_dashcam ].freeze
+
   belongs_to :user
   belongs_to :truck
   belongs_to :settlement_template_line, optional: true
