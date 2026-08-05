@@ -17,9 +17,10 @@ class DepreciationAssetTest < ActiveSupport::TestCase
   test "a partial period gets its share of the year rather than the whole year" do
     asset = depreciation_assets(:straight_line)
 
-    # 6,000 a year, and Jan 1 through Mar 31 is 90 of 365 days.
+    # 6,000 a year, and Jan 1 through Mar 31 is 90 of 365 days:
+    # 6,000 x 90 / 365 = 1,479.452... rounds to 1,479.45.
     assert_equal 6_000.to_d, asset.deduction_for_year(2026)
-    assert_in_delta 1_479.45, asset.deduction_for_period(Date.new(2026, 1, 1), Date.new(2026, 3, 31)), 0.01
+    assert_equal 1_479.45.to_d, asset.deduction_for_period(Date.new(2026, 1, 1), Date.new(2026, 3, 31))
   end
 
   test "the yearly deductions of a partial period still add up to the full year" do
@@ -28,6 +29,10 @@ class DepreciationAssetTest < ActiveSupport::TestCase
     first_half = asset.deduction_for_period(Date.new(2026, 1, 1), Date.new(2026, 6, 30))
     second_half = asset.deduction_for_period(Date.new(2026, 7, 1), Date.new(2026, 12, 31))
 
-    assert_in_delta asset.deduction_for_year(2026), first_half + second_half, 0.01
+    # 181 days: 6,000 x 181 / 365 = 2,975.342... -> 2,975.34.
+    # 184 days: 6,000 x 184 / 365 = 3,024.657... -> 3,024.66.
+    assert_equal 2_975.34.to_d, first_half
+    assert_equal 3_024.66.to_d, second_half
+    assert_equal asset.deduction_for_year(2026), first_half + second_half
   end
 end

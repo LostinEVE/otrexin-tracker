@@ -47,8 +47,12 @@ class TaxEstimatorTest < ActiveSupport::TestCase
     profit = estimator.business_profit
     earnings = estimator.net_earnings_from_self_employment
 
-    assert_in_delta profit * 0.9235, earnings, 0.01
-    assert_in_delta earnings * 0.153, estimator.self_employment_tax, 0.01
+    # Profit is 99,640.00 (the 100,000 invoice less the 360.00 per diem
+    # fixture). 92.35% of that is exactly 92,017.54, and 15.3% of the
+    # earnings is 11,410.17496 + 2,668.50866 = 14,078.68362 -> 14,078.68.
+    assert_equal 99_640.00.to_d, profit
+    assert_equal 92_017.54.to_d, earnings
+    assert_equal 14_078.68.to_d, estimator.self_employment_tax
     # The bug this guards against: charging 15.3% on the raw profit, which
     # overstated the bill by roughly 8%.
     assert_operator estimator.self_employment_tax, :<, profit * 0.153
@@ -63,8 +67,12 @@ class TaxEstimatorTest < ActiveSupport::TestCase
 
     assert_operator earnings, :>, wage_base
 
-    expected = (wage_base * 0.124) + (earnings * 0.029)
-    assert_in_delta expected, estimator.self_employment_tax, 0.01
+    # Earnings are 369,067.54 (92.35% of the 399,640.00 profit). Social
+    # Security stops at the 184,500 base: 184,500 x 0.124 = 22,878.00, and
+    # Medicare runs on it all: 369,067.54 x 0.029 = 10,702.95866, so the
+    # bill is 33,580.95866 -> 33,580.96.
+    assert_equal 369_067.54.to_d, earnings
+    assert_equal 33_580.96.to_d, estimator.self_employment_tax
     assert_operator estimator.self_employment_tax, :<, earnings * 0.153
   end
 
@@ -72,11 +80,9 @@ class TaxEstimatorTest < ActiveSupport::TestCase
     paid_invoice_for(users(:two), trucks(:three), 100_000)
     estimator = TaxEstimator.new(user: users(:two), year: 2026)
 
-    expected = estimator.business_profit -
-      (estimator.self_employment_tax / 2.0) -
-      estimator.standard_deduction
-
-    assert_in_delta expected, estimator.taxable_income, 0.01
+    # 99,640.00 profit less half the 14,078.68 self-employment tax
+    # (7,039.34) and the 16,100 standard deduction leaves 76,500.66.
+    assert_equal 76_500.66.to_d, estimator.taxable_income
   end
 
   test "a loss owes nothing rather than going negative" do
@@ -91,12 +97,11 @@ class TaxEstimatorTest < ActiveSupport::TestCase
 
   test "income tax is applied bracket by bracket" do
     estimator = TaxEstimator.new(user: users(:two), year: 2026)
-    estimator.define_singleton_method(:taxable_income) { 50_000.0 }
+    estimator.define_singleton_method(:taxable_income) { 50_000.to_d }
 
-    # 2026 single filer: 10% of the first 12,400, then 12% of the remainder.
-    expected = (12_400 * 0.10) + ((50_000 - 12_400) * 0.12)
-
-    assert_in_delta expected, estimator.income_tax, 0.01
+    # 2026 single filer: 10% of the first 12,400 is 1,240.00, then 12% of
+    # the remaining 37,600 is 4,512.00 — 5,752.00 in all.
+    assert_equal 5_752.00.to_d, estimator.income_tax
   end
 
   test "an unpublished tax year falls back to the newest table and says so" do
