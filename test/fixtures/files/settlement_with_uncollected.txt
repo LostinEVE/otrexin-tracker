@@ -1,0 +1,134 @@
+                  www.kaplantrucking.com
+
+
+                                              SETTLEMENT STATEMENT 06/02/2026
+
+
+
+           Terminal:(601)SOMEWHEREKY                                                         ContractorCode:            000000
+           DRIVERSAMPLE                                                                  Statement#:                00999004
+           0000 SAMPLE RD                                                                PaymentType:               EFS
+
+           SOMEWHERE,IN00000                                                               Amount:                    $654.78
+
+  CONTRACTOR STATEMENTSUMMARY: Load Count: 1                    Gross Linehaul: $1,054.50
+                                                              1
+    Line Haul      Fuel Surcharge      Accessorials         Truck        Miscellaneous         Total           Collected        Settlement
+  Settlement (2)     Settlement        Settlement        Revenue (3)      Settlements      Deductions (4)    Deductions (5)       Balance
+     $801.42           $421.80            $0.00           $1,223.22          $0.00           ($813.31)         ($568.44)          $654.78
+
+(6)cheduled Deductions for following week: ($913.19)
+
+   1AmountplusFuelSurcharge.Note:Advances,DeductionsandMiscellaneousarenotincluded;4-Alladvances/deductionsthatweresupposedtobetakenthisstatement;5-Alllement
+collectedadvances/deductionstakenthisstatement;6-ScheduledDeductionsforthefollowingweek=DoesnotincludeUncollectedDeductionsfromcurrentweekoranyadditionalnew
+                              deductions;7-EFSFuelLegend:F:FuelPurchase,C:Cash,D:FuelDiscount,Q:Numberofgallonspurchased.
+
+  TRUCK REVENUE: Truck #99999
+
+ DriverName:DRIVERSAMPLE
+ Ship Date:     06/01/2026     SAMPLE SHIPPER - A, OH TO SAMPLE CONSIGNEE - B, KY
+ Load #:        9999999              Weight/Miles 42,180 lbs 339 miles
+ Terminal: (019) SOMEPLACE OH        Line Haul Pay                $2.50 CWT on 42,180 lbs                $1,054.50       76 %        $801.42
+                                     Fuel Surcharge               40% OF LINE HAUL                       $421.80        100 %        $421.80
+                                     EFS FUEL                     Ref# 999999999                                                    ($461.00)
+
+                                                                                                                           Trip Net: $762.22
+
+  DEDUCTIONS: Truck#99999
+
+
+                                                                         Collected                    Previous        Total
+ Tractor Physical Damage - 99999 - ($32.31)/Week                            this                      Amount        Collected
+                                                          Deduction     Statement     Uncollected     Collected      to Date    New Balance
+  06/01/2026                                                  ($32.31)      ($32.31)
+                                                   Total:     ($32.31)      ($32.31)
+
+  SUMMARY: Truck#99999 Load Count: 1             1Gross Linehaul: $1,054.50
+
+    Line Haul      Fuel Surcharge      Accessorials         Truck        Miscellaneous         Total           Collected         Truck Net
+  Settlement (2)     Settlement        Settlement        Revenue (3)      Settlements      Deductions (4)    Deductions (5)
+     $801.42           $421.80            $0.00           $1,223.22          $0.00           ($493.31)         ($493.31)          $729.91
+   1-GrossLinehaul=AmountBilledtoCustomerforLinehaulOnly;2-Linehaul=ContractorSettlementAmount(includesaccessorials);3-TruckRevenue=TotalContractorSettlement
+    AmountplusFuelSurcharge.Note:Advances,DeductionsandMiscellaneousarenotincluded;4-Alladvances/deductionsthatweresupposedtobetakenthisstatement;5-All
+collectedadvances/deductionstakenthisstatement;6-ScheduledDeductionsforthefollowingweek=DoesnotincludeUncollectedDeductionsfromcurrentweekoranyadditionalnew
+                              deductions;7-EFSFuelLegend:F:FuelPurchase,C:Cash,D:FuelDiscount,Q:Numberofgallonspurchased.
+
+
+
+
+
+
+
+
+
+
+                                                                  Page 1 of2
+  CONTRACTOR DEDUCTIONS: DRIVER SAMPLE
+
+
+                                                                                    Collected                Previous    Total
+ SSI Trailer Lease Purchase - SSL0001 - ($79,000.00) @ ($300.00)/Week                  this                  Amount    Collected
+                                                                        Deduction Statement Uncollected Collected       to Date New Balance
+  06/01/2026                                                             ($300.00)    ($55.13)               ($244.87)
+                                                                  Total: ($300.00)    ($55.13)               ($244.87) ($300.00) ($78,700.00)
+
+                                                                                    Collected                Previous    Total
+ SSI Trailer Physical Damage - SSL0001 - ($20.00)/Week                                 this                  Amount    Collected
+                                                                        Deduction Statement Uncollected Collected       to Date New Balance
+
+  06/01/2026                                                               ($20.00)   ($20.00)
+                                                                  Total:   ($20.00)   ($20.00)
+
+  CONTRACTOR STATEMENTSUMMARY: Load Count: 1                   1Gross Linehaul: $1,054.50
+    Line Haul                                               Truck                               Total           Collected        Settlement
+  Settlement        Fuel Surcharge     Accessorials      Revenue          Miscellaneous     Deductions        Deductions           Balance
+             (2)     Settlement        Settlement                 (3)      Settlements                 (4)               (5)
+     $801.42           $421.80            $0.00           $1,223.22           $0.00           ($813.31)         ($568.44)          $654.78
+(6)cheduled Deductions for following week: ($913.19)
+
+   1-GrossLinehaul=AmountBilledtoCustomerforLinehaulOnly;2-Linehaul=ContractorSettlementAmount(includesaccessorials);3-TruckRevenue=TotalContractorSettlement
+    AmountplusFuelSurcharge.Note:Advances,DeductionsandMiscellaneousarenotincluded;4-Alladvances/deductionsthatweresupposedtobetakenthisstatement;5-All
+collectedadvances/deductionstadeductions;7-EFSFuelLegend:F:FuelPurchase,C:Cash,D:FuelDiscount,Q:Numberofgallonspurchased.nsfromcurrentweekoranyadditionalnew
+
+   CONTRACTOR ESCROW/LOAD SUMMARY
+
+                                 Contractor                              SSL Trailer
+      Escrow Collected             ($100.00)                              ($125.00)
+
+                                 Load Count           Line Haul       Fuel Surcharge      Accessorials      Non-Taxable       1099 Taxable
+        Year to Date                                                                                         Accessorials        Revenue
+
+                                       7              $6,280.90           $3,089.09          $346.00            $0.00            $9,715.99
+
+  ANNOUNCEMENTS:
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                                                   Page 2 of2

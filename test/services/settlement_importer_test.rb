@@ -81,7 +81,7 @@ class SettlementImporterTest < ActiveSupport::TestCase
 
   test "a statement that does not reconcile is refused outright" do
     broken = result
-    broken.total_deductions = 9_999.99.to_d
+    broken.collected_deductions = 9_999.99.to_d
 
     outcome = nil
     assert_no_difference [ "Settlement.count", "Expense.count" ] do
@@ -143,6 +143,54 @@ class SettlementImporterTest < ActiveSupport::TestCase
     assert_equal "Plates", finished.label
     assert_equal 0.to_d, finished.new_balance
     assert finished.finished?
+  end
+
+  test "accessorial lines become rows carrying their stated rates" do
+    outcome = importer.import(result("settlement_with_accessorials"))
+
+    rows = outcome.settlement.settlement_accessorials
+    assert_equal 2, rows.count
+
+    layover = rows.find_by(label: "Driver Layover Expen")
+    assert_equal 750.00.to_d, layover.gross_amount
+    assert_equal 100.to_d, layover.percentage_applied
+    assert_equal 750.00.to_d, layover.net_amount
+
+    stop_off = rows.find_by(label: "Stop Off")
+    assert_equal 300.00.to_d, stop_off.gross_amount
+    assert_equal 76.to_d, stop_off.percentage_applied
+    assert_equal 228.00.to_d, stop_off.net_amount
+  end
+
+  test "realized rates are stored and a clean statement carries no deviation" do
+    outcome = importer.import(result("settlement_with_accessorials"))
+
+    assert_equal 0.76.to_d, outcome.settlement.realized_linehaul_rate
+    assert_equal 1.to_d, outcome.settlement.realized_fuel_surcharge_rate
+    assert_nil outcome.settlement.pay_deviation
+  end
+
+  test "a pay line that shorts the stated rate is flagged at import" do
+    # 76% of $300.00 is $228.00; a statement printing $200.00 is short $28.00.
+    doctored = SettlementStatementParser.new(<<~TEXT).parse
+      SETTLEMENT STATEMENT 07/31/2026
+      Stop Off                                       $300.00         76 %          $200.00
+    TEXT
+
+    assert_includes doctored.pay_line_problems.join, "Stop Off"
+  end
+
+  test "an uncollected shortfall imports and stays queryable" do
+    outcome = importer.import(result("settlement_with_uncollected"))
+
+    assert outcome.imported?
+    lease = outcome.settlement.settlement_deductions.find_by(label: "SSI Trailer Lease Purchase")
+    assert_equal 55.13.to_d, lease.collected_this_statement
+    assert_equal 244.87.to_d, lease.uncollected
+    # Only collected money reaches the books: 32.31 + 55.13 + 20.00.
+    assert_equal 107.44.to_d, outcome.settlement.total_deductions
+    # Revenue 1,223.22 less 107.44 collected and the 461.00 fuel advance.
+    assert_equal 654.78.to_d, outcome.settlement.net_balance
   end
 
   # Guards the case that would quietly double a driver's books: the same

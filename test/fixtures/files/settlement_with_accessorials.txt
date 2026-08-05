@@ -1,0 +1,267 @@
+                  www.kaplantrucking.com
+
+
+                                              SETTLEMENT STATEMENT 07/31/2026
+
+
+
+           Terminal:(601)SOMEWHEREKY                                                          ContractorCode:            000000
+           DRIVERSAMPLE                                                                   Statement#:                00999003
+           0000 SAMPLE RD                                                                 PaymentType:               EFS
+           SOMEWHERE,IN00000                                                                Amount:                    $2,259.57
+
+
+  CONTRACTOR STATEMENTSUMMARY: Load Count: 1                   1Gross Linehaul: $4,850.00
+
+    Line Haul       Fuel Surcharge     Accessorials         Truck         Miscellaneous         Total           Collected        Settlement
+  Settlement (2)     Settlement        Settlement        Revenue  (3)      Settlements      Deductions (4)    Deductions (5)       Balance
+    $3,686.00         $1,350.00          $978.00          $6,014.00           $0.00          ($3,754.43)       ($3,754.43)        $2,259.57
+
+(6)cheduled Deductions for following week: ($552.19)
+   1-GrossLinehaul=AmountBilledtoCustomerforLinehaulOnly;2-Linehaul=ContractorSettlementAmount(includesaccessorials);3-TruckRevenue=TotalContractorSettlement
+    AmountplusFuelSurcharge.Note:Advances,DeductionsandMiscellaneousarenotincluded;4-Alladvances/deductionsthatweresupposedtobetakenthisstatement;5-All
+collectedadvances/deductionstakenthisstatement;6-ScheduledDeductionsforthefollowingweek=DoesnotincludeUncollectedDeductionsfromcurrentweekoranyadditionalnew
+                              deductions;7-EFSFuelLegend:F:FuelPurchase,C:Cash,D:FuelDiscount,Q:Numberofgallonspurchased.
+
+  TRUCK REVENUE: Truck #99999
+ DriverName:DRIVERSAMPLE
+ Ship Date:    07/24/2026    SAMPLE SHIPPER - A, TX TO SAMPLE CONSIGNEE - B, MI
+ Load #:       9999999              Weight/Miles 285,770 lbs 1708 miles
+
+ Terminal: (517) SOMEPLACE MI         Line Haul Pay               Flat                                    $4,850.00       76 %        $3,686.00
+                                    Fuel Surcharge              Flat                                    $1,350.00     100 %         $1,350.00
+                                    EFS FUEL                    Ref# 999999999                                                     ($3,001.00)
+                                    Driver Layover Expen                                                $750.00       100 %           $750.00
+                                    Stop Off                                                            $300.00         76 %          $228.00
+                                                                                                                          Trip Net: $3,013.00
+
+  DEDUCTIONS: Truck#99999
+
+
+                                                                                 Collected                 Previous      Total
+ Permits Driver - 99999 - ($1,300.00) @ ($130.00)/Week                              this                   Amount      Collected      New
+                                                                     Deduction Statement Uncollected Collected          to Date     Balance
+  07/27/2026 State: KY Permit Number: 000000, Permit Type: An         ($130.00)   ($130.00)
+
+                                                              Total: ($130.00)    ($130.00)               ($1,170.00) ($1,300.00)
+
+                                                                                 Collected                 Previous      Total
+ Plates - 99999 - ($2,100.00) @ ($150.00)/Week                                      this                   Amount      Collected      New
+                                                                     Deduction Statement Uncollected Collected          to Date     Balance
+  07/27/2026                                                          ($150.00)   ($150.00)
+                                                              Total: ($150.00)    ($150.00)                 ($675.00)    ($825.00) ($1,275.00)
+
+
+                                                                                 Collected                 Previous      Total
+ Bobtail Insurance - 99999 - ($6.92)/Week                                           this                   Amount      Collected      New
+                                                                     Deduction Statement Uncollected Collected          to Date     Balance
+  07/27/2026                                                             ($6.92)     ($6.92)
+                                                              Total:     ($6.92)     ($6.92)
+
+
+
+
+                                                                   Page 1 of4
+                                                                           Collected                     Previous        Total
+Dash Cam - 99999 - ($8.50)/Week                                               this                       Amount        Collected
+                                                            Deduction     Statement     Uncollected     Collected       to Date     New Balance
+  07/27/2026                                                     ($8.50)       ($8.50)
+                                                    Total:       ($8.50)       ($8.50)
+
+
+                                                                           Collected                     Previous        Total
+E-Log - 99999 - ($6.00)/Week                                                  this                       Amount        Collected
+                                                            Deduction     Statement     Uncollected     Collected       to Date     New Balance
+  07/27/2026                                                     ($6.00)       ($6.00)
+                                                    Total:       ($6.00)       ($6.00)
+
+                                                                           Collected                     Previous        Total
+Tractor Physical Damage - 99999 - ($32.31)/Week                               this                       Amount        Collected
+                                                            Deduction     Statement     Uncollected     Collected       to Date     New Balance
+
+  07/27/2026                                                    ($32.31)      ($32.31)
+                                                    Total:      ($32.31)      ($32.31)
+
+  SUMMARY: Truck#99999 Load Count: 1              1Gross Linehaul: $4,850.00
+    Line Haul       Fuel Surcharge     Accessorials          Truck         Miscellaneous          Total           Collected
+  Settlement (2)     Settlement         Settlement        Revenue  (3)      Settlements       Deductions (4)    Deductions (5)       Truck Net
+
+    $3,686.00         $1,350.00          $978.00           $6,014.00           $0.00           ($3,334.73)       ($3,334.73)         $2,679.27
+   1-GrossLinehaul=AmountBilledtoCustomerforLinehaulOnly;2-Linehaul=ContractorSettlementAmount(includesaccessorials);3-TruckRevenue=TotalContractorSettlement
+   AmountplusFuelSurcharge.Note:Advances,DeductionsandMiscellaneousarenotincluded;4-Alladvances/deductionsthatweresupposedtobetakenthisstatement;5-All
+collectedadvances/deductionstakenthisstatement;6-ScheduledDeductionsforthefollowingweek=DoesnotincludeUncollectedDeductionsfromcurrentweekoranyadditionalnew
+                              deductions;7-EFSFuelLegend:F:FuelPurchase,C:Cash,D:FuelDiscount,Q:Numberofgallonspurchased.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                                                    Page 2 of4
+  CONTRACTOR DEDUCTIONS: DRIVER SAMPLE
+
+
+                                                                                     Collected                Previous      Total
+ Contractor Escrow - ($500.00) @ ($50.00)/Week                                          this                  Amount      Collected      New
+                                                                         Deduction Statement Uncollected Collected         to Date      Balance
+  07/27/2026                                                               ($50.00)    ($50.00)
+                                                                   Total:  ($50.00)    ($50.00)                ($450.00)   ($500.00)
+
+                                                                                     Collected                Previous      Total
+ Loan - 000000 - ($1,219.31) @ ($300.00)/Week                                           this                  Amount      Collected      New
+                                                                         Deduction Statement Uncollected Collected         to Date      Balance
+
+  07/27/2026                                                               ($19.31)    ($19.31)
+                                                                   Total:  ($19.31)    ($19.31)              ($1,200.00) ($1,219.31)
+
+                                                                                     Collected                Previous      Total
+ Loan Fee - 000000 - ($121.93) @ ($30.00)/Week                                          this                  Amount      Collected      New
+                                                                         Deduction Statement Uncollected Collected         to Date      Balance
+  07/27/2026                                                                ($1.93)     ($1.93)
+
+                                                                   Total:   ($1.93)     ($1.93)                ($120.00)   ($121.93)
+
+                                                                                     Collected                Previous      Total
+ SSI Trailer Escrow - SSL0000 - ($2,000.00) @ ($125.00)/Week                            this                  Amount      Collected      New
+                                                                         Deduction Statement Uncollected Collected         to Date      Balance
+  07/27/2026                                                              ($125.00) ($125.00)
+                                                                   Total: ($125.00) ($125.00)                  ($375.00)   ($500.00) ($1,500.00)
+
+
+                                                                                     Collected                Previous      Total
+ SSI Trailer Lease Purchase - SSL0000 - ($62,500.00) @ ($175.00)/Week                   this                  Amount      Collected      New
+                                                                         Deduction Statement Uncollected Collected         to Date      Balance
+  07/27/2026                                                              ($175.00) ($175.00)
+                                                                   Total: ($175.00) ($175.00)                  ($525.00)   ($700.00) ($61,800.00)
+
+                                                                                     Collected                Previous      Total
+ Occupational Accident Insurance - SAMPLE - ($33.46)/Week                               this                  Amount      Collected      New
+                                                                         Deduction Statement Uncollected Collected         to Date      Balance
+  07/27/2026                                                               ($33.46)    ($33.46)
+
+                                                                   Total:  ($33.46)    ($33.46)
+
+                                                                                     Collected                Previous      Total
+ SSI Trailer Physical Damage - SSL0000 - ($15.00)/Week                                  this                  Amount      Collected      New
+                                                                         Deduction Statement Uncollected Collected         to Date      Balance
+  07/27/2026                                                               ($15.00)    ($15.00)
+                                                                   Total:  ($15.00)    ($15.00)
+
+  CONTRACTOR STATEMENTSUMMARY: Load Count: 1                    1 Gross Linehaul: $4,850.00
+
+    Line Haul       Fuel Surcharge      Accessorials         Truck          Miscellaneous         Total            Collected        Settlement
+  Settlement (2)      Settlement        Settlement         Revenue (3)       Settlements      Deductions (4)     Deductions (5)       Balance
+    $3,686.00          $1,350.00          $978.00          $6,014.00            $0.00          ($3,754.43)        ($3,754.43)        $2,259.57
+
+(6)cheduled Deductions for following week: ($552.19)
+    1-GrossLinehaul=AmountBilledtoCustomerforLinehaulOnly;2-Linehaul=ContractorSettlementAmount(includesaccessorials);3-TruckRevenue=TotalContractorSettlement
+    AmountplusFuelSurcharge.Note:Advances,DeductionsandMiscellaneousarenotincluded;4-Alladvances/deductionsthatweresupposedtobetakenthisstatement;5-All
+collectedadvances/deductionstakenthisstatement;6-ScheduledDeductionsforthefollowingweek=DoesnotincludeUncollectedDeductionsfromcurrentweekoranyadditionalnew
+                               deductions;7-EFSFuelLegend:F:FuelPurchase,C:Cash,D:FuelDiscount,Q:Numberofgallonspurchased.
+
+
+
+
+
+
+
+
+                                                                    Page 3 of4
+ CONTRACTOR ESCROW/LOAD SUMMARY
+
+   Escrow Collected           Contractor                            SSL Trailer
+                               ($500.00)                            ($875.00)
+
+                              Load Count          Line Haul      Fuel Surcharge     Accessorials      Non-Taxable      1099 Taxable
+      Year to Date                                                                                    Accessorials       Revenue
+                                  22             $35,532.42         $13,123.13        $1,872.75         $483.83          $50,528.30
+
+ANNOUNCEMENTS:
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                                              Page 4 of4
