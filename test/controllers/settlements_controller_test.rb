@@ -61,4 +61,42 @@ class SettlementsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_no_match(/needs review/, response.body)
   end
+
+  test "marking a settlement reviewed silences the warnings" do
+    settlement = flagged_settlement!
+
+    post review_settlement_url(settlement)
+    assert_redirected_to settlement_url(settlement)
+
+    get settlements_url(start_date: "2026-06-01", end_date: "2026-06-30")
+    assert_no_match(/needs review/, response.body)
+
+    get root_url
+    assert_no_match(/needs review/, response.body)
+  end
+
+  test "a reviewed settlement page shows the acceptance instead of a warning" do
+    settlement = flagged_settlement!
+    post review_settlement_url(settlement)
+
+    get settlement_url(settlement)
+
+    assert_response :success
+    assert_no_match(/needs review/, response.body)
+    assert_match "Reviewed and accepted", response.body
+    assert_match "above the agreed", response.body
+    assert_match "Reopen review", response.body
+  end
+
+  test "reopening a review brings the warning back" do
+    settlement = flagged_settlement!
+    post review_settlement_url(settlement)
+    delete review_settlement_url(settlement)
+
+    get settlement_url(settlement)
+
+    assert_response :success
+    assert_match "needs review", response.body
+    assert_match "Mark as reviewed", response.body
+  end
 end
