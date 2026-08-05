@@ -152,7 +152,7 @@ class FuelLog < ApplicationRecord
     # so a fill-up recorded in both places is not counted twice; see
     # OperatingSummary.
     def total_cost(scope = all)
-      scope.sum(:total_cost).to_f
+      scope.sum(:total_cost).to_d
     end
 
     # --- Interval construction -----------------------------------------------
