@@ -62,7 +62,9 @@ class SettlementStatementParser
     end
   end
 
-  Line = Struct.new(:label, :amount, :category, :weekly, :balance_target, :detail, keyword_init: true)
+  Line = Struct.new(:label, :amount, :category, :weekly, :balance_target, :detail,
+                    :scheduled_amount, :uncollected, :previous_collected,
+                    :total_collected_to_date, :new_balance, keyword_init: true)
 
   def self.extract(io_or_path)
     reader = PDF::Reader.new(io_or_path)
@@ -204,10 +206,10 @@ class SettlementStatementParser
 
       Line.new(
         label: label,
-        amount: collected_after_total(index),
         category: category_for(label),
         weekly: weekly,
-        balance_target: target
+        balance_target: target,
+        **sub_table_after(index)
       ).to_h
     end
   end
@@ -228,22 +230,47 @@ class SettlementStatementParser
       Line.new(
         label: "Trip Permit",
         amount: amount,
+        scheduled_amount: amount,
         category: "permits",
         detail: match[:detail].strip
       ).to_h
     end
   end
 
-  # Each block closes with a Total row whose first figure is what was actually
-  # collected on this statement — the rest are running balances.
-  def collected_after_total(index)
+  # Each block closes with a Total row: the whole amortization line for this
+  # deduction, not just the amount collected.
+  def sub_table_after(index)
     lines[(index + 1)..(index + 12)]&.each do |candidate|
       next unless candidate.start_with?("Total:")
 
-      match = candidate.match(MONEY)
-      return match ? to_amount(match[1]) : 0.to_d
+      amounts = candidate.scan(MONEY).flatten.map { |value| to_amount(value) }
+      return map_total_row(amounts)
     end
-    0.to_d
+    { amount: 0.to_d }
+  end
+
+  # The Total row prints two to six figures, and which column each belongs to
+  # follows from how many there are: running totals appear only once a payoff
+  # target exists, and the Uncollected column is blank unless collection fell
+  # short. A missing New Balance on a row that does carry running totals is the
+  # statement's way of printing zero — the payoff just finished — so it is
+  # recorded as 0.00, while a flat weekly line, which has no balance at all,
+  # stays nil.
+  def map_total_row(found)
+    scheduled, collected = found.first(2)
+    base = { scheduled_amount: scheduled || 0.to_d, amount: collected || 0.to_d,
+             uncollected: 0.to_d, previous_collected: 0.to_d, total_collected_to_date: 0.to_d }
+
+    case found.size
+    when 3 then base.merge(uncollected: found[2])
+    when 4 then base.merge(previous_collected: found[2], total_collected_to_date: found[3],
+                           new_balance: 0.to_d)
+    when 5 then base.merge(previous_collected: found[2], total_collected_to_date: found[3],
+                           new_balance: found[4])
+    when 6 then base.merge(uncollected: found[2], previous_collected: found[3],
+                           total_collected_to_date: found[4], new_balance: found[5])
+    else base
+    end
   end
 
   def category_for(label)

@@ -73,6 +73,7 @@ class SettlementImporter
       removed = clashing.each(&:destroy!).size if strategy == :replace && clashing.any?
       settlement = create_settlement(result, filename)
       tally = record_deductions(settlement, result, adoptable: (strategy == :merge ? clashing : []))
+      record_deduction_details(settlement, result)
     end
 
     Outcome.new(status: :imported, settlement: settlement, result: result,
@@ -169,6 +170,27 @@ class SettlementImporter
     end
 
     tally
+  end
+
+  # The statement's own amortization sub-table, one row per printed line. This
+  # is the detail layer behind the expense rows, not a replacement for them —
+  # it is what makes "this loan just finished" a queryable fact.
+  def record_deduction_details(settlement, result)
+    result.deductions.each do |line|
+      settlement.settlement_deductions.create!(
+        label: line[:label],
+        category: line[:category],
+        detail: line[:detail],
+        scheduled_amount: line[:scheduled_amount] || line[:amount].to_d,
+        collected_this_statement: line[:amount].to_d,
+        uncollected: line[:uncollected] || 0.to_d,
+        previous_collected: line[:previous_collected] || 0.to_d,
+        total_collected_to_date: line[:total_collected_to_date] || 0.to_d,
+        new_balance: line[:new_balance],
+        weekly_amount: line[:weekly],
+        balance_target: line[:balance_target]
+      )
+    end
   end
 
   def import_message(result, tally, removed)
