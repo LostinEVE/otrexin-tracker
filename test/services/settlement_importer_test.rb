@@ -11,9 +11,13 @@ class SettlementImporterTest < ActiveSupport::TestCase
 
   test "a reconciling statement becomes a settlement and its deductions" do
     outcome = nil
+    # Fourteen deduction lines: twelve are costs and become expenses, two are
+    # escrow deposits and go to the ledger instead.
     assert_difference [ "Settlement.count" ], 1 do
-      assert_difference "Expense.count", 14 do
-        outcome = importer.import(result, filename: "statement.pdf")
+      assert_difference [ "Expense.count" ], 12 do
+        assert_difference [ "EscrowLedgerEntry.count" ], 2 do
+          outcome = importer.import(result, filename: "statement.pdf")
+        end
       end
     end
 
@@ -41,6 +45,38 @@ class SettlementImporterTest < ActiveSupport::TestCase
     # 50 contractor escrow plus 125 trailer escrow.
     assert_equal 175.00.to_d, summary.escrow_total
     assert_equal 838.19.to_d, summary.expense_total - 1_100.to_d
+  end
+
+  test "escrow lines become ledger entries carrying the statement's own figures" do
+    outcome = importer.import(result)
+
+    # Contractor Escrow Total row: ($50.00) ($50.00) ($350.00) ($400.00) ($100.00)
+    contractor = outcome.settlement.escrow_ledger_entries.find_by(name: "Contractor Escrow")
+    assert_equal 50.00.to_d, contractor.deposit_amount
+    assert_equal 400.00.to_d, contractor.running_balance
+    assert_equal 500.00.to_d, contractor.target
+
+    # SSI Trailer Escrow Total row: ($125.00) ($125.00) ($125.00) ($250.00) ($1,750.00)
+    trailer = outcome.settlement.escrow_ledger_entries.find_by(name: "SSI Trailer Escrow")
+    assert_equal 125.00.to_d, trailer.deposit_amount
+    assert_equal 250.00.to_d, trailer.running_balance
+    assert_equal 2_000.00.to_d, trailer.target
+
+    assert_empty outcome.settlement.expenses.where(category: "escrow")
+  end
+
+  test "escrow and the fuel advance stay out of every operating aggregate" do
+    importer.import(result)
+    summary = OperatingSummary.year(user: users(:one), year: 2026, truck: trucks(:one))
+    estimator = TaxEstimator.new(user: users(:one), year: 2026, truck: trucks(:one))
+
+    # 838.19 of operating deductions plus the 1,100.00 of seeded fixture
+    # expenses. Not the 175.00 of escrow, and not the 1,401.00 fuel advance —
+    # one is a refundable deposit, the other is repayment of borrowed money.
+    assert_equal 1_938.19.to_d, summary.expense_total
+    assert_equal 1_938.19.to_d, estimator.operating_expenses
+    assert_equal 175.00.to_d, summary.escrow_total
+    assert_equal 175.00.to_d, summary.escrow_balance
   end
 
   test "a statement that does not reconcile is refused outright" do
@@ -146,7 +182,7 @@ class SettlementImporterTest < ActiveSupport::TestCase
 
     assert outcome.imported?
     assert_includes outcome.message, "4 hand-entered rows replaced"
-    assert_equal 14, outcome.settlement.expenses.count
+    assert_equal 12, outcome.settlement.expenses.count
     # Nothing hand-typed survives on that date to be counted a second time.
     assert_empty Expense.where(settlement_id: nil, expense_date: Date.new(2026, 7, 14))
   end
@@ -178,14 +214,21 @@ class SettlementImporterTest < ActiveSupport::TestCase
     end
 
     outcome = nil
-    # Fourteen deductions, four of which already exist, so only ten are new.
-    assert_difference "Expense.count", 10 do
+    # Twelve deduction lines are costs; two of them (33.46 and 175.00) are
+    # already typed and get adopted, so ten expenses are new. The 125.00 and
+    # 50.00 rows match escrow lines: their money moves into the ledger and the
+    # hand-typed expense rows go with it, so the net change is eight.
+    assert_difference "Expense.count", 8 do
       outcome = importer.import(result, on_conflict: :merge)
     end
 
     assert outcome.imported?
-    assert_equal 14, outcome.settlement.expenses.count
-    assert typed.all? { |expense| expense.reload.settlement == outcome.settlement }
+    assert_equal 12, outcome.settlement.expenses.count
+    assert_equal outcome.settlement, typed[0].reload.settlement # 33.46 adopted
+    assert_equal outcome.settlement, typed[2].reload.settlement # 175.00 adopted
+    # The escrow rows are not expenses any more; their money is in the ledger.
+    assert_not Expense.exists?(typed[1].id)
+    assert_not Expense.exists?(typed[3].id)
   end
 
   test "merging records the revenue that holding leaves behind" do
@@ -198,7 +241,7 @@ class SettlementImporterTest < ActiveSupport::TestCase
     assert_includes outcome.message, "matched to what you already entered"
   end
 
-  test "merging corrects the category of an adopted row from the statement" do
+  test "merging moves a hand-typed escrow row into the ledger, note and all" do
     escrow = Expense.create!(user: users(:one), truck: trucks(:one), expense_date: Date.new(2026, 7, 14),
                              category: "other", vendor: "Kaplan", amount: 125.00, notes: "Trailer escrow")
     3.times { |i| Expense.create!(user: users(:one), truck: trucks(:one), expense_date: Date.new(2026, 7, 14),
@@ -206,9 +249,12 @@ class SettlementImporterTest < ActiveSupport::TestCase
 
     importer.import(result, on_conflict: :merge)
 
-    # Filed under Other by hand, it belongs in escrow — and therefore out of
-    # operating cost entirely.
-    assert_equal "escrow", escrow.reload.category
+    # Filed under Other by hand, but it is a refundable deposit: it belongs in
+    # the escrow ledger, out of expenses entirely, with the driver's note kept.
+    assert_not Expense.exists?(escrow.id)
+    entry = EscrowLedgerEntry.find_by(name: "SSI Trailer Escrow")
+    assert_equal 125.00.to_d, entry.deposit_amount
+    assert_includes entry.notes, "Trailer escrow"
   end
 
   test "merging keeps the driver's own note" do
@@ -228,11 +274,12 @@ class SettlementImporterTest < ActiveSupport::TestCase
 
     outcome = importer.import(result, on_conflict: :merge)
 
-    # Deductions on the books for that day equal the statement's own total, not
+    # Deductions on the books for that day equal the statement's own total —
+    # 838.19 of costs in expenses plus 175.00 of escrow in the ledger — not
     # the total plus the four rows that were already there.
     recorded = Expense.where(expense_date: Date.new(2026, 7, 14)).sum(:amount)
-    assert_equal outcome.settlement.total_deductions, recorded
-    assert_equal 1_013.19.to_d, recorded
+    assert_equal 838.19.to_d, recorded
+    assert_equal 1_013.19.to_d, outcome.settlement.total_deductions
   end
 
   test "an unknown strategy falls back to holding rather than writing" do
