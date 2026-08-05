@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_25_000005) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_04_000001) do
   create_table "company_profiles", force: :cascade do |t|
     t.string "address_line1"
     t.string "address_line2"
@@ -175,6 +175,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_25_000005) do
     t.decimal "gross_linehaul", precision: 12, scale: 2, default: "0.0", null: false
     t.decimal "linehaul", precision: 12, scale: 2, default: "0.0", null: false
     t.integer "load_count"
+    t.integer "miles"
     t.text "notes"
     t.decimal "other_income", precision: 12, scale: 2, default: "0.0", null: false
     t.string "payer"
