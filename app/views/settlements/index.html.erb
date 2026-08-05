@@ -83,6 +83,14 @@
   </div>
 <% end %>
 
+<% if @review_notes.any? %>
+  <div class="note-box is-warning">
+    <strong><%= pluralize(@review_notes.size, "settlement") %> in this period</strong> —
+    something here needs review. Each flagged row below says why; the figures come from the
+    statement itself and the lease terms on file.
+  </div>
+<% end %>
+
 <% if @settlements.any? %>
   <div class="table-wrap">
     <table>
@@ -106,6 +114,10 @@
               <%= settlement.payer.presence || "-" %>
               <% if settlement.linehaul_percentage %>
                 <div class="text-muted"><%= settlement.linehaul_percentage %>% of gross</div>
+              <% end %>
+              <% if (notes = @review_notes.fetch(settlement.id, [])).any? %>
+                <div><span class="badge badge-warning">Needs review</span></div>
+                <div class="text-muted"><%= notes.first %></div>
               <% end %>
             </td>
             <td class="align-right"><%= money(settlement.linehaul) %></td>

@@ -14,6 +14,18 @@
   </div>
 </div>
 
+<% if @review_notes.any? %>
+  <div class="note-box is-warning">
+    <strong>This settlement needs review.</strong>
+    <ul>
+      <% @review_notes.each do |note| %>
+        <li><%= note %></li>
+      <% end %>
+    </ul>
+    <div class="text-muted"><%= LeaseAudit::DISCLAIMER %></div>
+  </div>
+<% end %>
+
 <section class="panel">
   <div class="table-wrap">
     <table class="statement">

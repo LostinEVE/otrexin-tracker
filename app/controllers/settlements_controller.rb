@@ -17,9 +17,12 @@ class SettlementsController < ApplicationController
       end_date: @end_date,
       truck: selected_truck
     )
+
+    @review_notes = settlement_review_notes(@settlements)
   end
 
   def show
+    @review_notes = settlement_review_notes([ @settlement ]).fetch(@settlement.id, [])
   end
 
   def destroy

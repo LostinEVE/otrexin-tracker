@@ -38,6 +38,28 @@ class ApplicationController < ActionController::Base
     @current_trucks ||= current_user.trucks.order(active: :desc, name: :asc, created_at: :asc)
   end
 
+  # Settlements worth a second look, keyed by settlement id: the pay deviation
+  # caught at import plus any lease-audit findings. The audit contributes only
+  # once lease terms are on file — with none, every line would read as
+  # unauthorized, which is noise rather than review material.
+  def settlement_review_notes(settlements)
+    notes = {}
+    settlements.each do |settlement|
+      (notes[settlement.id] ||= []) << settlement.pay_deviation if settlement.pay_deviation.present?
+    end
+
+    if current_user.lease_terms.exists?
+      ids = settlements.map(&:id)
+      LeaseAudit.new(user: current_user).findings.each do |finding|
+        next unless finding.settlement && ids.include?(finding.settlement.id)
+
+        (notes[finding.settlement.id] ||= []) << finding.reason
+      end
+    end
+
+    notes
+  end
+
   def selected_truck
     return @selected_truck if defined?(@selected_truck)
 

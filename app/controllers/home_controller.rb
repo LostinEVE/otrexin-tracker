@@ -27,5 +27,9 @@ class HomeController < ApplicationController
     @recent_unpaid = invoice_scope.where(status: "unpaid").order(invoice_date: :desc).limit(5)
 
     @overall_mpg = FuelLog.overall_mpg(@year.fuel_logs)
+
+    review_scope = current_user.settlements
+    review_scope = review_scope.where(truck: truck) if truck
+    @review_notes = settlement_review_notes(review_scope)
   end
 end

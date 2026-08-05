@@ -19,6 +19,15 @@
   </div>
 <% end %>
 
+<% if @review_notes.any? %>
+  <div class="note-box is-warning">
+    <strong><%= pluralize(@review_notes.size, "settlement") %></strong> on your books —
+    something there needs review: a figure deviates from the statement's own rates or from
+    the lease terms on file.
+    <%= link_to "See settlements", settlements_path, class: "btn-link" %>
+  </div>
+<% end %>
+
 <% unless @year.reconciled? %>
   <div class="note-box is-warning">
     <strong><%= money(@year.unreconciled_total) %></strong>
