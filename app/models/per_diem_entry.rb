@@ -26,7 +26,7 @@ class PerDiemEntry < ApplicationRecord
     return 0 if overlap_days <= 0
 
     span_days = (end_date - start_date).to_i + 1
-    [ (qualifying_days.to_i * overlap_days.to_f / span_days).round, qualifying_days.to_i ].min
+    [ (qualifying_days.to_i * overlap_days.to_d / span_days).round, qualifying_days.to_i ].min
   end
 
   def overlaps_period?(period_start, period_end)

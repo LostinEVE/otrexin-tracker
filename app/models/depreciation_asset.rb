@@ -11,7 +11,7 @@ class DepreciationAsset < ApplicationRecord
   validates :depreciation_method, inclusion: { in: METHODS }
 
   def depreciable_basis
-    [ cost_basis.to_d - salvage_value.to_d, 0 ].max
+    [ cost_basis.to_d - salvage_value.to_d, 0.to_d ].max
   end
 
   def annual_deduction
@@ -21,7 +21,7 @@ class DepreciationAsset < ApplicationRecord
     when "straight_line"
       (depreciable_basis / recovery_period_years.to_i).round(2)
     when "double_declining_balance"
-      (depreciable_basis * (2.0 / recovery_period_years.to_i)).round(2)
+      (depreciable_basis * 2 / recovery_period_years.to_i).round(2)
     when "section_179"
       depreciable_basis.round(2)
     else
@@ -65,12 +65,12 @@ class DepreciationAsset < ApplicationRecord
     schedule = []
 
     while current_year <= final_year && remaining_basis.positive?
-      service_factor = current_year == placed_in_service_date.year ? first_year_service_factor : 1.0
+      service_factor = current_year == placed_in_service_date.year ? first_year_service_factor : 1.to_d
       amount = case depreciation_method
       when "straight_line"
         annual_deduction * service_factor
       when "double_declining_balance"
-        current_basis * (2.0 / recovery_period_years.to_i) * service_factor
+        current_basis * 2 / recovery_period_years.to_i * service_factor
       when "section_179"
         current_year == placed_in_service_date.year ? remaining_basis : 0.to_d
       else
@@ -91,6 +91,6 @@ class DepreciationAsset < ApplicationRecord
 
   def first_year_service_factor
     months_in_service = 12 - placed_in_service_date.month + 1
-    months_in_service / 12.0
+    months_in_service.to_d / 12
   end
 end
