@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_04_000001) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_04_000002) do
   create_table "company_profiles", force: :cascade do |t|
     t.string "address_line1"
     t.string "address_line2"
@@ -142,6 +142,25 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_04_000001) do
     t.index ["user_id"], name: "index_per_diem_entries_on_user_id"
   end
 
+  create_table "settlement_deductions", force: :cascade do |t|
+    t.decimal "balance_target", precision: 12, scale: 2
+    t.string "category", null: false
+    t.decimal "collected_this_statement", precision: 12, scale: 2, default: "0.0", null: false
+    t.datetime "created_at", null: false
+    t.string "detail"
+    t.string "label", null: false
+    t.boolean "lease_authorized"
+    t.decimal "new_balance", precision: 12, scale: 2
+    t.decimal "previous_collected", precision: 12, scale: 2, default: "0.0", null: false
+    t.decimal "scheduled_amount", precision: 12, scale: 2, default: "0.0", null: false
+    t.integer "settlement_id", null: false
+    t.decimal "total_collected_to_date", precision: 12, scale: 2, default: "0.0", null: false
+    t.decimal "uncollected", precision: 12, scale: 2, default: "0.0", null: false
+    t.datetime "updated_at", null: false
+    t.decimal "weekly_amount", precision: 12, scale: 2
+    t.index ["settlement_id"], name: "index_settlement_deductions_on_settlement_id"
+  end
+
   create_table "settlement_template_lines", force: :cascade do |t|
     t.boolean "active", default: true, null: false
     t.decimal "amount", precision: 10, scale: 2
@@ -245,6 +264,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_04_000001) do
   add_foreign_key "maintenances", "users"
   add_foreign_key "per_diem_entries", "trucks"
   add_foreign_key "per_diem_entries", "users"
+  add_foreign_key "settlement_deductions", "settlements"
   add_foreign_key "settlement_template_lines", "settlement_templates"
   add_foreign_key "settlement_templates", "trucks"
   add_foreign_key "settlement_templates", "users"
