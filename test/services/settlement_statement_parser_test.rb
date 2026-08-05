@@ -235,6 +235,21 @@ class SettlementStatementParserTest < ActiveSupport::TestCase
     assert result.reconciled?
   end
 
+  test "a pay line's deviation names its direction against the agreed rate" do
+    # Real 06/01 line: $1,395.00 at 85% paid $1,185.75 — above the agreed 76%.
+    above = SettlementStatementParser.new(<<~TEXT).parse
+      SETTLEMENT STATEMENT 06/01/2026
+      Line Haul Pay               Flat                              $1,395.00                    85 %     $1,185.75
+    TEXT
+    assert_includes above.pay_line_problems.join, "above the agreed 76"
+
+    below = SettlementStatementParser.new(<<~TEXT).parse
+      SETTLEMENT STATEMENT 06/01/2026
+      Line Haul Pay               Flat                              $1,000.00                    70 %     $700.00
+    TEXT
+    assert_includes below.pay_line_problems.join, "below the agreed 76"
+  end
+
   test "an unreadable statement reports itself rather than parsing to zero" do
     result = SettlementStatementParser.new("this is not a settlement statement").parse
 
