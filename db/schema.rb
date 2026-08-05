@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_04_000005) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_04_000006) do
   create_table "company_profiles", force: :cascade do |t|
     t.string "address_line1"
     t.string "address_line2"
@@ -133,6 +133,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_04_000005) do
     t.decimal "balance_target", precision: 12, scale: 2
     t.string "category"
     t.datetime "created_at", null: false
+    t.date "effective_from"
     t.string "kind", default: "deduction", null: false
     t.string "label"
     t.text "notes"
