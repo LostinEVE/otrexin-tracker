@@ -125,7 +125,7 @@ class SettlementImporter
       ytd_revenue: result.ytd_revenue,
       ytd_load_count: result.ytd_load_count,
       source_filename: filename,
-      notes: result.miles.positive? ? "#{ActiveSupport::NumberHelper.number_to_delimited(result.miles)} paid miles" : nil
+      miles: result.miles.positive? ? result.miles : nil
     )
   end
 
