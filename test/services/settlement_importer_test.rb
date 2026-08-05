@@ -80,7 +80,9 @@ class SettlementImporterTest < ActiveSupport::TestCase
   test "paid miles are kept on the settlement" do
     outcome = importer.import(result)
 
-    assert_includes outcome.settlement.notes, "1,377"
+    # 1377 as printed on the statement's load line, not prose in notes.
+    assert_equal 1_377, outcome.settlement.miles
+    assert_nil outcome.settlement.notes
   end
 
   # Guards the case that would quietly double a driver's books: the same
