@@ -32,33 +32,75 @@ class SettlementStatementParser
     /toll/i => "tolls"
   }.freeze
 
+  # The lease's stated pay percentages, checked against every rate line.
+  AGREED_PERCENTAGES = { "Line Haul Pay" => 76.to_d, "Fuel Surcharge" => 100.to_d }.freeze
+
   Result = Struct.new(
     :statement_date, :statement_number, :payer, :load_count, :miles,
     :gross_linehaul, :linehaul, :fuel_surcharge, :accessorials, :truck_revenue,
-    :total_deductions, :balance, :fuel_advance, :deductions, :errors,
-    :ytd_revenue, :ytd_load_count,
+    :total_deductions, :collected_deductions, :balance, :fuel_advance,
+    :deductions, :rate_lines, :errors, :ytd_revenue, :ytd_load_count,
     keyword_init: true
   ) do
     def deduction_sum
       deductions.sum { |line| line[:amount] }
     end
 
-    # The statement's own total is the arbiter. Everything found must add up to
-    # it, with the fuel advance counted alongside the itemised lines.
+    # The statement's own collected figure is the arbiter. Everything found
+    # must add up to it, with the fuel advance counted alongside the itemised
+    # lines. Collected, not Total: when the week's revenue cannot cover every
+    # scheduled deduction the two differ, and only collected money actually
+    # left the settlement.
     def accounted_for
       deduction_sum + fuel_advance
     end
 
     def reconciled?
-      errors.empty? && accounted_for == total_deductions
+      errors.empty? && accounted_for == collected_deductions
     end
 
     def discrepancy
-      total_deductions - accounted_for
+      collected_deductions - accounted_for
     end
 
     def net_balance
       truck_revenue - accounted_for
+    end
+
+    # Rate lines that are pay for something other than the haul itself.
+    def accessorial_lines
+      rate_lines.reject { |line| AGREED_PERCENTAGES.key?(line[:label]) }
+    end
+
+    def realized_linehaul_rate
+      return nil unless gross_linehaul.to_d.positive?
+
+      (linehaul / gross_linehaul).round(8)
+    end
+
+    def realized_fuel_surcharge_rate
+      gross = rate_lines.select { |line| line[:label] == "Fuel Surcharge" }
+        .sum(0.to_d) { |line| line[:gross] }
+      return nil unless gross.positive?
+
+      (fuel_surcharge / gross).round(8)
+    end
+
+    # Exact, line by line: the printed net must be the stated percentage of the
+    # printed gross to the cent, and lines with an agreed rate must state it.
+    def pay_line_problems
+      rate_lines.filter_map do |line|
+        expected = (line[:gross] * line[:percentage] / 100).round(2)
+        agreed = AGREED_PERCENTAGES[line[:label]]
+
+        if line[:net] != expected
+          format("%s pays $%.2f but %s%% of $%.2f is $%.2f",
+                 line[:label], line[:net], line[:percentage].to_s("F"), line[:gross], expected)
+        elsif agreed && line[:percentage] != agreed
+          format("%s at %s%% differs from the agreed %s%%",
+                 line[:label], line[:percentage].to_s("F"), agreed.to_s("F"))
+        end
+      end
     end
   end
 
@@ -90,16 +132,18 @@ class SettlementStatementParser
   def parse
     Result.new(
       statement_date: statement_date,
-      statement_number: capture(/Statement#:\s*\n\s*(\S+)/),
+      statement_number: capture(/Statement#:\s+(\S+)/),
       payer: payer,
       load_count: capture(/Load Count:\s*(\d+)/).to_i,
       miles: total_miles,
       gross_linehaul: summary[:gross_linehaul] || 0.to_d,
       **SUMMARY_FIELDS.index_with { |field| summary[field] || 0.to_d }.slice(
-        :linehaul, :fuel_surcharge, :accessorials, :truck_revenue, :total_deductions, :balance
+        :linehaul, :fuel_surcharge, :accessorials, :truck_revenue,
+        :total_deductions, :collected_deductions, :balance
       ),
       fuel_advance: fuel_advance,
       deductions: deduction_lines + trip_permit_lines,
+      rate_lines: rate_lines,
       ytd_revenue: year_to_date[:revenue],
       ytd_load_count: year_to_date[:loads],
       errors: @errors
@@ -177,6 +221,43 @@ class SettlementStatementParser
     end
   end
 
+  PERCENT_TOKEN = /\A(\d+(?:\.\d+)?)\s*%\z/
+
+  # Revenue-section pay lines print gross, a stated percentage, and net:
+  #
+  #   Line Haul Pay    $6.15 CWT on 42,120 lbs    $2,590.38    76 %    $1,968.69
+  #   Stop Off                                      $300.00    76 %      $228.00
+  #
+  # Columns are separated by runs of spaces; the pricing detail between label
+  # and gross (Flat, CWT, MI, or a percentage formula) varies and is skipped.
+  def rate_lines
+    @rate_lines ||= lines.filter_map do |line|
+      tokens = line.split(/\s{2,}/).map(&:strip).reject(&:empty?)
+      next if tokens.size < 3
+
+      pct_index = tokens.rindex { |token| token.match?(PERCENT_TOKEN) }
+      next if pct_index.nil? || pct_index.zero? || pct_index == tokens.size - 1
+
+      gross = tokens[pct_index - 1][FULL_MONEY, 1]
+      net = tokens[pct_index + 1][FULL_MONEY, 1]
+      next if gross.nil? || net.nil?
+
+      label = tokens[0...(pct_index - 1)].reverse.find { |token| label_token?(token) }
+      next if label.nil?
+
+      { label: label, gross: to_amount(gross),
+        percentage: tokens[pct_index][PERCENT_TOKEN, 1].to_d, net: to_amount(net) }
+    end
+  end
+
+  def label_token?(token)
+    return false if token.start_with?("Terminal:")
+    return false if token.match?(/\AFlat\z|CWT on|MI on|OF LINE HAUL/i)
+    return false if token.match?(FULL_MONEY)
+
+    token.match?(/[A-Za-z]/)
+  end
+
   # A recurring deduction announces itself on one line, in either of two shapes:
   #
   #   Permits Driver - 12169 - ($1,300.00) @ ($130.00)/Week   <- pays down a total
@@ -250,23 +331,31 @@ class SettlementStatementParser
   end
 
   # The Total row prints two to six figures, and which column each belongs to
-  # follows from how many there are: running totals appear only once a payoff
-  # target exists, and the Uncollected column is blank unless collection fell
-  # short. A missing New Balance on a row that does carry running totals is the
-  # statement's way of printing zero — the payoff just finished — so it is
-  # recorded as 0.00, while a flat weekly line, which has no balance at all,
-  # stays nil.
+  # follows from how many there are plus one piece of arithmetic: the
+  # Uncollected column is exactly scheduled minus collected, and blank unless
+  # collection fell short. A missing New Balance on a row that does carry
+  # running totals is the statement's way of printing zero — the payoff just
+  # finished — so it is recorded as 0.00, while a flat weekly line, which has
+  # no balance at all, stays nil.
   def map_total_row(found)
     scheduled, collected = found.first(2)
     base = { scheduled_amount: scheduled || 0.to_d, amount: collected || 0.to_d,
              uncollected: 0.to_d, previous_collected: 0.to_d, total_collected_to_date: 0.to_d }
+    shortfall = scheduled && collected && collected < scheduled ? scheduled - collected : nil
 
     case found.size
     when 3 then base.merge(uncollected: found[2])
     when 4 then base.merge(previous_collected: found[2], total_collected_to_date: found[3],
                            new_balance: 0.to_d)
-    when 5 then base.merge(previous_collected: found[2], total_collected_to_date: found[3],
-                           new_balance: found[4])
+    when 5
+      if shortfall && found[2] == shortfall
+        # Nothing previously collected; the third figure is the shortfall.
+        base.merge(uncollected: found[2], total_collected_to_date: found[3],
+                   new_balance: found[4])
+      else
+        base.merge(previous_collected: found[2], total_collected_to_date: found[3],
+                   new_balance: found[4])
+      end
     when 6 then base.merge(uncollected: found[2], previous_collected: found[3],
                            total_collected_to_date: found[4], new_balance: found[5])
     else base

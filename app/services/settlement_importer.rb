@@ -47,7 +47,7 @@ class SettlementImporter
 
     unless result.reconciled?
       return failure(result, "Deductions add to #{fmt(result.accounted_for)} but the statement " \
-                             "says #{fmt(result.total_deductions)} — off by #{fmt(result.discrepancy.abs)}.")
+                             "says #{fmt(result.collected_deductions)} was collected — off by #{fmt(result.discrepancy.abs)}.")
     end
 
     existing = duplicate_of(result)
@@ -74,6 +74,7 @@ class SettlementImporter
       settlement = create_settlement(result, filename)
       tally = record_deductions(settlement, result, adoptable: (strategy == :merge ? clashing : []))
       record_deduction_details(settlement, result)
+      record_accessorials(settlement, result)
     end
 
     Outcome.new(status: :imported, settlement: settlement, result: result,
@@ -126,7 +127,10 @@ class SettlementImporter
       ytd_revenue: result.ytd_revenue,
       ytd_load_count: result.ytd_load_count,
       source_filename: filename,
-      miles: result.miles.positive? ? result.miles : nil
+      miles: result.miles.positive? ? result.miles : nil,
+      realized_linehaul_rate: result.realized_linehaul_rate,
+      realized_fuel_surcharge_rate: result.realized_fuel_surcharge_rate,
+      pay_deviation: result.pay_line_problems.join("; ").presence
     )
   end
 
@@ -214,6 +218,17 @@ class SettlementImporter
         new_balance: line[:new_balance],
         weekly_amount: line[:weekly],
         balance_target: line[:balance_target]
+      )
+    end
+  end
+
+  def record_accessorials(settlement, result)
+    result.accessorial_lines.each do |line|
+      settlement.settlement_accessorials.create!(
+        label: line[:label],
+        gross_amount: line[:gross],
+        percentage_applied: line[:percentage],
+        net_amount: line[:net]
       )
     end
   end
