@@ -116,7 +116,8 @@ class FuelLog < ApplicationRecord
       total_gallons = intervals.sum { |interval| interval[:gallons] }
       return nil if total_miles <= 0 || total_gallons <= 0
 
-      (total_miles.to_f / total_gallons).round(2)
+      # MPG is a ratio, not money or a stored quantity — float is fine here.
+      (total_miles.to_f / total_gallons.to_f).round(2)
     end
 
     def avg_mpg_last(scope = all, n = 10)
@@ -145,7 +146,7 @@ class FuelLog < ApplicationRecord
     end
 
     def total_gallons(scope = all)
-      scope.sum(:gallons).to_f
+      scope.sum(:gallons).to_d
     end
 
     # Reference only. Fuel spend that reaches the P&L comes from Expense records
@@ -234,8 +235,9 @@ class FuelLog < ApplicationRecord
 
     def build_interval(starting_odometer, current_log, include_fuel: true)
       miles = current_log.odometer - starting_odometer
-      gallons = include_fuel ? current_log.gallons.to_f : 0.0
-      mpg = (miles.to_f / gallons).round(2) if miles.positive? && gallons.positive?
+      gallons = include_fuel ? current_log.gallons.to_d : 0.to_d
+      # MPG is a ratio, not money or a stored quantity — float is fine here.
+      mpg = (miles.to_f / gallons.to_f).round(2) if miles.positive? && gallons.positive?
 
       {
         id: current_log.id || 0,

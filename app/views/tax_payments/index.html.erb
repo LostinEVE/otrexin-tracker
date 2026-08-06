@@ -98,7 +98,7 @@
 <h2 class="section-title">Quarterly Estimated Payments</h2>
 <div class="metric-grid is-compact">
   <% quarters.each do |qkey, qinfo| %>
-    <% q_paid = @tax_payments.select { |p| p.quarter == qkey && p.payment_date&.year == year }.sum { |p| p.amount.to_f }.round(2) %>
+    <% q_paid = TaxPayment.quarter_total(@tax_payments, qkey, year) %>
     <% q_remaining = (quarterly_estimate - q_paid).round(2) %>
     <% is_current = qkey == current_quarter %>
     <div class="metric-card <%= 'is-current' if is_current %>">
