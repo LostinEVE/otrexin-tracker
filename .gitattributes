@@ -1,5 +1,10 @@
 # See https://git-scm.com/docs/gitattributes for more about git attribute files.
 
+# One line-ending convention for the whole repository: LF in the repo and in
+# working trees, whatever platform commits. Later, more specific patterns
+# below override this where they must.
+* text=auto eol=lf
+
 # Mark the database schema as having been generated.
 db/schema.rb linguist-generated
 
@@ -9,6 +14,10 @@ db/schema.rb linguist-generated
 # with "bad interpreter". The .cmd wrapper is for Windows and keeps CRLF.
 bin/* text eol=lf
 bin/*.cmd text eol=crlf
+
+# Statement fixtures are hand-verified against real settlements and frozen —
+# no conversion of any kind may ever rewrite them.
+test/fixtures/files/* -text
 
 # Mark any vendored files as having been vendored.
 vendor/* linguist-vendored
