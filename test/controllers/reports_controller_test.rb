@@ -10,6 +10,34 @@ class ReportsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "the business page renders its figures from the service" do
+    settlement = users(:one).settlements.create!(
+      truck: trucks(:one), statement_date: Date.current - 7, statement_number: "BIZ",
+      linehaul: 1_000.00, miles: 500
+    )
+    users(:one).expenses.create!(truck: trucks(:one), settlement: settlement,
+                                 expense_date: settlement.statement_date,
+                                 category: "fuel", amount: 400.00, vendor: "Pilot")
+
+    get reports_business_url
+
+    assert_response :success
+    assert_match "Break-Even Miles / Week", response.body
+    assert_match "Where the Money Goes", response.body
+    assert_match "not\n  tax advice", response.body.gsub("\r\n", "\n")
+  end
+
+  test "the business page warns when the window predates the first settlement" do
+    users(:one).settlements.create!(
+      truck: trucks(:one), statement_date: Date.current, statement_number: "BIZ", linehaul: 100.00
+    )
+
+    get reports_business_url(start_date: (Date.current - 200).to_s, end_date: Date.current.to_s)
+
+    assert_response :success
+    assert_match "before your first imported settlement", response.body
+  end
+
   test "shows expenses as the operating cost without adding the maintenance log" do
     get reports_profit_loss_url(start_date: "2026-01-01", end_date: "2026-12-31")
 
