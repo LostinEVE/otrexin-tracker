@@ -6,6 +6,7 @@ Rails.application.routes.draw do
   delete "/logout", to: "sessions#destroy"
 
   get "reports/profit_loss", to: "reports#profit_loss", as: :reports_profit_loss
+  get "reports/business", to: "reports#business", as: :reports_business
   get "support", to: "support#show", as: :support
   get "support/thank_you", to: "support#thank_you", as: :support_thank_you
   resource :company_profile, only: [ :show, :edit, :update ]

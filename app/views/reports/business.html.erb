@@ -1,0 +1,173 @@
+<% content_for :title, "Business" %>
+
+<div class="page-header">
+  <div class="page-title-group">
+    <h1>Business</h1>
+    <p class="page-kicker">What a week must earn, where the margin goes, and what to hold back.</p>
+  </div>
+</div>
+
+<%= form_with url: reports_business_path, method: :get, local: true, class: "filter-bar is-wide" do |f| %>
+  <div class="field">
+    <%= f.label :truck_id, "Truck" %>
+    <%= f.select :truck_id,
+      options_from_collection_for_select(current_trucks, :id, :display_name, selected_truck&.id),
+      { include_blank: "All trucks" } %>
+  </div>
+  <div class="field">
+    <%= f.label :start_date, "From" %>
+    <%= f.date_field :start_date, value: @start_date %>
+  </div>
+  <div class="field">
+    <%= f.label :end_date, "To" %>
+    <%= f.date_field :end_date, value: @end_date %>
+  </div>
+  <div class="field"><%= f.submit "Filter" %></div>
+<% end %>
+
+<% if @first_settlement_date && @start_date < @first_settlement_date %>
+  <div class="note-box is-warning">
+    This window reaches back before your first imported settlement
+    (<%= @first_settlement_date %>). Earlier expenses belong to a different pay
+    arrangement, so run rates across that boundary mix two businesses.
+  </div>
+<% end %>
+
+<div class="metric-grid is-compact">
+  <div class="metric-card">
+    <div class="metric-label">Break-Even Miles / Week</div>
+    <div class="metric-value">
+      <%= @business.break_even_miles_per_week ? number_with_delimiter(@business.break_even_miles_per_week) : "—" %>
+    </div>
+    <div class="metric-note">Paid miles before fixed costs are covered</div>
+  </div>
+  <div class="metric-card">
+    <div class="metric-label">Net Margin / Mile</div>
+    <div class="metric-value <%= profit_class(@business.net_margin_per_mile) %>">
+      <%= @business.net_margin_per_mile ? money(@business.net_margin_per_mile, precision: 2) : "—" %>
+    </div>
+    <div class="metric-note">
+      <%= money(@business.revenue_per_paid_mile, precision: 2) %>/mi earned
+      <% if @business.variable_cost_per_mile %> &middot; <%= money(@business.variable_cost_per_mile, precision: 2) %>/mi variable<% end %>
+    </div>
+  </div>
+  <div class="metric-card">
+    <div class="metric-label">Fixed Costs / Week</div>
+    <div class="metric-value text-danger"><%= money(@business.weekly_fixed_costs) %></div>
+    <div class="metric-note">Comes out whether the truck moves or not</div>
+  </div>
+  <div class="metric-card">
+    <div class="metric-label">Carrier Obligation / Week</div>
+    <div class="metric-value text-danger"><%= money(@business.weekly_recurring_obligation) %></div>
+    <div class="metric-note">Weekly deductions still running, per the latest statement</div>
+  </div>
+</div>
+
+<h2 class="section-title">Money Coming Free</h2>
+<% completions = @business.deductions_completing_within(8) %>
+<% if completions.any? %>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Deduction</th>
+          <th class="align-right">Weekly</th>
+          <th class="align-right">Balance Left</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% completions.each do |row| %>
+          <tr>
+            <td><%= row.label %></td>
+            <td class="align-right"><%= money(row.weekly_amount) %></td>
+            <td class="align-right"><%= money(row.new_balance) %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+  <p class="page-kicker">These finish within eight weeks — that weekly amount returns to your pocket.</p>
+<% else %>
+  <p class="page-kicker">No deductions finish within the next eight weeks.</p>
+<% end %>
+
+<h2 class="section-title">Where the Money Goes</h2>
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>Category</th>
+        <th class="align-right">Spent</th>
+        <th class="align-right">Share</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @business.category_shares.each do |row| %>
+        <tr>
+          <td><%= Expense.category_label(row[:category]) %></td>
+          <td class="align-right"><%= money(row[:amount]) %></td>
+          <td class="align-right"><%= number_to_percentage(row[:share].to_f * 100, precision: 1) %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>
+
+<h2 class="section-title">Week by Week</h2>
+<% if @business.settlement_rows.any? %>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Statement</th>
+          <th class="align-right">Revenue</th>
+          <th class="align-right">Miles</th>
+          <th class="align-right">Revenue / Mile</th>
+          <th class="align-right">Withheld</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @business.settlement_rows.each do |row| %>
+          <tr>
+            <td><strong><%= row[:settlement].statement_date %></strong></td>
+            <td class="align-right text-success"><%= money(row[:revenue]) %></td>
+            <td class="align-right"><%= row[:miles].positive? ? number_with_delimiter(row[:miles]) : "—" %></td>
+            <td class="align-right"><%= row[:revenue_per_mile] ? money(row[:revenue_per_mile], precision: 2) : "—" %></td>
+            <td class="align-right">
+              <%= row[:deduction_rate] ? number_to_percentage(row[:deduction_rate].to_f * 100, precision: 1) : "—" %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+<% else %>
+  <p class="page-kicker">No settlements in this window.</p>
+<% end %>
+
+<h2 class="section-title">Hold Back</h2>
+<div class="metric-grid is-compact">
+  <div class="metric-card">
+    <div class="metric-label">Maintenance Reserve</div>
+    <div class="metric-value text-warning"><%= money(@business.maintenance_reserve_target) %></div>
+    <div class="metric-note">
+      12 weeks at your actual <%= money(@business.maintenance_weekly_run_rate) %>/week run rate
+      <% if @business.maintenance_cost_per_mile %> (<%= money(@business.maintenance_cost_per_mile, precision: 2) %>/mi)<% end %>
+    </div>
+  </div>
+  <div class="metric-card">
+    <div class="metric-label">Estimated Tax Still Owed (<%= @tax.table_year %>)</div>
+    <div class="metric-value text-warning"><%= money(@tax.remaining_balance) %></div>
+    <div class="metric-note"><%= money(@tax.ytd_paid) %> paid of <%= money(@tax.total_owed) %> estimated</div>
+  </div>
+  <div class="metric-card">
+    <div class="metric-label">Escrow Held by Carrier</div>
+    <div class="metric-value"><%= money(@business.escrow_balance) %></div>
+    <div class="metric-note">Your money, owed back per the lease</div>
+  </div>
+</div>
+
+<p class="page-kicker">
+  The tax figure is a rough single-filer federal estimate for planning a reserve — it is not
+  tax advice; confirm elections and amounts with your tax preparer.
+</p>

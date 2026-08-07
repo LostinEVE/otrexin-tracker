@@ -1,4 +1,26 @@
 class ReportsController < ApplicationController
+  # The business-manager page. Defaults to the trailing thirteen weeks so a
+  # carrier change months back cannot quietly distort the run rates.
+  def business
+    @end_date = params[:end_date].present? ? Date.parse(params[:end_date]) : Date.current
+    @start_date = params[:start_date].present? ? Date.parse(params[:start_date]) : @end_date - 90
+
+    if @end_date < @start_date
+      return redirect_to reports_business_path, alert: "End date must be on or after the start date."
+    end
+
+    @business = BusinessSummary.new(
+      user: current_user,
+      start_date: @start_date,
+      end_date: @end_date,
+      truck: selected_truck
+    )
+    @tax = TaxEstimator.new(user: current_user, year: @end_date.year, truck: selected_truck)
+    @first_settlement_date = current_user.settlements.minimum(:statement_date)
+  rescue Date::Error
+    redirect_to reports_business_path, alert: "Invalid date range."
+  end
+
   def profit_loss
     @start_date = params[:start_date].present? ? Date.parse(params[:start_date]) : Date.current.beginning_of_year
     @end_date   = params[:end_date].present? ? Date.parse(params[:end_date]) : Date.current
